@@ -1,16 +1,4 @@
-import { SHORE, type Level, type Platform } from "./level";
-
-function gearTeeth(id: string, cx: number, cy: number, r: number, speed: number, teeth: number): Platform[] {
-  return Array.from({ length: teeth }, (_, i) => ({
-    id: `${id}-${i}`,
-    kind: "oneway" as const,
-    x: cx,
-    y: cy,
-    w: 150,
-    h: 16,
-    gear: { cx, cy, r, speed, phase: (i / teeth) * Math.PI * 2, teeth },
-  }));
-}
+import { SHORE, type Level } from "./level";
 
 /** Plates open gates. Solo is a sprint. A friend who stays keeps the gate up. */
 const LATCH: Level = {
@@ -278,69 +266,73 @@ const CHOIR: Level = {
   light: { x: 1400, y: 120 },
 };
 
-/** A gear hall. Teeth carry you over the wheel, then drop. */
+/** Gears turn behind a run of marked planks. */
 const GEAR: Level = {
   id: "gear",
   title: "The works",
-  kicker: "The teeth do not wait.",
-  rule: "The gears are the ground. Jump from one turning wheel to the next. Two bells wake the plate.",
-  together: "The gears turn for everyone. The bells are shared.",
+  kicker: "The wheels only watch.",
+  rule: "The gears spin behind you. The pale planks are where you jump. Two bells wake the plate.",
+  together: "The bells are shared. The planks are the same for everyone.",
   clearKicker: "The works",
   clearTitle: "The wheel let you off",
-  worldW: 3300,
-  killY: 760,
+  worldW: 3800,
+  killY: 780,
   poster: 1100,
   introCrow: false,
   platforms: [
-    ...gearTeeth("a", 480, 980, 520, 0.36, 12),
-    ...gearTeeth("b", 1040, 990, 470, -0.5, 12),
-    ...gearTeeth("c", 1580, 970, 500, 0.42, 12),
-    ...gearTeeth("d", 2140, 990, 450, -0.46, 12),
-    ...gearTeeth("e", 2680, 980, 480, 0.3, 12),
-    { id: "gExit", kind: "gate", x: 2920, y: 250, w: 24, h: 250, openY: 16 },
+    { id: "start", kind: "solid", terrain: true, x: 0, y: 470, w: 560, h: 420 },
+    { id: "j1", kind: "oneway", x: 680, y: 448, w: 120, h: 12 },
+    { id: "j2", kind: "oneway", x: 880, y: 376, w: 110, h: 12 },
+    { id: "j3", kind: "oneway", x: 1080, y: 440, w: 120, h: 12 },
+    { id: "mid", kind: "solid", terrain: true, x: 1280, y: 470, w: 440, h: 420 },
+    { id: "j4", kind: "oneway", x: 1840, y: 430, w: 110, h: 12 },
+    { id: "j5", kind: "oneway", x: 2040, y: 348, w: 110, h: 12 },
+    { id: "j6", kind: "oneway", x: 2240, y: 424, w: 120, h: 12 },
+    { id: "end", kind: "solid", terrain: true, x: 2460, y: 470, w: 1280, h: 420 },
+    { id: "gExit", kind: "gate", x: 3280, y: 252, w: 24, h: 218, openY: 20 },
   ],
   moths: [
-    { id: "m1", x: 480, y: 400 },
-    { id: "m2", x: 1040, y: 420 },
-    { id: "m3", x: 1580, y: 390 },
-    { id: "m4", x: 2140, y: 420 },
-    { id: "m5", x: 2680, y: 410 },
+    { id: "m1", x: 740, y: 400 },
+    { id: "m2", x: 935, y: 328 },
+    { id: "m3", x: 1140, y: 392 },
+    { id: "m4", x: 2095, y: 300 },
+    { id: "m5", x: 2900, y: 410 },
   ],
   checkpoints: [
-    { id: "start", x: 480, surface: 460 },
-    { id: "mid", x: 1580, surface: 470 },
-    { id: "end", x: 2680, surface: 500 },
+    { id: "start", x: 180, surface: 470 },
+    { id: "mid", x: 1460, surface: 470 },
+    { id: "end", x: 2700, surface: 470 },
   ],
   rope: null,
-  shrines: [{ id: "shrine-end", x: 2860, y: 340, w: 80, h: 140 }],
+  shrines: [{ id: "shrine-end", x: 3520, y: 340, w: 80, h: 130 }],
   beacons: [
-    { id: "b1", x: 1000, y: 390, w: 80, h: 110 },
-    { id: "b2", x: 2100, y: 400, w: 80, h: 110 },
+    { id: "b1", x: 1460, y: 360, w: 80, h: 110 },
+    { id: "b2", x: 2920, y: 360, w: 80, h: 110 },
   ],
-  plates: [{ id: "pExit", gate: "gExit", x: 2600, y: 390, w: 160, h: 120, latch: 3.4, whenLit: true }],
-  goal: { id: "goal", x: 3000, y: 280, w: 90, h: 200 },
+  plates: [{ id: "pExit", gate: "gExit", x: 3120, y: 386, w: 110, h: 84, latch: 3.4, whenLit: true }],
+  goal: { id: "goal", x: 3480, y: 300, w: 90, h: 170 },
   pit: null,
   wind: null,
   birds: [],
   spiders: [
     {
-      id: "over",
-      mode: "hang",
-      x0: 1040,
-      x1: 1040,
-      ceil: 36,
-      y: 180,
-      speed: 0,
-      reach: 150,
-      period: 4.4,
-      phase: 1.2,
+      id: "mid",
+      mode: "crawl",
+      x0: 1360,
+      x1: 1640,
+      y: 448,
+      ceil: 0,
+      speed: 34,
+      reach: 0,
+      period: 1,
+      phase: 0.4,
     },
   ],
   chapters: [
-    { x: 0, id: "works", title: "The works", kicker: "Jump the wheels." },
-    { x: 2400, id: "bells", title: "The square light", kicker: "Two bells, then the plate." },
+    { x: 0, id: "works", title: "The works", kicker: "The pale planks are the way." },
+    { x: 2460, id: "bells", title: "The square light", kicker: "Two bells, then the plate." },
   ],
-  light: { x: 1580, y: 70 },
+  light: { x: 1600, y: 80 },
 };
 
 /** Rooftops under a broken sign. Three letters wake the plate beneath the white one. */

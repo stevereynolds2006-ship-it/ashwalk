@@ -216,6 +216,10 @@ function drawTerrain(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) 
     ctx.lineTo(rect.x + rect.w + 30, rect.y + Math.min(rect.h, 420) + 40);
     ctx.closePath();
     ctx.fill();
+    if (sim.level.id === "gear") {
+      ctx.fillStyle = "rgba(255,255,255,0.7)";
+      ctx.fillRect(rect.x, rect.y, rect.w, 3);
+    }
     if (sim.level.id !== "roof" && sim.level.id !== "gale" && sim.level.id !== "choir" && sim.level.id !== "gear") drawGrass(ctx, rect, 26);
   }
   for (const rect of bodies) {
@@ -224,7 +228,7 @@ function drawTerrain(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) 
     else if (sim.level.platforms.find((item) => item.id === rect.id)?.gear) continue;
     else if (rect.kind === "sway" || rect.kind === "rope") {
       drawCage(ctx, rect, sim.rope < 1 && rect.id === "cageC");
-    } else drawPlank(ctx, rect, rect.kind === "crumble" || (sim.crumbles[rect.id]?.timer ?? 0) > 0.9);
+    } else drawPlank(ctx, rect, rect.kind === "crumble" || (sim.crumbles[rect.id]?.timer ?? 0) > 0.9, sim.level.id === "gear");
   }
 }
 
@@ -246,14 +250,23 @@ function drawGrass(ctx: CanvasRenderingContext2D, rect: RectLike, tall: number) 
   }
 }
 
-function drawPlank(ctx: CanvasRenderingContext2D, rect: RectLike, rotten: boolean) {
+function drawPlank(ctx: CanvasRenderingContext2D, rect: RectLike, rotten: boolean, marked = false) {
   ctx.save();
   ctx.translate(rect.x + rect.w / 2, rect.y);
   if (rotten) ctx.rotate(-0.04);
-  ctx.fillStyle = "#0c0c0d";
-  ctx.fillRect(-rect.w / 2, 0, rect.w, 10);
-  ctx.fillStyle = "rgba(255,255,255,0.18)";
-  ctx.fillRect(-rect.w / 2, 0, rect.w, 1);
+  if (marked) {
+    ctx.fillStyle = "rgba(255,255,255,0.28)";
+    ctx.fillRect(-rect.w / 2 - 8, -10, rect.w + 16, 28);
+    ctx.fillStyle = "#e8e6e1";
+    ctx.fillRect(-rect.w / 2, 0, rect.w, 11);
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(-rect.w / 2, 0, rect.w, 3);
+  } else {
+    ctx.fillStyle = "#0c0c0d";
+    ctx.fillRect(-rect.w / 2, 0, rect.w, 10);
+    ctx.fillStyle = "rgba(255,255,255,0.18)";
+    ctx.fillRect(-rect.w / 2, 0, rect.w, 1);
+  }
   ctx.restore();
 }
 
@@ -1497,21 +1510,21 @@ function drawGearHall(ctx: CanvasRenderingContext2D, camera: Camera, sim: Sim, r
   ctx.fillRect(lx - 18, ly - 18, 36, 36);
   ctx.restore();
 
-  const seen = new Set<string>();
-  for (const plat of sim.level.platforms) {
-    const spin = plat.gear;
-    if (!spin) continue;
-    const key = `${spin.cx}:${spin.cy}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
+  const wheels = [
+    { x: 860, y: 760, r: 340, speed: 0.22, teeth: 10 },
+    { x: 1760, y: 800, r: 390, speed: -0.16, teeth: 11 },
+    { x: 2680, y: 780, r: 360, speed: 0.18, teeth: 9 },
+    { x: 3400, y: 860, r: 300, speed: -0.24, teeth: 8 },
+  ];
+  for (const wheel of wheels) {
     ctx.save();
-    ctx.translate(spin.cx, spin.cy);
-    ctx.rotate(sim.t * spin.speed);
-    ctx.fillStyle = "#070708";
-    drawCog(ctx, spin.r, spin.teeth);
+    ctx.translate(wheel.x, wheel.y);
+    ctx.rotate(sim.t * (reduced ? wheel.speed * 0.35 : wheel.speed));
+    ctx.fillStyle = "rgba(8,8,10,0.94)";
+    drawCog(ctx, wheel.r, wheel.teeth);
     ctx.beginPath();
-    ctx.arc(0, 0, spin.r * 0.16, 0, Math.PI * 2);
-    ctx.fillStyle = "#2a2a2e";
+    ctx.arc(0, 0, wheel.r * 0.16, 0, Math.PI * 2);
+    ctx.fillStyle = "#2c2c30";
     ctx.fill();
     ctx.restore();
   }
