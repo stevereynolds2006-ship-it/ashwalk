@@ -60,7 +60,7 @@ const MID: Tree[] = Array.from({ length: 7 }, (_, i) => ({
 
 const SKY: Record<string, [string, string, string, string]> = {
   shore: ["#141416", "#d9d7d2", "#8e8c88", "#121214"],
-  latch: ["#101014", "#c2c1c8", "#6e6c78", "#101012"],
+  latch: ["#2c2c30", "#d8d6d2", "#a4a29e", "#3a3a3e"],
   gale: ["#1a1c20", "#f4f3ee", "#b0b1b6", "#141618"],
   choir: ["#3c3c44", "#f0ece4", "#c2beb6", "#3a3c44"],
   roof: ["#2a2a2c", "#c8c8c6", "#6a6a6c", "#121214"],
@@ -851,6 +851,8 @@ export function renderFrame(
   if (sim.level.id === "roof") {
     drawSkyline(ctx, camera);
     drawRareSign(ctx, sim.t, reduced);
+  } else if (sim.level.id === "latch") {
+    drawLatchFog(ctx, camera, sim.level.worldW);
   } else if (sim.level.id === "shore" || sim.level.id === "antler") {
     ctx.save();
     ctx.translate(camera.x * 0.72, camera.y * 0.4);
@@ -876,8 +878,9 @@ export function renderFrame(
   drawTerrain(ctx, sim, reduced);
 
   for (const plate of sim.level.plates) {
-    const hot = (sim.latch[plate.id] ?? 0) > 0;
+    const hot = (sim.latch[plate.id] ?? 0) > 0 || (sim.wind[plate.id] ?? 0) > 0.04;
     drawPlate(ctx, plate, hot);
+    if (plate.cable) drawCable(ctx, sim, plate);
   }
 
   for (const pose of spiderPoses(sim, reduced)) {
@@ -1406,6 +1409,116 @@ function drawBlockLetter(
     for (const [rx, ry, rw, rh] of parts) ctx.strokeRect(rx + 1, ry + 1, rw - 2, rh - 2);
   }
   ctx.restore();
+}
+
+function drawLatchFog(ctx: CanvasRenderingContext2D, camera: Camera, worldW: number) {
+  ctx.save();
+  ctx.translate(camera.x * 0.82, camera.y * 0.35);
+  ctx.fillStyle = "rgba(28,28,32,0.55)";
+  for (let x = -200; x < worldW + 400; x += 260) {
+    const h = 90 + (x % 5) * 18;
+    ctx.beginPath();
+    ctx.moveTo(x, 520);
+    ctx.lineTo(x + 28, 520 - h);
+    ctx.lineTo(x + 46, 520 - h + 16);
+    ctx.lineTo(x + 70, 520 - h - 40);
+    ctx.lineTo(x + 96, 520);
+    ctx.fill();
+  }
+  ctx.restore();
+
+  ctx.save();
+  ctx.translate(camera.x * 0.45, 40);
+  const span = Math.ceil(worldW / 980) + 1;
+  for (let i = 0; i < span; i++) {
+    const origin = i * 980;
+    ctx.strokeStyle = "rgba(10,10,12,0.92)";
+    ctx.lineWidth = 8;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(origin - 40, 86);
+    ctx.quadraticCurveTo(origin + 280, 18, origin + 560, 74);
+    ctx.quadraticCurveTo(origin + 760, 108, origin + 980, 46);
+    ctx.stroke();
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(origin + 180, 48);
+    ctx.quadraticCurveTo(origin + 120, 10, origin + 70, -20);
+    ctx.moveTo(origin + 640, 70);
+    ctx.quadraticCurveTo(origin + 700, 20, origin + 760, -10);
+    ctx.stroke();
+    drawHangingLock(ctx, origin + 150, 70, 150, 210);
+    drawHangingLock(ctx, origin + 430, 78, 118, 170);
+    if (i % 2 === 0) drawCrow(ctx, origin + 168, 78, 0, 1);
+  }
+  ctx.restore();
+
+  ctx.save();
+  ctx.translate(camera.x * 0.2, camera.y * 0.05);
+  ctx.fillStyle = "rgba(8,8,10,0.88)";
+  ctx.beginPath();
+  ctx.moveTo(worldW * 0.72, 560);
+  ctx.lineTo(worldW * 0.78, 250);
+  ctx.lineTo(worldW * 0.86, 210);
+  ctx.lineTo(worldW + 200, 180);
+  ctx.lineTo(worldW + 200, 640);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawHangingLock(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
+  ctx.strokeStyle = "#121214";
+  ctx.fillStyle = "#121214";
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(x + w * 0.5, y - 36);
+  ctx.lineTo(x + w * 0.5, y);
+  ctx.stroke();
+  ctx.lineWidth = 10;
+  ctx.strokeRect(x, y, w, h);
+  ctx.lineWidth = 8;
+  ctx.beginPath();
+  ctx.moveTo(x + 16, y + h * 0.48);
+  ctx.lineTo(x + w - 16, y + h * 0.48);
+  ctx.stroke();
+  ctx.fillRect(x - 8, y + h * 0.48 - 6, 14, 14);
+  ctx.fillRect(x + w - 6, y + h * 0.48 - 6, 14, 14);
+  const lockW = 28;
+  const lockX = x + w * 0.5 - lockW * 0.5;
+  const lockY = y + h + 18;
+  ctx.beginPath();
+  ctx.moveTo(x + w * 0.5, y + h);
+  ctx.lineTo(x + w * 0.5, lockY);
+  ctx.stroke();
+  ctx.lineWidth = 8;
+  ctx.strokeRect(lockX, lockY, lockW, 36);
+  ctx.beginPath();
+  ctx.arc(x + w * 0.5, lockY + 16, 3, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawCable(ctx: CanvasRenderingContext2D, sim: Sim, plate: { id: string; gate: string; x: number; y: number; w: number; h: number }) {
+  const gate = sim.level.platforms.find((plat) => plat.id === plate.gate);
+  if (!gate) return;
+  const wind = sim.wind[plate.id] ?? 0;
+  const x0 = plate.x + plate.w * 0.5;
+  const y0 = plate.y + 8;
+  const x1 = gate.x + gate.w * 0.5;
+  const y1 = gate.y + 8;
+  const sag = 28 + (1 - wind) * 64;
+  ctx.strokeStyle = "#141416";
+  ctx.fillStyle = "#141416";
+  ctx.lineWidth = 4;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(x0, y0);
+  ctx.quadraticCurveTo((x0 + x1) * 0.5, (y0 + y1) * 0.5 + sag, x1, y1);
+  ctx.stroke();
+  ctx.fillRect(x0 - 5, y0, 10, plate.h - 8);
+  ctx.beginPath();
+  ctx.arc(x0, y0, 7, 0, Math.PI * 2);
+  ctx.fill();
 }
 
 function drawBranch(ctx: CanvasRenderingContext2D) {

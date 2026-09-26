@@ -38,10 +38,12 @@ export type Plate = {
   y: number;
   w: number;
   h: number;
-  /** Seconds the gate stays open after the last body steps off. */
+  /** Seconds the gate stays open after the last body steps off, or after a cable is released. */
   latch: number;
   /** The plate ignores you until every bell is lit. */
   whenLit?: boolean;
+  /** Stand here and hold use. The gate opens, then shuts when you let go. */
+  cable?: boolean;
 };
 
 export type Bird = {

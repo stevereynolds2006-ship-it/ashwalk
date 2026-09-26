@@ -31,6 +31,7 @@ export type Actions = {
   jumpHeld: boolean;
   jumpPressed: boolean;
   down: boolean;
+  interact: boolean;
   interactPressed: boolean;
 };
 
@@ -90,6 +91,8 @@ export type Sim = {
   beacons: Set<string>;
   crumbles: Record<string, Crumble>;
   latch: Record<string, number>;
+  /** 0 to 1. How far a cable has been pulled. */
+  wind: Record<string, number>;
   gateLift: Record<string, number>;
   birds: { x: number; dir: 1 | -1 }[];
   /** Sign roof: the gate has opened, then shut, with you on the far side. */
@@ -108,6 +111,7 @@ export type Sim = {
   doorLocked: boolean;
   plateAsleep: boolean;
   holding: string | null;
+  nearCable: boolean;
   gateSeconds: number;
   wasGrounded: boolean;
   lastRects: Rect[] | null;
@@ -128,6 +132,7 @@ export function createSim(level: Level = SHORE): Sim {
   const spawn = placePlayer(level.checkpoints[0]!.x, level.checkpoints[0]!.surface, PW, PH);
   const crumbles: Record<string, Crumble> = {};
   const latch: Record<string, number> = {};
+  const wind: Record<string, number> = {};
   const gateLift: Record<string, number> = {};
   for (const plat of level.platforms) {
     if (plat.kind === "crumble" || plat.kind === "oneway" || plat.kind === "sway" || plat.kind === "rope") {
@@ -135,7 +140,10 @@ export function createSim(level: Level = SHORE): Sim {
     }
     if (plat.kind === "gate") gateLift[plat.id] = 0;
   }
-  for (const plate of level.plates) latch[plate.id] = 0;
+  for (const plate of level.plates) {
+    latch[plate.id] = 0;
+    wind[plate.id] = 0;
+  }
   return {
     level,
     x: spawn.x,
@@ -164,6 +172,7 @@ export function createSim(level: Level = SHORE): Sim {
     beacons: new Set(),
     crumbles,
     latch,
+    wind,
     gateLift,
     birds: level.birds.map((bird) => ({ x: bird.start ?? bird.x0, dir: 1 })),
     sawGate: false,
@@ -180,6 +189,7 @@ export function createSim(level: Level = SHORE): Sim {
     doorLocked: level.beacons.length > 0,
     plateAsleep: false,
     holding: null,
+    nearCable: false,
     gateSeconds: 0,
     wasGrounded: false,
     lastRects: null,
@@ -369,33 +379,66 @@ function respawn(sim: Sim) {
     for (const id of Object.keys(sim.crumbles)) {
       sim.crumbles[id] = { timer: 0, fall: 0, gone: false, back: 0 };
     }
+    for (const plate of sim.level.plates) {
+      if (!plate.cable) continue;
+      sim.latch[plate.id] = 0;
+      sim.wind[plate.id] = 0;
+      sim.gateLift[plate.gate] = 0;
+    }
   }
 }
 
-function stepPlates(sim: Sim, dt: number) {
+function stepPlates(sim: Sim, input: Actions, dt: number) {
   sim.holding = null;
+  sim.nearCable = false;
   sim.plateAsleep = false;
   const lit = sim.level.beacons.length === 0 || sim.beacons.size >= sim.level.beacons.length;
   let soonest = 0;
   for (const plate of sim.level.plates) {
-    let held = bodyOn(sim.x, sim.y, plate);
-    if (!held) {
+    let on = bodyOn(sim.x, sim.y, plate);
+    if (!on) {
       for (const remote of sim.remotes) {
         if (remote.dead) continue;
         if (bodyOn(remote.x, remote.y, plate)) {
-          held = true;
+          on = true;
           break;
         }
       }
     }
     if (plate.whenLit && !lit) {
       if (bodyOn(sim.x, sim.y, plate)) sim.plateAsleep = true;
-      held = false;
-    } else if (held && bodyOn(sim.x, sim.y, plate)) {
-      sim.holding = plate.id;
+      on = false;
     }
+
+    if (plate.cable) {
+      const pulling = on && input.interact;
+      let wind = sim.wind[plate.id] ?? 0;
+      let left = sim.latch[plate.id] ?? 0;
+      if (pulling) {
+        wind = Math.min(1, wind + dt / 1.25);
+        if (wind >= 1) left = plate.latch;
+        sim.holding = plate.id;
+      } else if (wind >= 1) {
+        left = Math.max(0, left - dt);
+        if (left <= 0) wind = 0;
+      } else {
+        wind = Math.max(0, wind - dt / 0.35);
+        left = 0;
+      }
+      sim.wind[plate.id] = wind;
+      sim.latch[plate.id] = left;
+      if (on && wind < 1 && left <= 0) sim.nearCable = true;
+      const target = left > 0 ? 1 : wind;
+      const lift = sim.gateLift[plate.gate] ?? 0;
+      const step = Math.min(1, dt * 3.2);
+      sim.gateLift[plate.gate] = lift + (target - lift) * step;
+      if (left > 0 && !pulling && (soonest === 0 || left < soonest)) soonest = left;
+      continue;
+    }
+
+    if (on && bodyOn(sim.x, sim.y, plate)) sim.holding = plate.id;
     const current = sim.latch[plate.id] ?? 0;
-    sim.latch[plate.id] = held ? plate.latch : Math.max(0, current - dt);
+    sim.latch[plate.id] = on ? plate.latch : Math.max(0, current - dt);
     const target = (sim.latch[plate.id] ?? 0) > 0 ? 1 : 0;
     const lift = sim.gateLift[plate.gate] ?? 0;
     const step = Math.min(1, dt * 2.6);
@@ -429,7 +472,7 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
     if (before < 1 && sim.rope === 1) events.rope = true;
   }
 
-  stepPlates(sim, dt);
+  stepPlates(sim, input, dt);
 
   if (level.id === "roof" && sim.crack < 1) {
     const lift = sim.gateLift.gSign ?? 0;

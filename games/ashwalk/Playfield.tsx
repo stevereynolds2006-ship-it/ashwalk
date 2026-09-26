@@ -427,6 +427,7 @@ export function Playfield({
             jumpHeld: held.jumpHeld,
             jumpPressed,
             down: held.down,
+            interact: held.interact,
             interactPressed,
           };
           jumpPressed = false;
@@ -1476,12 +1477,18 @@ function musicScene(phase: Phase, sim: Sim): MusicScene {
 function promptFor(sim: Sim, phase: Phase) {
   if (phase !== "play" || sim.won || sim.dead > 0) return "";
   if (sim.nearBeacon) return "E · light the bell";
-  if (sim.plateAsleep) return "Light every bell. The plate is asleep.";
+  if (sim.plateAsleep) return "Light every bell. The cable is slack.";
+  if (sim.nearCable) return "Hold E · pull the cable";
   if (sim.nearRope) return "E · pull the rope";
   if (sim.nearShrine) return "E · light a lantern";
   if (sim.nearLamp) return "E · buy light · 1 coin";
-  if (sim.holding) return "Holding the gate";
-  if (sim.gateSeconds > 0) return `Gate ${sim.gateSeconds.toFixed(1)}`;
+  if (sim.holding) {
+    const plate = sim.level.plates.find((item) => item.id === sim.holding);
+    if (plate?.cable && (sim.wind[plate.id] ?? 0) >= 1) return "Let go and run";
+    if (plate?.cable) return "Pulling";
+    return "Holding the gate";
+  }
+  if (sim.gateSeconds > 0) return sim.level.id === "latch" ? `Run · ${sim.gateSeconds.toFixed(1)}` : `Gate ${sim.gateSeconds.toFixed(1)}`;
   if (sim.nearGoal && sim.doorLocked) {
     if (sim.level.stalker && sim.beacons.size >= sim.level.beacons.length) return "Trap it in the cage first";
     return "The door wants every bell";

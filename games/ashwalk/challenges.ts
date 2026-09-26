@@ -1,12 +1,12 @@
 import { SHORE, type Level } from "./level";
 
-/** Plates open gates. Solo is a sprint. A friend who stays keeps the gate up. */
+/** Cables open gates. Hold the pull, then run before the gate shuts. */
 const LATCH: Level = {
   id: "latch",
   title: "The latch",
-  kicker: "Someone has to stay.",
-  rule: "Step on a plate and the gate opens — then it starts to close. The last plate stays asleep until you light the bell.",
-  together: "A friend who stays on the plate keeps the gate up.",
+  kicker: "Pull, then run.",
+  rule: "Stand at a cable and hold E to pull the gate open. Let go and run through before it shuts. The last cable stays slack until you light the bell.",
+  together: "Hold the cable, then run through before the gate shuts.",
   clearKicker: "The latch",
   clearTitle: "The gate let you through",
   worldW: 3700,
@@ -27,9 +27,9 @@ const LATCH: Level = {
     { id: "end", kind: "solid", terrain: true, x: 2884, y: 468, w: 700, h: 420 },
   ],
   plates: [
-    { id: "p1", gate: "g1", x: 420, y: 390, w: 120, h: 80, latch: 2.8 },
-    { id: "p2", gate: "g2", x: 720, y: 390, w: 120, h: 80, latch: 6.6 },
-    { id: "p3", gate: "g3", x: 1900, y: 390, w: 120, h: 80, latch: 6.2, whenLit: true },
+    { id: "p1", gate: "g1", x: 420, y: 390, w: 120, h: 80, latch: 2.8, cable: true },
+    { id: "p2", gate: "g2", x: 720, y: 390, w: 120, h: 80, latch: 6.6, cable: true },
+    { id: "p3", gate: "g3", x: 1900, y: 390, w: 120, h: 80, latch: 6.2, whenLit: true, cable: true },
   ],
   moths: [
     { id: "m1", x: 1330, y: 348 },
