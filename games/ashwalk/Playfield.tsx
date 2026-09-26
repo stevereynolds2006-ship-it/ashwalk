@@ -40,7 +40,7 @@ const LIVES = 3;
 const ALPHABET = "abcdefghjkmnpqrstuvwxyz23456789";
 
 function dimBoard(id: string) {
-  return id === "shore" || id === "roof";
+  return id === "shore" || id === "roof" || id === "choir";
 }
 
 function makeCode() {
@@ -553,7 +553,7 @@ export function Playfield({
           chapterId.current = "drain";
           setChapter("The drain");
         }
-        nextKicker = "Rats. Turtles that should be dead. Climb out.";
+        nextKicker = "Larger rats in the dark. Climb out.";
       } else if (sim.level.id === "roof" && sim.crack > 0 && sim.crack < 1) {
         nextKicker = "The last roof is cracking.";
       }

@@ -155,7 +155,7 @@ const CHOIR: Level = {
   id: "choir",
   title: "The choir",
   kicker: "The second bell is by the spider. The third is on the cage.",
-  rule: "Three bells. The second is beside the hanging spider. The third is on the cage. A floor that falls only kills you if it is over an open hole.",
+  rule: "Three bells. The second is beside the hanging spider. The third is on the cage. A lantern costs 1 coin and lasts 10 seconds. A floor that falls only kills you if it is over an open hole.",
   together: "Bells are shared. Split up and light them at once.",
   clearKicker: "The choir",
   clearTitle: "Every bell was yours",
@@ -222,6 +222,14 @@ const CHOIR: Level = {
     { id: "bw", x: 560, y: 380, w: 90, h: 100 },
     { id: "bs", x: 1332, y: 214, w: 78, h: 104 },
     { id: "be", x: 1755, y: 300, w: 160, h: 112 },
+  ],
+  lamps: [
+    { id: "c-west", x: 740, y: 376, w: 56, h: 92 },
+    { id: "c-hub", x: 1080, y: 376, w: 56, h: 92 },
+    { id: "c-south", x: 560, y: 528, w: 56, h: 92 },
+    { id: "c-north", x: 1860, y: 108, w: 56, h: 92 },
+    { id: "c-east", x: 2280, y: 200, w: 56, h: 92 },
+    { id: "c-low", x: 2040, y: 468, w: 56, h: 92 },
   ],
   plates: [],
   goal: { id: "goal", x: 1900, y: 40, w: 90, h: 170 },
@@ -327,8 +335,6 @@ const ROOF: Level = {
   birds: [
     { kind: "rat", x0: 3620, x1: 4020, y: 1156, amp: 0, speed: 80, start: 3780 },
     { kind: "rat", x0: 3960, x1: 4300, y: 1156, amp: 0, speed: 64, start: 4120 },
-    { kind: "turtle", x0: 3500, x1: 3980, y: 1136, amp: 0, speed: 24, start: 3860 },
-    { kind: "turtle", x0: 4080, x1: 4340, y: 1136, amp: 0, speed: 18, start: 4220 },
   ],
   spiders: [
     {

@@ -567,7 +567,7 @@ function drawRat(
   const step = reduced ? 0 : Math.sin(t * 16) * 2;
   ctx.save();
   ctx.translate(x, y);
-  ctx.scale(dir < 0 ? -1 : 1, 1);
+  ctx.scale((dir < 0 ? -1 : 1) * 1.8, 1.8);
   ctx.fillStyle = "#070708";
   ctx.beginPath();
   ctx.ellipse(0, 4, 9, 4.2, 0, 0, Math.PI * 2);
