@@ -28,7 +28,7 @@ npx friendsdk check ./games/ashwalk
 - E / Enter / Use: pull the rope, light a bell, or buy a lantern
 - F, or Buy light: a flashlight costs 5 coins and throws a beam through the dark
 - Stand on a plank, cage, or ledge too long and it falls. It comes back after 4 seconds, so you can cross again.
-- The coins you spend are the Rare coins in the connected wallet. 5 Rare coins starts a walk and does not give you any. Collect coins on the board. 20 Rare coins opens every fog. Three lives. A death burns half the coins you collected on that walk.
+- The shore is free, and you start that walk with 5 coins. Every fog after it costs 5 Rare coins from the connected wallet. 20 Rare coins opens every fog. Three lives. A death burns half the coins you are carrying.
 - Esc: pause
 
 Keyboard and touch are both supported. Hold buttons ignore the phone’s long-press magnifier so a walk does not break mid-press. A score starts with the first touch and changes with the scene: the shore, the cages, the white, and each other fog. The Sound button mutes the score and the cues. Motion can be reduced; the game also follows `prefers-reduced-motion`.

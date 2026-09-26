@@ -245,8 +245,7 @@ export function Playfield({
       setStakeMsg(prev ? `Beat ${getLevel(prev).title} before this fog.` : "That fog is still shut.");
       return;
     }
-    clearRun();
-    const fee = allOpenRef.current ? 0 : STAKE;
+    const fee = allOpenRef.current || id === "shore" ? 0 : STAKE;
     if (fee > 0) {
       const who = accountRef.current;
       const balance = rareRef.current;
@@ -263,6 +262,8 @@ export function Playfield({
     }
     livesRef.current = LIVES;
     setLives(LIVES);
+    purseRef.current = STAKE;
+    setPurse(STAKE);
     setStakeMsg("");
     setShopError("");
     const level = getLevel(id);
@@ -454,7 +455,7 @@ export function Playfield({
               burned > 0 ? `Burned ${burned} coin${burned === 1 ? "" : "s"}.` : "No coins left to burn.";
             if (left <= 0) {
               clearRun();
-              setStakeMsg(`Three lives are gone. ${burnNote} 5 Rare coins starts another walk.`);
+              setStakeMsg(`Three lives are gone. ${burnNote} The shore is free. Every fog after it costs 5 Rare coins.`);
               go("title");
             } else {
               setShopError(`${left} ${left === 1 ? "life" : "lives"} left. ${burnNote}`);
@@ -870,7 +871,7 @@ export function Playfield({
                 <span className="sr-only"> including you</span>
               </span>
             )}
-            <span className="ash-count">{purse} found</span>
+            <span className="ash-count">{purse} coins</span>
             <span className="ash-count">
               {lives} {lives === 1 ? "life" : "lives"}
             </span>
@@ -934,7 +935,7 @@ export function Playfield({
                 ? "Reading Rare coins…"
                 : `You have ${formatRareCoins(spendable(rareBalance, account) ?? 0n)} Rare coins.`}
           </p>
-          <p>5 Rare coins starts a walk and does not give you any. Collect coins in the fog. 20 Rare coins opens every fog.</p>
+          <p>The shore is free. You start that walk with 5 coins. Every fog after it costs 5 Rare coins. 20 Rare coins opens every fog.</p>
           {stakeMsg && (
             <p className="ash-error" role="alert">
               {stakeMsg}
@@ -951,13 +952,8 @@ export function Playfield({
           )}
           {picker}
           <div className="ash-actions">
-            <button
-              type="button"
-              className="ash-btn"
-              onClick={beginShore}
-              disabled={!ledger.allFogs && !hasWhole(rareBalance, account, STAKE)}
-            >
-              {ledger.allFogs ? "Walk into the fog" : "Walk into the fog · 5 Rare coins"}
+            <button type="button" className="ash-btn" onClick={beginShore}>
+              Walk into the fog
             </button>
             <button type="button" className="ash-btn-ghost" onClick={() => go("levels")}>
               Other fogs
@@ -979,8 +975,7 @@ export function Playfield({
           <p className="ash-note">
             A and D move. W, up, or space jumps. S drops through a cage. E pulls, lights a bell, or
             buys a lantern. Stand on a plank too long and it falls. It comes back after 4 seconds.
-            Three lives to a board. A death burns half the coins you have collected. Then another walk costs 5,
-            unless you already opened every fog.
+            Three lives to a board. A death burns half the coins you are carrying. The shore is free. Every fog after it costs 5 Rare coins.
           </p>
         </section>
       )}
@@ -1065,15 +1060,15 @@ export function Playfield({
           )}
           <p className="ash-note">
             {!account
-              ? "Connect a wallet. A walk costs 5 Rare coins and does not give you any."
+              ? "Connect a wallet when you are ready to pay. The shore is free. Later fogs cost 5 Rare coins."
               : rareBalance == null
                 ? "Reading Rare coins…"
-                : `You have ${formatRareCoins(spendable(rareBalance, account) ?? 0n)} Rare coins. A walk costs 5 and does not give you any.`}
+                : `You have ${formatRareCoins(spendable(rareBalance, account) ?? 0n)} Rare coins. The shore is free. Every fog after it costs 5.`}
           </p>
           <p className="ash-note">
             {ledger.allFogs
               ? "Every fog is open."
-              : "The shore is first. Each fog after it opens when you beat the one before. Or pay 20 Rare coins for all of them."}
+              : "The shore is free. Each fog after it opens when you beat the one before, and costs 5 Rare coins. Or pay 20 Rare coins for all of them."}
           </p>
           {!ledger.allFogs && (
             <div className="ash-actions">
@@ -1275,6 +1270,15 @@ export function Playfield({
                 Other fogs
               </button>
             )}
+            {!session && (() => {
+              const next = LEVELS[LEVELS.findIndex((level) => level.id === clearLevel.id) + 1];
+              if (!next) return null;
+              return (
+                <button type="button" className="ash-btn" onClick={() => startLevel(next.id)}>
+                  {ledger.allFogs ? `Continue to ${next.title}` : `Continue · ${STAKE} Rare coins`}
+                </button>
+              );
+            })()}
             {!session && (
               <button type="button" className="ash-btn-ghost" onClick={() => go("levels")}>
                 Other fogs

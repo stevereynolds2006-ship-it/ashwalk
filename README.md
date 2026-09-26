@@ -21,8 +21,8 @@ Open the printed URL.
 
 - A and D, or the arrow keys, move. W, up, or space jumps. S drops through a cage. E pulls, lights a bell, or buys a lantern.
 - On a phone, use the buttons along the bottom.
-- The shore is open first. Beating a fog opens the next one. 20 Rare coins opens every fog.
-- 5 Rare coins starts a walk and does not give you coins. Pick coins up in the fog. A death burns half of the coins collected on that walk. Three lives, then the walk costs 5 Rare coins again.
+- The shore is free. You start that walk with 5 coins. Beating a fog opens the next one, and every fog after the shore costs 5 Rare coins. 20 Rare coins opens every fog.
+- A death burns half the coins you are carrying. Three lives, then you return to the menu. The shore is still free.
 - Clothes are on the start menu. One rare piece changes each Monday (UTC).
 
 Keyboard, touch, mute, and reduced motion are in the game. With friends, one person opens a room code and the other joins it.
