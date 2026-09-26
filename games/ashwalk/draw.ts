@@ -326,71 +326,189 @@ function drawOutfit(
   ctx.save();
   ctx.translate(center, bottom);
   ctx.scale(facing === -1 ? -1 : 1, 1);
-  ctx.fillStyle = "#070708";
-  ctx.strokeStyle = "#f4f1ea";
   ctx.lineCap = "round";
-  ctx.lineWidth = 1.6;
-  if (layer === "back" && (cloth === "cloak" || cloth === "cape")) {
+  ctx.lineJoin = "round";
+  const ink = "#070708";
+  const edge = "#f4f1ea";
+  ctx.fillStyle = ink;
+  ctx.strokeStyle = edge;
+
+  if (layer === "back" && cloth === "cloak") {
     ctx.beginPath();
-    ctx.moveTo(-4, -44);
-    ctx.lineTo(-22, -2);
-    ctx.lineTo(16, -2);
-    ctx.lineTo(8, -44);
+    ctx.moveTo(-8, -46);
+    ctx.quadraticCurveTo(-20, -28, -18, -4);
+    ctx.quadraticCurveTo(-6, 2, 4, -2);
+    ctx.quadraticCurveTo(16, 4, 18, -6);
+    ctx.quadraticCurveTo(20, -28, 10, -46);
+    ctx.closePath();
     ctx.fill();
-    if (cloth === "cape") {
-      ctx.fillStyle = "#f4f1ea";
-      ctx.fillRect(-14, -30, 3, 3);
-      ctx.fillRect(-4, -18, 2, 2);
-      ctx.fillRect(4, -26, 2, 2);
-    }
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.moveTo(0, -40);
+    ctx.quadraticCurveTo(-2, -20, 2, -4);
+    ctx.stroke();
   }
+
+  if (layer === "back" && cloth === "cape") {
+    ctx.beginPath();
+    ctx.moveTo(-6, -44);
+    ctx.quadraticCurveTo(-16, -24, -12, -8);
+    ctx.lineTo(14, -8);
+    ctx.quadraticCurveTo(18, -24, 8, -44);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = edge;
+    ctx.fillRect(-8, -30, 2.4, 2.4);
+    ctx.fillRect(2, -22, 2, 2);
+    ctx.fillRect(6, -32, 2, 2);
+    ctx.beginPath();
+    ctx.arc(0, -40, 2.2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
   if (layer === "back" && cloth === "coat") {
-    ctx.fillRect(-16, -38, 30, 34);
+    ctx.beginPath();
+    ctx.moveTo(-14, -40);
+    ctx.lineTo(-16, -8);
+    ctx.quadraticCurveTo(-8, -2, 0, -6);
+    ctx.quadraticCurveTo(10, -2, 16, -8);
+    ctx.lineTo(14, -40);
+    ctx.quadraticCurveTo(0, -34, -14, -40);
+    ctx.fill();
   }
+  if (layer === "front" && cloth === "coat") {
+    ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    ctx.moveTo(-10, -38);
+    ctx.lineTo(-6, -16);
+    ctx.moveTo(10, -38);
+    ctx.lineTo(6, -16);
+    ctx.stroke();
+    ctx.fillRect(-11, -40, 6, 3);
+    ctx.fillRect(5, -40, 6, 3);
+  }
+
   if (layer === "front" && cloth === "hood") {
     ctx.beginPath();
-    ctx.arc(0, -40, 13, Math.PI, 0);
-    ctx.lineTo(11, -28);
-    ctx.lineTo(-11, -28);
+    ctx.moveTo(-12, -30);
+    ctx.quadraticCurveTo(-16, -52, 0, -56);
+    ctx.quadraticCurveTo(16, -52, 12, -30);
+    ctx.quadraticCurveTo(0, -36, -12, -30);
     ctx.fill();
+    ctx.lineWidth = 1.3;
+    ctx.beginPath();
+    ctx.moveTo(-7, -34);
+    ctx.quadraticCurveTo(0, -42, 7, -34);
+    ctx.stroke();
   }
+
   if (layer === "front" && cloth === "scarf") {
-    ctx.fillStyle = "#f4f1ea";
-    ctx.fillRect(-14, -32, 26, 4);
-    ctx.fillRect(8, -32, 3, 16);
+    ctx.fillStyle = edge;
+    ctx.beginPath();
+    ctx.moveTo(-12, -34);
+    ctx.quadraticCurveTo(0, -28, 12, -34);
+    ctx.quadraticCurveTo(8, -30, 0, -26);
+    ctx.quadraticCurveTo(-8, -30, -12, -34);
+    ctx.fill();
+    ctx.fillStyle = ink;
+    ctx.beginPath();
+    ctx.moveTo(-8, -30);
+    ctx.quadraticCurveTo(-12, -16, -6, -6);
+    ctx.lineTo(-2, -8);
+    ctx.quadraticCurveTo(-6, -16, -4, -30);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(6, -30);
+    ctx.quadraticCurveTo(10, -12, 4, -2);
+    ctx.lineTo(1, -4);
+    ctx.quadraticCurveTo(4, -14, 3, -30);
+    ctx.fill();
+    ctx.strokeStyle = edge;
+    ctx.lineWidth = 1;
+    ctx.stroke();
   }
+
   if (layer === "front" && cloth === "veil") {
+    ctx.globalAlpha = 0.92;
+    ctx.beginPath();
+    ctx.moveTo(-11, -50);
+    ctx.quadraticCurveTo(-14, -28, -8, -12);
+    ctx.lineTo(-3, -14);
+    ctx.quadraticCurveTo(-6, -30, -2, -48);
+    ctx.closePath();
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(11, -50);
+    ctx.quadraticCurveTo(14, -28, 8, -12);
+    ctx.lineTo(3, -14);
+    ctx.quadraticCurveTo(6, -30, 2, -48);
+    ctx.closePath();
+    ctx.fill();
+    ctx.lineWidth = 1.2;
     ctx.beginPath();
     ctx.moveTo(-10, -50);
-    ctx.lineTo(0, -16);
-    ctx.lineTo(10, -50);
+    ctx.quadraticCurveTo(0, -58, 10, -50);
     ctx.stroke();
   }
+
   if (layer === "front" && cloth === "crown") {
+    ctx.lineWidth = 1.8;
     ctx.beginPath();
-    ctx.moveTo(-12, -46);
-    ctx.lineTo(-7, -58);
-    ctx.lineTo(0, -46);
-    ctx.lineTo(7, -58);
-    ctx.lineTo(12, -46);
+    ctx.moveTo(-13, -48);
+    ctx.lineTo(-8, -62);
+    ctx.lineTo(-3, -50);
+    ctx.lineTo(0, -64);
+    ctx.lineTo(3, -50);
+    ctx.lineTo(8, -62);
+    ctx.lineTo(13, -48);
+    ctx.closePath();
     ctx.stroke();
+    ctx.fillStyle = edge;
+    ctx.fillRect(-1.2, -60, 2.4, 2.4);
   }
+
   if (layer === "front" && cloth === "wreath") {
+    ctx.lineWidth = 1.7;
     ctx.beginPath();
-    ctx.arc(0, -48, 12, Math.PI * 1.05, Math.PI * 1.95);
-    ctx.moveTo(-6, -56);
-    ctx.lineTo(-14, -70);
-    ctx.moveTo(6, -56);
-    ctx.lineTo(14, -70);
+    ctx.arc(0, -46, 11, Math.PI * 0.15, Math.PI * 0.85, true);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(-8, -52);
+    ctx.quadraticCurveTo(-16, -66, -10, -74);
+    ctx.moveTo(8, -52);
+    ctx.quadraticCurveTo(16, -66, 10, -74);
+    ctx.moveTo(-2, -56);
+    ctx.lineTo(-6, -64);
+    ctx.moveTo(3, -56);
+    ctx.lineTo(7, -66);
     ctx.stroke();
   }
+
   if (layer === "front" && cloth === "cord") {
-    ctx.fillStyle = "#f4f1ea";
+    ctx.strokeStyle = edge;
+    ctx.lineWidth = 1.2;
     ctx.beginPath();
-    ctx.arc(0, -24, 3.2, 0, Math.PI * 2);
+    ctx.moveTo(0, -36);
+    ctx.quadraticCurveTo(3, -28, 0, -20);
+    ctx.stroke();
+    ctx.fillStyle = edge;
+    ctx.beginPath();
+    ctx.arc(0, -18, 3.4, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillRect(-1, -24, 2, 18);
+    ctx.fillStyle = ink;
+    ctx.beginPath();
+    ctx.arc(0, -18, 1.3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = edge;
+    ctx.fillRect(-1, -16, 2, 14);
+    ctx.beginPath();
+    ctx.moveTo(-4, -2);
+    ctx.lineTo(0, 4);
+    ctx.lineTo(4, -2);
+    ctx.closePath();
+    ctx.fill();
   }
+
   ctx.restore();
 }
 
@@ -1702,6 +1820,10 @@ export function frameCamera(sim: Sim, viewW: number, viewH: number, started: boo
   } else {
     x = sim.x + PW / 2 + sim.look * 70 - viewW * 0.38;
     y = sim.y + PH / 2 - viewH * 0.58;
+    if (sim.level.stalker && sim.wake > 0 && !sim.caged) {
+      x -= viewW * 0.26 * sim.wake;
+      y -= 36 * sim.wake;
+    }
   }
   x = Math.max(0, Math.min(Math.max(0, sim.level.worldW - viewW), x));
   y = Math.max(-40, Math.min(worldH - viewH, y));

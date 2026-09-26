@@ -588,9 +588,11 @@ export function Playfield({
 
       const cssW = canvas.clientWidth;
       const cssH = canvas.clientHeight;
-      const { viewW, viewH } = viewSize(cssW, cssH);
+      const sized = viewSize(cssW, cssH);
+      const hunting = sim.level.stalker && sim.wake > 0 && !sim.caged;
+      const zoom = hunting ? 1 + 0.75 * sim.wake : 1;
       const follow = phaseNow === "play" || phaseNow === "pause" || phaseNow === "rite" || phaseNow === "clear";
-      const camera = frameCamera(sim, viewW, viewH, follow, reducedRef.current);
+      const camera = frameCamera(sim, sized.viewW * zoom, sized.viewH * zoom, follow, reducedRef.current);
       if (shake.v > 0.2 && !reducedRef.current) {
         camera.x += (Math.random() - 0.5) * shake.v;
         camera.y += (Math.random() - 0.5) * shake.v;
