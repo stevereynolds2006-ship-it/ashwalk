@@ -61,7 +61,7 @@ const MID: Tree[] = Array.from({ length: 7 }, (_, i) => ({
 const SKY: Record<string, [string, string, string, string]> = {
   shore: ["#141416", "#d9d7d2", "#8e8c88", "#121214"],
   latch: ["#101014", "#c2c1c8", "#6e6c78", "#101012"],
-  gale: ["#1a1c20", "#f4f3ee", "#b0b1b6", "#141618"],
+  gale: ["#121214", "#7a7a7e", "#3c3c40", "#101012"],
   choir: ["#3c3c44", "#f0ece4", "#c2beb6", "#3a3c44"],
   roof: ["#2a2a2c", "#c8c8c6", "#6a6a6c", "#121214"],
   antler: ["#101114", "#c5c3be", "#6d6b68", "#101114"],
@@ -215,7 +215,7 @@ function drawTerrain(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) 
     ctx.lineTo(rect.x + rect.w + 30, rect.y + Math.min(rect.h, 420) + 40);
     ctx.closePath();
     ctx.fill();
-    if (sim.level.id !== "roof") drawGrass(ctx, rect, 26);
+    if (sim.level.id !== "roof" && sim.level.id !== "gale") drawGrass(ctx, rect, 26);
   }
   for (const rect of bodies) {
     if (rect.terrain) continue;
@@ -522,7 +522,7 @@ function drawSpider(
   const legT = reduced ? 0 : t * (warn ? 26 : 12);
   ctx.save();
   ctx.translate(x, y + twitch);
-  ctx.scale(dir < 0 ? -1 : 1, 1);
+  ctx.scale((dir < 0 ? -1 : 1) * 1.45, 1.45);
   const legs = (color: string, width: number) => {
     ctx.strokeStyle = color;
     ctx.lineWidth = width;
@@ -861,6 +861,8 @@ export function renderFrame(
     ctx.translate(camera.x * 0.4, camera.y * 0.15);
     for (const tree of SHORE_NEAR) drawDeadwood(ctx, tree, 0.88);
     ctx.restore();
+  } else if (sim.level.id === "gale") {
+    drawGaleStorm(ctx, camera, sim.t, reduced);
   } else {
     ctx.save();
     ctx.translate(camera.x * 0.72, camera.y * 0.4);
@@ -1406,6 +1408,73 @@ function drawBlockLetter(
     for (const [rx, ry, rw, rh] of parts) ctx.strokeRect(rx + 1, ry + 1, rw - 2, rh - 2);
   }
   ctx.restore();
+}
+
+const ASH: { x: number; y: number; s: number; scrap: boolean; w: number; h: number; spin: number }[] = (() => {
+  const bits = [];
+  let seed = 19;
+  const rnd = () => {
+    seed = (seed * 16807) % 2147483647;
+    return seed / 2147483647;
+  };
+  for (let i = 0; i < 240; i++) {
+    const scrap = rnd() > 0.84;
+    bits.push({
+      x: rnd() * 4800,
+      y: rnd() * 640 - 30,
+      s: 0.35 + rnd() * 1.15,
+      scrap,
+      w: scrap ? 8 + rnd() * 16 : 1 + rnd() * 2.4,
+      h: scrap ? 3 + rnd() * 7 : 1 + rnd() * 1.5,
+      spin: rnd() * Math.PI,
+    });
+  }
+  return bits;
+})();
+
+function drawGaleStorm(ctx: CanvasRenderingContext2D, camera: Camera, t: number, reduced: boolean) {
+  const gust = Math.sin(t * 1.7);
+  const blow = gust > 0.35 ? (gust - 0.35) / 0.65 : 0;
+  const drift = reduced ? 0 : t * (70 + blow * 460);
+
+  ctx.save();
+  ctx.translate(camera.x * 0.2, camera.y * 0.08);
+  for (let i = 0; i < 6; i++) {
+    const cx = ((i * 540 + drift * 0.2) % 2800) - 200;
+    const cloud = ctx.createRadialGradient(cx, 180 + i * 36, 8, cx, 210, 300);
+    cloud.addColorStop(0, "rgba(214,214,210,0.2)");
+    cloud.addColorStop(1, "rgba(214,214,210,0)");
+    ctx.fillStyle = cloud;
+    ctx.fillRect(cx - 320, 20, 640, 420);
+  }
+  ctx.restore();
+
+  for (const bit of ASH) {
+    const span = 5000;
+    let x = bit.x - drift * bit.s;
+    x = ((x % span) + span) % span - 180;
+    if (x < camera.x - 60 || x > camera.x + camera.w + 60) continue;
+    const y = bit.y + (reduced ? 0 : Math.sin(t * 0.8 + bit.spin) * 12 * bit.s);
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(bit.spin + (reduced ? 0 : -t * bit.s * (0.15 + blow)));
+    ctx.fillStyle = bit.scrap ? "rgba(236,236,232,0.88)" : "rgba(226,226,222,0.75)";
+    ctx.fillRect(-bit.w / 2, -bit.h / 2, bit.w, bit.h);
+    ctx.restore();
+  }
+
+  if (blow > 0.04 && !reduced) {
+    ctx.strokeStyle = `rgba(236,236,232,${0.12 + blow * 0.4})`;
+    ctx.lineWidth = 1.2;
+    for (let i = 0; i < 16; i++) {
+      const y = camera.y + 24 + i * 32;
+      const x = camera.x + ((((i * 97 - drift) % camera.w) + camera.w) % camera.w);
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x - 24 - blow * 90, y + 1);
+      ctx.stroke();
+    }
+  }
 }
 
 function drawBranch(ctx: CanvasRenderingContext2D) {

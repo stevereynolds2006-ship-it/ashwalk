@@ -75,7 +75,7 @@ const GALE: Level = {
   id: "gale",
   title: "The gale",
   kicker: "It shoves every body the same way.",
-  rule: "The wind turns on a timer and shoves every jump. On the last roof, three bells wake the plate.",
+  rule: "Gusts shove every jump, then go quiet. Cross in the lull. On the last roof, three bells wake the plate.",
   together: "You both feel the same gust. The bells at the end are shared.",
   clearKicker: "The gale",
   clearTitle: "The wind let go",
@@ -124,7 +124,7 @@ const GALE: Level = {
   plates: [{ id: "pExit", gate: "gExit", x: 3520, y: 390, w: 96, h: 84, latch: 3.4, whenLit: true }],
   goal: { id: "goal", x: 4080, y: 300, w: 90, h: 172 },
   pit: null,
-  wind: { x0: 0, x1: 3080, strength: 780, period: 0.62, mode: "tide" },
+  wind: { x0: 0, x1: 3200, strength: 1500, period: 1.7, mode: "gust" },
   birds: [{ x0: 2320, x1: 3040, y: 330, amp: 18, speed: 120 }],
   spiders: [
     {
