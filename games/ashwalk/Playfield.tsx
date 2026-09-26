@@ -124,7 +124,7 @@ export function Playfield({
   const [stakeMsg, setStakeMsg] = useState("");
   const clearedRef = useRef(new Set<string>());
   const [cleared, setCleared] = useState<string[]>([]);
-  const [ledger, setLedger] = useState<Ledger>({ spent: 0n, allFogs: false, owned: [], equipped: null });
+  const [ledger, setLedger] = useState<Ledger>({ spent: 0n, allFogs: true, owned: [], equipped: null });
   const markClearRef = useRef<(id: string) => void>(() => {});
   const shoreGlowRef = useRef(0);
   const lampOnRef = useRef(false);
@@ -171,7 +171,7 @@ export function Playfield({
   accountRef.current = account;
   rareRef.current = rareBalance;
   clothRef.current = ledger.equipped;
-  allOpenRef.current = ledger.allFogs;
+  allOpenRef.current = true;
 
   function fogOpen(id: string) {
     return allOpenRef.current || fogUnlocked(id, clearedRef.current);
@@ -179,8 +179,9 @@ export function Playfield({
 
   function refreshLedger(nextAccount = accountRef.current) {
     const next = readLedger(nextAccount);
+    next.allFogs = true;
     setLedger(next);
-    allOpenRef.current = next.allFogs;
+    allOpenRef.current = true;
     clothRef.current = next.equipped;
   }
 
