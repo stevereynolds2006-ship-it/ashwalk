@@ -62,7 +62,7 @@ const SKY: Record<string, [string, string, string, string]> = {
   shore: ["#141416", "#d9d7d2", "#8e8c88", "#121214"],
   latch: ["#101014", "#c2c1c8", "#6e6c78", "#101012"],
   gale: ["#121214", "#7a7a7e", "#3c3c40", "#101012"],
-  choir: ["#2e2e34", "#b4b4b8", "#6e6e74", "#242428"],
+  choir: ["#5a5a62", "#f4f2ec", "#ddd9d2", "#4a4a52"],
   roof: ["#2a2a2c", "#c8c8c6", "#6a6a6c", "#121214"],
   antler: ["#101114", "#c5c3be", "#6d6b68", "#101114"],
 };
@@ -1010,7 +1010,7 @@ export function renderFrame(
       cssW * 0.72,
     );
     vig.addColorStop(0, "rgba(0,0,0,0)");
-    vig.addColorStop(1, "rgba(0,0,0,0.72)");
+    vig.addColorStop(1, sim.level.id === "choir" ? "rgba(0,0,0,0.28)" : "rgba(0,0,0,0.72)");
     ctx.fillStyle = vig;
     ctx.fillRect(0, 0, cssW, cssH);
   }
