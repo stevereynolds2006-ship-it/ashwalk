@@ -1,0 +1,10 @@
+{
+  "name": "Ashwalk",
+  "consumable": "Lantern",
+  "price": "1000000000000000000",
+  "outcomes": [
+    { "name": "Ash mote", "chanceBps": 6200, "reward": "250000000000000000" },
+    { "name": "Cage splinter", "chanceBps": 2800, "reward": "800000000000000000" },
+    { "name": "White moth", "chanceBps": 1000, "reward": "3000000000000000000" }
+  ]
+}
