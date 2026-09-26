@@ -11,7 +11,7 @@ export type Cloth = {
 export const CLOTHES: readonly Cloth[] = [
   { id: "cloak", name: "Fog cloak", cost: 0, rare: false, note: "Hangs behind you." },
   { id: "hood", name: "Hood", cost: 0, rare: false, note: "Covers the head." },
-  { id: "cap", name: "Ash cap", cost: 0, rare: false, note: "A short brim." },
+  { id: "cap", name: "Ash cap", cost: 0, rare: false, note: "Fits the head. Face stays open." },
   { id: "scarf", name: "Pale scarf", cost: 0, rare: false, note: "A light wrap at the neck." },
   { id: "coat", name: "Ash coat", cost: 0, rare: false, note: "Heavier shoulders." },
 ];

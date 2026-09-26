@@ -404,27 +404,21 @@ function drawOutfit(
 
   if (layer === "front" && cloth === "cap") {
     ctx.beginPath();
-    ctx.moveTo(-11, -44);
-    ctx.quadraticCurveTo(-12, -58, -1, -62);
-    ctx.quadraticCurveTo(10, -58, 9, -44);
-    ctx.quadraticCurveTo(0, -40, -11, -44);
-    ctx.fill();
-    ctx.lineWidth = 1.2;
+    ctx.moveTo(-14, -30);
+    ctx.quadraticCurveTo(-17, -50, 0, -62);
+    ctx.quadraticCurveTo(17, -50, 14, -30);
+    ctx.quadraticCurveTo(0, -22, -14, -30);
+    ctx.moveTo(-7, -32);
+    ctx.quadraticCurveTo(-9, -46, 0, -48);
+    ctx.quadraticCurveTo(9, -46, 7, -32);
+    ctx.quadraticCurveTo(0, -26, -7, -32);
+    ctx.fill("evenodd");
+    ctx.lineWidth = 1.35;
     ctx.stroke();
     ctx.beginPath();
-    ctx.moveTo(2, -46);
-    ctx.quadraticCurveTo(16, -50, 20, -42);
-    ctx.quadraticCurveTo(14, -38, 4, -42);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-    ctx.fillStyle = edge;
-    ctx.beginPath();
-    ctx.arc(-1, -60, 1.6, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.moveTo(-6, -50);
-    ctx.quadraticCurveTo(0, -54, 6, -48);
+    ctx.moveTo(0, -50);
+    ctx.quadraticCurveTo(6, -56, 2, -46);
+    ctx.quadraticCurveTo(-1, -50, 3, -40);
     ctx.stroke();
   }
 
