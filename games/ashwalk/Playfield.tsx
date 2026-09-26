@@ -302,6 +302,16 @@ export function Playfield({
     const music = createAshMusic();
     soundRef.current = kit;
     musicRef.current = music;
+    kit.setMuted(false);
+    music.setMuted(false);
+    const startAudio = () => {
+      void kit.unlock();
+      void music.unlock();
+    };
+    startAudio();
+    const onGesture = () => startAudio();
+    window.addEventListener("pointerdown", onGesture, true);
+    window.addEventListener("keydown", onGesture, true);
     const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
     const apply = () => {
       if (!motionTouchedRef.current) {
@@ -312,6 +322,8 @@ export function Playfield({
     apply();
     preference.addEventListener("change", apply);
     return () => {
+      window.removeEventListener("pointerdown", onGesture, true);
+      window.removeEventListener("keydown", onGesture, true);
       kit.dispose();
       music.dispose();
       soundRef.current = null;

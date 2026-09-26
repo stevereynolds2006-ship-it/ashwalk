@@ -353,7 +353,7 @@
 .ash-touch {
   left: 0;
   right: 0;
-  bottom: 0;
+  bottom: 36px;
   display: none;
   justify-content: space-between;
   gap: 12px;
@@ -386,6 +386,10 @@
 @media (pointer: coarse), (max-width: 800px) {
   .ash-touch {
     display: flex;
+  }
+
+  .ash-prompt {
+    bottom: 148px;
   }
 
   .ash-card,
