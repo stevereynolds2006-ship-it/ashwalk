@@ -62,7 +62,7 @@ const SKY: Record<string, [string, string, string, string]> = {
   shore: ["#141416", "#d9d7d2", "#8e8c88", "#121214"],
   latch: ["#101014", "#c2c1c8", "#6e6c78", "#101012"],
   gale: ["#121214", "#7a7a7e", "#3c3c40", "#101012"],
-  choir: ["#3c3c44", "#f0ece4", "#c2beb6", "#3a3c44"],
+  choir: ["#141416", "#6a6a70", "#323236", "#101012"],
   roof: ["#2a2a2c", "#c8c8c6", "#6a6a6c", "#121214"],
   antler: ["#101114", "#c5c3be", "#6d6b68", "#101114"],
 };
@@ -215,7 +215,7 @@ function drawTerrain(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) 
     ctx.lineTo(rect.x + rect.w + 30, rect.y + Math.min(rect.h, 420) + 40);
     ctx.closePath();
     ctx.fill();
-    if (sim.level.id !== "roof" && sim.level.id !== "gale") drawGrass(ctx, rect, 26);
+    if (sim.level.id !== "roof" && sim.level.id !== "gale" && sim.level.id !== "choir") drawGrass(ctx, rect, 26);
   }
   for (const rect of bodies) {
     if (rect.terrain) continue;
@@ -863,6 +863,8 @@ export function renderFrame(
     ctx.restore();
   } else if (sim.level.id === "gale") {
     drawGaleStorm(ctx, camera, sim.t, reduced);
+  } else if (sim.level.id === "choir") {
+    drawChoirGear(ctx, camera, sim.t, reduced);
   } else {
     ctx.save();
     ctx.translate(camera.x * 0.72, camera.y * 0.4);
@@ -1431,6 +1433,76 @@ const ASH: { x: number; y: number; s: number; scrap: boolean; w: number; h: numb
   }
   return bits;
 })();
+
+function drawPixelCrowd(ctx: CanvasRenderingContext2D, x: number, y: number, s: number) {
+  ctx.fillStyle = "#f4f4f2";
+  ctx.fillRect(x + s, y, s * 2, s * 2);
+  ctx.fillRect(x, y, s, s);
+  ctx.fillRect(x + s * 3, y, s, s);
+  ctx.fillRect(x + s, y + s * 2, s * 2, s * 3);
+  ctx.fillRect(x, y + s * 3, s, s * 2);
+  ctx.fillRect(x + s * 3, y + s * 3, s, s * 2);
+  ctx.fillRect(x + s, y + s * 5, s, s * 2);
+  ctx.fillRect(x + s * 2, y + s * 5, s, s * 2);
+}
+
+function drawChoirGear(ctx: CanvasRenderingContext2D, camera: Camera, t: number, reduced: boolean) {
+  ctx.save();
+  ctx.translate(camera.x * 0.62, camera.y * 0.15);
+
+  ctx.fillStyle = "#070708";
+  ctx.fillRect(-80, -40, 280, 340);
+  ctx.strokeStyle = "rgba(20,20,22,0.9)";
+  ctx.lineWidth = 3;
+  for (let i = 0; i < 4; i++) {
+    ctx.beginPath();
+    ctx.moveTo(40 + i * 28, 80);
+    ctx.lineTo(20 + i * 18, 420);
+    ctx.stroke();
+  }
+
+  const glow = ctx.createRadialGradient(620, 70, 4, 620, 70, 220);
+  glow.addColorStop(0, "rgba(255,255,255,0.95)");
+  glow.addColorStop(0.2, "rgba(220,220,216,0.35)");
+  glow.addColorStop(1, "rgba(220,220,216,0)");
+  ctx.fillStyle = glow;
+  ctx.fillRect(380, -80, 480, 360);
+  ctx.fillStyle = "#f7f7f4";
+  ctx.fillRect(602, 52, 36, 36);
+
+  ctx.fillStyle = "#0a0a0c";
+  ctx.beginPath();
+  ctx.moveTo(280, 560);
+  const teeth = 16;
+  for (let i = 0; i <= teeth; i++) {
+    const x = 280 + i * 62;
+    const high = i % 2 === 0;
+    ctx.lineTo(x, high ? 300 : 390);
+    if (i < teeth) ctx.lineTo(x + 31, high ? 390 : 300);
+  }
+  ctx.lineTo(280 + teeth * 62, 640);
+  ctx.lineTo(280, 640);
+  ctx.closePath();
+  ctx.fill();
+
+  for (let i = 0; i <= teeth; i += 2) {
+    const x = 292 + i * 62;
+    const y = 300;
+    drawPixelCrowd(ctx, x, y - 28, 4);
+    if (i % 4 === 0) drawPixelCrowd(ctx, x + 16, y - 8, 3);
+    if (i > 2 && i < teeth - 2) drawPixelCrowd(ctx, x - 8, y - 52, 3);
+  }
+
+  if (!reduced) {
+    ctx.fillStyle = "rgba(230,230,226,0.55)";
+    for (let i = 0; i < 40; i++) {
+      const x = ((i * 173 + t * 18) % 1400) - 40;
+      const y = 40 + ((i * 97) % 480);
+      ctx.fillRect(x, y, i % 5 === 0 ? 3 : 1.2, i % 5 === 0 ? 2 : 1.2);
+    }
+  }
+  ctx.restore();
+}
 
 function drawGaleStorm(ctx: CanvasRenderingContext2D, camera: Camera, t: number, reduced: boolean) {
   const gust = Math.sin(t * 1.7);

@@ -155,7 +155,7 @@ const CHOIR: Level = {
   id: "choir",
   title: "The choir",
   kicker: "The second bell is by the spider. The third is on the cage.",
-  rule: "Three bells. The second is beside the hanging spider. The third is on the cage. The door stays shut until the last one.",
+  rule: "Three bells. The second is beside the hanging spider. The third is on the cage. A floor that falls only kills you if it is over an open hole.",
   together: "Bells are shared. Split up and light them at once.",
   clearKicker: "The choir",
   clearTitle: "Every bell was yours",

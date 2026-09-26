@@ -250,6 +250,22 @@ function emptyEvents(): StepEvents {
   };
 }
 
+function openHole(level: Level, x: number, w: number, fromY: number) {
+  for (const plat of level.platforms) {
+    if (plat.kind !== "solid" || !plat.terrain) continue;
+    if (plat.y <= fromY + 8 || plat.y >= level.killY) continue;
+    if (x < plat.x + plat.w - 10 && x + w > plat.x + 10) return false;
+  }
+  return true;
+}
+
+function choirSafeDrop(sim: Sim, id: string, restY: number, x: number, w: number) {
+  if (sim.level.id !== "choir") return false;
+  const state = sim.crumbles[id];
+  if (!state || state.fall <= 0) return false;
+  return !openHole(sim.level, x, w, restY);
+}
+
 function bodyOn(x: number, y: number, zone: { x: number; y: number; w: number; h: number }) {
   return x < zone.x + zone.w && x + PW > zone.x && y < zone.y + zone.h && y + PH > zone.y;
 }
@@ -466,8 +482,17 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
     const before = prevRects.find((rect) => rect.id === sim.groundId);
     const after = nextBodies.find((rect) => rect.id === sim.groundId);
     if (before && after) {
+      const state = sim.crumbles[sim.groundId];
+      const restY = state ? after.y - state.fall : after.y;
+      const safeDrop = choirSafeDrop(sim, sim.groundId, restY, before.x, before.w) && after.y > before.y + 1;
       sim.x += after.x - before.x;
-      sim.y += after.y - before.y;
+      if (safeDrop) {
+        sim.grounded = false;
+        sim.groundId = null;
+        sim.groundKind = null;
+      } else {
+        sim.y += after.y - before.y;
+      }
     }
   }
 
@@ -737,6 +762,7 @@ function resolveY(sim: Sim, prevX: number, prevY: number, bodies: Rect[]) {
   sim.groundId = null;
   sim.groundKind = null;
   for (const plat of bodies) {
+    if (choirSafeDrop(sim, plat.id, plat.y - (sim.crumbles[plat.id]?.fall ?? 0), plat.x, plat.w)) continue;
     if (!overlaps(sim.x, sim.y, PW, PH, plat, 0)) continue;
     const topOnly = plat.kind !== "solid" && plat.kind !== "gate";
     if (topOnly) {
