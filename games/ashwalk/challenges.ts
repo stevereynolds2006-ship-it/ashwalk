@@ -465,9 +465,9 @@ const ANTLER: Level = {
   rope: null,
   shrines: [{ id: "shrine-end", x: 3180, y: 370, w: 74, h: 130 }],
   beacons: [
-    { id: "b1", x: 300, y: 390, w: 72, h: 120 },
-    { id: "b2", x: 650, y: 280, w: 72, h: 120 },
-    { id: "b3", x: 1280, y: 390, w: 72, h: 120 },
+    { id: "b1", x: 300, y: 380, w: 72, h: 120 },
+    { id: "b2", x: 980, y: 380, w: 72, h: 120 },
+    { id: "b3", x: 1280, y: 380, w: 72, h: 120 },
   ],
   plates: [],
   goal: { id: "goal", x: 3320, y: 330, w: 84, h: 170 },

@@ -899,22 +899,47 @@ function drawShrine(ctx: CanvasRenderingContext2D, x: number, y: number, t: numb
   ctx.fill();
 }
 
-function drawBell(ctx: CanvasRenderingContext2D, x: number, y: number, lit: boolean, t: number) {
+function bellSurface(sim: Sim, x: number, hint: number) {
+  let best: number | null = null;
+  let bestDist = 90;
+  for (const plat of sim.level.platforms) {
+    if (plat.kind === "gate" || plat.kind === "rope" || plat.gear) continue;
+    if (x < plat.x + 4 || x > plat.x + plat.w - 4) continue;
+    const dist = Math.abs(plat.y - hint);
+    if (dist < bestDist) {
+      bestDist = dist;
+      best = plat.y;
+    }
+  }
+  return best ?? hint;
+}
+
+function drawBell(ctx: CanvasRenderingContext2D, x: number, ground: number, lit: boolean, t: number) {
   ctx.fillStyle = "#070708";
-  ctx.fillRect(x - 1, y - 28, 3, 28);
+  ctx.fillRect(x - 8, ground - 3, 16, 5);
+  ctx.fillRect(x - 2, ground - 34, 4, 32);
   ctx.beginPath();
-  ctx.arc(x, y - 30, 7, Math.PI, 0);
-  ctx.lineTo(x + 7, y - 22);
-  ctx.lineTo(x - 7, y - 22);
+  ctx.arc(x, ground - 36, 8, Math.PI, 0);
+  ctx.lineTo(x + 8, ground - 26);
+  ctx.lineTo(x - 8, ground - 26);
   ctx.fill();
   if (!lit) return;
-  const g = ctx.createRadialGradient(x, y - 34, 1, x, y - 34, 16 + Math.sin(t * 3) * 2);
-  g.addColorStop(0, "rgba(244,241,234,0.95)");
+  const pulse = 28 + Math.sin(t * 3) * 3;
+  const g = ctx.createRadialGradient(x, ground - 34, 2, x, ground - 34, pulse);
+  g.addColorStop(0, "rgba(255,255,255,0.95)");
+  g.addColorStop(0.45, "rgba(244,241,234,0.45)");
   g.addColorStop(1, "rgba(244,241,234,0)");
   ctx.fillStyle = g;
   ctx.beginPath();
-  ctx.arc(x, y - 34, 16, 0, Math.PI * 2);
+  ctx.arc(x, ground - 34, pulse, 0, Math.PI * 2);
   ctx.fill();
+  ctx.fillStyle = "#f7f4ee";
+  ctx.beginPath();
+  ctx.arc(x, ground - 36, 8, Math.PI, 0);
+  ctx.lineTo(x + 8, ground - 26);
+  ctx.lineTo(x - 8, ground - 26);
+  ctx.fill();
+  ctx.fillRect(x - 1.5, ground - 24, 3, 8);
 }
 
 export function renderFrame(
@@ -1021,7 +1046,8 @@ export function renderFrame(
     drawLantern(ctx, stand.x + stand.w / 2, stand.y + 18, sim.t);
   }
   for (const bell of sim.level.beacons) {
-    drawBell(ctx, bell.x + bell.w / 2, bell.y + bell.h - 6, sim.beacons.has(bell.id), sim.t);
+    const x = bell.x + bell.w / 2;
+    drawBell(ctx, x, bellSurface(sim, x, bell.y + bell.h), sim.beacons.has(bell.id), sim.t);
   }
 
   if (sim.level.pit && camera.x < sim.level.pit.x1 && camera.x + camera.w > sim.level.pit.x0) {
@@ -1146,6 +1172,7 @@ export function renderFrame(
   }
 
   if (gloom > 0 && sim.level.id === "roof") paintNeonSign(ctx, camera, cssW);
+  paintLitBells(ctx, cssW, sim, camera);
 
   if (lamp && !attract && !lampInDark) {
     cutFog(ctx, cssW, cssH, sim, camera);
@@ -1164,6 +1191,28 @@ export function renderFrame(
     }
     ctx.globalAlpha = 1;
   }
+}
+
+function paintLitBells(ctx: CanvasRenderingContext2D, cssW: number, sim: Sim, camera: Camera) {
+  if (sim.beacons.size === 0) return;
+  const scale = cssW / camera.w;
+  ctx.save();
+  ctx.scale(scale, scale);
+  ctx.translate(-camera.x, -camera.y);
+  for (const bell of sim.level.beacons) {
+    if (!sim.beacons.has(bell.id)) continue;
+    const x = bell.x + bell.w / 2;
+    const ground = bellSurface(sim, x, bell.y + bell.h);
+    const glow = ctx.createRadialGradient(x, ground - 34, 4, x, ground - 34, 46);
+    glow.addColorStop(0, "rgba(255,255,255,0.85)");
+    glow.addColorStop(0.4, "rgba(255,255,255,0.28)");
+    glow.addColorStop(1, "rgba(255,255,255,0)");
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(x, ground - 34, 46, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
 }
 
 function paintNeonSign(ctx: CanvasRenderingContext2D, camera: Camera, cssW: number) {
@@ -1804,7 +1853,14 @@ function drawThorns(ctx: CanvasRenderingContext2D, pit: { x0: number; x1: number
   }
 }
 
-export function frameCamera(sim: Sim, viewW: number, viewH: number, started: boolean, reduced: boolean): Camera {
+export function frameCamera(
+  sim: Sim,
+  viewW: number,
+  viewH: number,
+  started: boolean,
+  reduced: boolean,
+  huntPull = 0,
+): Camera {
   const worldH = 1680;
   let x: number;
   let y: number;
@@ -1820,9 +1876,9 @@ export function frameCamera(sim: Sim, viewW: number, viewH: number, started: boo
   } else {
     x = sim.x + PW / 2 + sim.look * 70 - viewW * 0.38;
     y = sim.y + PH / 2 - viewH * 0.58;
-    if (sim.level.stalker && sim.wake > 0 && !sim.caged) {
-      x -= viewW * 0.26 * sim.wake;
-      y -= 36 * sim.wake;
+    if (huntPull > 0) {
+      x -= viewW * 0.26 * huntPull;
+      y -= 36 * huntPull;
     }
   }
   x = Math.max(0, Math.min(Math.max(0, sim.level.worldW - viewW), x));

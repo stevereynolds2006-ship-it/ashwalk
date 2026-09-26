@@ -128,6 +128,7 @@ export function Playfield({
   const [ledger, setLedger] = useState<Ledger>({ spent: 0n, allFogs: true, owned: [], equipped: null });
   const markClearRef = useRef<(id: string) => void>(() => {});
   const shoreGlowRef = useRef(0);
+  const huntZoomRef = useRef(0);
   const lampOnRef = useRef(false);
   const lampActionRef = useRef<() => void>(() => {});
   const buyingLamp = useRef(false);
@@ -589,10 +590,19 @@ export function Playfield({
       const cssW = canvas.clientWidth;
       const cssH = canvas.clientHeight;
       const sized = viewSize(cssW, cssH);
-      const hunting = sim.level.stalker && sim.wake > 0 && !sim.caged;
-      const zoom = hunting ? 1 + 0.75 * sim.wake : 1;
+      const caught = Boolean(sim.level.stalker && sim.caged && sim.cage >= 1);
+      if (sim.level.stalker && sim.wake > 0 && !caught) huntZoomRef.current = 1;
+      else huntZoomRef.current = Math.max(0, huntZoomRef.current - dt * 0.35);
+      const zoom = 1 + 0.75 * huntZoomRef.current;
       const follow = phaseNow === "play" || phaseNow === "pause" || phaseNow === "rite" || phaseNow === "clear";
-      const camera = frameCamera(sim, sized.viewW * zoom, sized.viewH * zoom, follow, reducedRef.current);
+      const camera = frameCamera(
+        sim,
+        sized.viewW * zoom,
+        sized.viewH * zoom,
+        follow,
+        reducedRef.current,
+        huntZoomRef.current,
+      );
       if (shake.v > 0.2 && !reducedRef.current) {
         camera.x += (Math.random() - 0.5) * shake.v;
         camera.y += (Math.random() - 0.5) * shake.v;
