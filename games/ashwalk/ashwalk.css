@@ -389,7 +389,7 @@
   }
 
   .ash-prompt {
-    bottom: 148px;
+    bottom: calc(156px + env(safe-area-inset-bottom));
   }
 
   .ash-card,
@@ -410,10 +410,6 @@
   .ash-panel p {
     font-size: 14px;
     margin-bottom: 8px;
-  }
-
-  .ash-prompt {
-    bottom: 84px;
   }
 
   .ash-hud {
