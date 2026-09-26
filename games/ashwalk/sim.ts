@@ -373,11 +373,26 @@ function kill(sim: Sim, events: StepEvents) {
   events.died = true;
 }
 
+function gearPerch(sim: Sim, hintX: number) {
+  let best: { x: number; y: number } | null = null;
+  for (const plat of sim.level.platforms) {
+    const spin = plat.gear;
+    if (!spin) continue;
+    const ang = sim.t * spin.speed + spin.phase;
+    const cx = spin.cx + Math.cos(ang) * spin.r;
+    const top = spin.cy + Math.sin(ang) * spin.r;
+    if (Math.abs(cx - hintX) > 240) continue;
+    if (!best || top < best.y) best = { x: cx - PW / 2, y: top - PH };
+  }
+  return best;
+}
+
 function respawn(sim: Sim) {
   const cp = sim.level.checkpoints[sim.checkpoint] ?? sim.level.checkpoints[0]!;
   const spot = placePlayer(cp.x, cp.surface, PW, PH);
-  sim.x = spot.x;
-  sim.y = spot.y;
+  const perch = gearPerch(sim, cp.x);
+  sim.x = perch?.x ?? spot.x;
+  sim.y = perch?.y ?? spot.y;
   sim.vx = 0;
   sim.vy = 0;
   sim.grounded = false;

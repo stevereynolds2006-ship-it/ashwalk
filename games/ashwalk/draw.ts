@@ -221,6 +221,7 @@ function drawTerrain(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) 
   for (const rect of bodies) {
     if (rect.terrain) continue;
     if (rect.kind === "gate") drawGate(ctx, rect);
+    else if (sim.level.platforms.find((item) => item.id === rect.id)?.gear) continue;
     else if (rect.kind === "sway" || rect.kind === "rope") {
       drawCage(ctx, rect, sim.rope < 1 && rect.id === "cageC");
     } else drawPlank(ctx, rect, rect.kind === "crumble" || (sim.crumbles[rect.id]?.timer ?? 0) > 0.9);
@@ -1474,7 +1475,7 @@ function drawGearHall(ctx: CanvasRenderingContext2D, camera: Camera, sim: Sim, r
   ctx.fillRect(-20, 250, 90, 18);
   ctx.restore();
 
-  const lx = 1680 - camera.x * 0.35;
+  const lx = 1580 - camera.x * 0.35;
   const ly = 90;
   ctx.save();
   ctx.translate(camera.x * 0.35, camera.y * 0.08);
@@ -1494,13 +1495,6 @@ function drawGearHall(ctx: CanvasRenderingContext2D, camera: Camera, sim: Sim, r
   ctx.restore();
   ctx.fillStyle = "#f7f7f4";
   ctx.fillRect(lx - 18, ly - 18, 36, 36);
-  ctx.restore();
-
-  ctx.save();
-  ctx.translate(camera.x * 0.25 + 2100, 620);
-  ctx.rotate(reduced ? 0.4 : sim.t * 0.18);
-  ctx.fillStyle = "rgba(8,8,10,0.92)";
-  drawCog(ctx, 520, 9);
   ctx.restore();
 
   const seen = new Set<string>();
