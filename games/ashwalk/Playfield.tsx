@@ -987,9 +987,10 @@ export function Playfield({
             </button>
           </div>
           <p className="ash-note">
-            A and D move. W, up, or space jumps. S drops through a cage. E pulls, lights a bell, or
-            buys a lantern. Stand on a plank too long and it falls. It comes back after 4 seconds.
-            Three lives to a board. A death burns half the coins you are carrying. The shore is free. Every fog after it costs 5 Rare coins.
+            A and D, or the left and right arrow keys, move. W, up, or space jumps. S drops through a cage.
+            E pulls, lights a bell, or buys a lantern. A lantern lasts 10 seconds. Stand on a plank too long and it falls.
+            It comes back after 4 seconds. Three lives to a board. A death burns half the coins you are carrying.
+            The shore is free. Every fog after it costs 5 Rare coins.
           </p>
         </section>
       )}
