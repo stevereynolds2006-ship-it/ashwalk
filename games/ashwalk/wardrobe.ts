@@ -9,18 +9,18 @@ export type Cloth = {
 };
 
 export const CLOTHES: readonly Cloth[] = [
-  { id: "cloak", name: "Fog cloak", cost: 8, rare: false, note: "Hangs behind you." },
-  { id: "hood", name: "Hood", cost: 5, rare: false, note: "Covers the head." },
-  { id: "scarf", name: "Pale scarf", cost: 6, rare: false, note: "A light wrap at the neck." },
-  { id: "coat", name: "Ash coat", cost: 10, rare: false, note: "Heavier shoulders." },
+  { id: "cloak", name: "Fog cloak", cost: 0, rare: false, note: "Hangs behind you." },
+  { id: "hood", name: "Hood", cost: 0, rare: false, note: "Covers the head." },
+  { id: "scarf", name: "Pale scarf", cost: 0, rare: false, note: "A light wrap at the neck." },
+  { id: "coat", name: "Ash coat", cost: 0, rare: false, note: "Heavier shoulders." },
 ];
 
 const WEEKLY: readonly Cloth[] = [
-  { id: "veil", name: "White veil", cost: 20, rare: true, note: "Rare this week." },
-  { id: "crown", name: "Ash crown", cost: 20, rare: true, note: "Rare this week." },
-  { id: "cape", name: "Moth cape", cost: 20, rare: true, note: "Rare this week." },
-  { id: "wreath", name: "Antler wreath", cost: 20, rare: true, note: "Rare this week." },
-  { id: "cord", name: "Bell cord", cost: 20, rare: true, note: "Rare this week." },
+  { id: "veil", name: "White veil", cost: 0, rare: true, note: "Rare this week." },
+  { id: "crown", name: "Ash crown", cost: 0, rare: true, note: "Rare this week." },
+  { id: "cape", name: "Moth cape", cost: 0, rare: true, note: "Rare this week." },
+  { id: "wreath", name: "Antler wreath", cost: 0, rare: true, note: "Rare this week." },
+  { id: "cord", name: "Bell cord", cost: 0, rare: true, note: "Rare this week." },
 ];
 
 export const ALL_FOGS_COST = 20;
@@ -54,6 +54,10 @@ function yearOrder(year: number) {
     items[j] = swap;
   }
   return items;
+}
+
+export function outfitList(): readonly Cloth[] {
+  return [...CLOTHES, ...WEEKLY];
 }
 
 export function weekRare(now = new Date()): Cloth {
@@ -153,14 +157,15 @@ function pay(account: string, balance: bigint, whole: number) {
 
 export function buyCloth(account: string, balance: bigint, id: string, now = new Date()) {
   const cloth = clothById(id);
-  if (!cloth || !rareOnOffer(id, now)) return false;
+  if (!cloth) return false;
+  if (cloth.cost > 0 && !rareOnOffer(id, now)) return false;
   const ledger = readLedger(account);
   if (ledger.owned.includes(id)) {
     ledger.equipped = id;
     writeLedger(account, ledger);
     return true;
   }
-  if (!pay(account, balance, cloth.cost)) return false;
+  if (cloth.cost > 0 && !pay(account, balance, cloth.cost)) return false;
   const next = readLedger(account);
   next.owned = [...next.owned, id];
   next.equipped = id;

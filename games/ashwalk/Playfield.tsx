@@ -18,6 +18,7 @@ import {
   equipCloth,
   formatRareCoins,
   hasWhole,
+  outfitList,
   readLedger,
   spendWhole,
   spendable,
@@ -186,12 +187,8 @@ export function Playfield({
   }
 
   function buyOutfit(id: string) {
-    const who = accountRef.current;
-    const balance = rareRef.current;
-    if (!who || balance == null) {
-      setStakeMsg("Connect a wallet to spend Rare coins.");
-      return;
-    }
+    const who = accountRef.current ?? "guest";
+    const balance = rareRef.current ?? 0n;
     if (!buyCloth(who, balance, id)) {
       setStakeMsg("Not enough Rare coins.");
       return;
@@ -202,8 +199,7 @@ export function Playfield({
   }
 
   function wearOutfit(id: string | null) {
-    const who = accountRef.current;
-    if (!who) return;
+    const who = accountRef.current ?? "guest";
     equipCloth(who, id);
     refreshLedger(who);
     onWardrobe?.();
@@ -1005,14 +1001,14 @@ export function Playfield({
           )}
           <p className="ash-note">
             {!account
-              ? "Connect a wallet. Clothes cost Rare coins."
+              ? "No wallet needed. Clothes are free to try."
               : rareBalance == null
                 ? "Reading Rare coins…"
                 : `You have ${formatRareCoins(spendable(rareBalance, account) ?? 0n)} Rare coins.`}
           </p>
-          <p className="ash-note">One rare piece is for sale each week, then a different one on Monday. Bought clothes stay yours.</p>
+          <p className="ash-note">Clothes are free to try. Press one to wear it. Press it again to take it off.</p>
           <div className="ash-levels">
-            {[weekRare(), ...CLOTHES].map((cloth) => {
+            {outfitList().map((cloth) => {
               const owned = ledger.owned.includes(cloth.id);
               const wearing = ledger.equipped === cloth.id;
               return (
@@ -1032,7 +1028,7 @@ export function Playfield({
                       ? wearing
                         ? "Wearing. Press to take it off."
                         : `${cloth.note} Press to wear.`
-                      : `${cloth.note} ${cloth.cost} Rare coins.`}
+                      : `${cloth.note} Free.`}
                   </small>
                 </button>
               );
