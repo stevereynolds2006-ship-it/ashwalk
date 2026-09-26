@@ -63,6 +63,7 @@ const SKY: Record<string, [string, string, string, string]> = {
   latch: ["#101014", "#c2c1c8", "#6e6c78", "#101012"],
   gale: ["#121214", "#7a7a7e", "#3c3c40", "#101012"],
   choir: ["#5a5a62", "#f4f2ec", "#ddd9d2", "#4a4a52"],
+  gear: ["#16161a", "#c8c8cc", "#7a7a80", "#121214"],
   roof: ["#2a2a2c", "#c8c8c6", "#6a6a6c", "#121214"],
   antler: ["#101114", "#c5c3be", "#6d6b68", "#101114"],
 };
@@ -215,7 +216,7 @@ function drawTerrain(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) 
     ctx.lineTo(rect.x + rect.w + 30, rect.y + Math.min(rect.h, 420) + 40);
     ctx.closePath();
     ctx.fill();
-    if (sim.level.id !== "roof" && sim.level.id !== "gale" && sim.level.id !== "choir") drawGrass(ctx, rect, 26);
+    if (sim.level.id !== "roof" && sim.level.id !== "gale" && sim.level.id !== "choir" && sim.level.id !== "gear") drawGrass(ctx, rect, 26);
   }
   for (const rect of bodies) {
     if (rect.terrain) continue;
@@ -865,6 +866,8 @@ export function renderFrame(
     drawGaleStorm(ctx, camera, sim.t, reduced);
   } else if (sim.level.id === "choir") {
     drawChoirGear(ctx, camera, sim.t, reduced);
+  } else if (sim.level.id === "gear") {
+    drawGearHall(ctx, camera, sim, reduced);
   } else {
     ctx.save();
     ctx.translate(camera.x * 0.72, camera.y * 0.4);
@@ -1433,6 +1436,92 @@ const ASH: { x: number; y: number; s: number; scrap: boolean; w: number; h: numb
   }
   return bits;
 })();
+
+function drawCog(ctx: CanvasRenderingContext2D, r: number, teeth: number) {
+  ctx.beginPath();
+  for (let i = 0; i < teeth; i++) {
+    const step = (Math.PI * 2) / teeth;
+    const a0 = i * step;
+    const tip0 = a0 + step * 0.18;
+    const tip1 = a0 + step * 0.42;
+    const valley = a0 + step * 0.72;
+    const rim = r * 0.78;
+    const point = (ang: number, rad: number) => {
+      ctx.lineTo(Math.cos(ang) * rad, Math.sin(ang) * rad);
+    };
+    if (i === 0) ctx.moveTo(Math.cos(a0) * rim, Math.sin(a0) * rim);
+    point(tip0, r);
+    point(tip1, r);
+    point(valley, rim);
+  }
+  ctx.closePath();
+  ctx.fill();
+}
+
+function drawGearHall(ctx: CanvasRenderingContext2D, camera: Camera, sim: Sim, reduced: boolean) {
+  ctx.save();
+  ctx.translate(camera.x * 0.7, camera.y * 0.12);
+  ctx.fillStyle = "#070708";
+  ctx.fillRect(-120, -30, 340, 280);
+  ctx.strokeStyle = "#101014";
+  ctx.lineWidth = 3;
+  for (let i = 0; i < 4; i++) {
+    ctx.beginPath();
+    ctx.moveTo(30 + i * 36, 70);
+    ctx.quadraticCurveTo(10 + i * 20, 220, 24 + i * 14, 460);
+    ctx.stroke();
+  }
+  ctx.fillRect(-20, 250, 90, 18);
+  ctx.restore();
+
+  const lx = 1680 - camera.x * 0.35;
+  const ly = 90;
+  ctx.save();
+  ctx.translate(camera.x * 0.35, camera.y * 0.08);
+  const glow = ctx.createRadialGradient(lx, ly, 6, lx, ly, 340);
+  glow.addColorStop(0, "rgba(255,255,255,0.95)");
+  glow.addColorStop(0.18, "rgba(230,230,228,0.4)");
+  glow.addColorStop(1, "rgba(230,230,228,0)");
+  ctx.fillStyle = glow;
+  ctx.fillRect(lx - 360, ly - 200, 720, 560);
+  ctx.save();
+  ctx.translate(lx, ly);
+  ctx.fillStyle = "rgba(255,255,255,0.09)";
+  for (let i = 0; i < 7; i++) {
+    ctx.rotate(Math.PI / 7);
+    ctx.fillRect(18, -10, 280, 20);
+  }
+  ctx.restore();
+  ctx.fillStyle = "#f7f7f4";
+  ctx.fillRect(lx - 18, ly - 18, 36, 36);
+  ctx.restore();
+
+  ctx.save();
+  ctx.translate(camera.x * 0.25 + 2100, 620);
+  ctx.rotate(reduced ? 0.4 : sim.t * 0.18);
+  ctx.fillStyle = "rgba(8,8,10,0.92)";
+  drawCog(ctx, 520, 9);
+  ctx.restore();
+
+  const seen = new Set<string>();
+  for (const plat of sim.level.platforms) {
+    const spin = plat.gear;
+    if (!spin) continue;
+    const key = `${spin.cx}:${spin.cy}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    ctx.save();
+    ctx.translate(spin.cx, spin.cy);
+    ctx.rotate(sim.t * spin.speed);
+    ctx.fillStyle = "#070708";
+    drawCog(ctx, spin.r, spin.teeth);
+    ctx.beginPath();
+    ctx.arc(0, 0, spin.r * 0.16, 0, Math.PI * 2);
+    ctx.fillStyle = "#2a2a2e";
+    ctx.fill();
+    ctx.restore();
+  }
+}
 
 function drawPixelCrowd(ctx: CanvasRenderingContext2D, x: number, y: number, s: number) {
   ctx.fillStyle = "#f4f4f2";

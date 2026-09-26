@@ -1457,6 +1457,7 @@ function musicScene(phase: Phase, sim: Sim): MusicScene {
   if (phase === "title" || phase === "levels" || phase === "lobby" || phase === "clothes") return "title";
   if (sim.level.id === "antler") return "hunt";
   if (sim.level.id === "choir") return "chant";
+  if (sim.level.id === "gear") return "works";
   const id = chapterAt(sim.level, sim.x + 7).id;
   if (id === "lock") return "white";
   if (id === "gust") return "gale";

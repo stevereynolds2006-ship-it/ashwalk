@@ -130,7 +130,7 @@ export function createSim(level: Level = SHORE): Sim {
   const latch: Record<string, number> = {};
   const gateLift: Record<string, number> = {};
   for (const plat of level.platforms) {
-    if (plat.kind === "crumble" || plat.kind === "oneway" || plat.kind === "sway" || plat.kind === "rope") {
+    if (!plat.gear && (plat.kind === "crumble" || plat.kind === "oneway" || plat.kind === "sway" || plat.kind === "rope")) {
       crumbles[plat.id] = { timer: 0, fall: 0, gone: false, back: 0 };
     }
     if (plat.kind === "gate") gateLift[plat.id] = 0;
@@ -273,6 +273,19 @@ function bodyOn(x: number, y: number, zone: { x: number; y: number; w: number; h
 export function rectsAt(sim: Sim, reduced: boolean): Rect[] {
   const out: Rect[] = [];
   for (const plat of sim.level.platforms) {
+    if (plat.gear) {
+      const spin = plat.gear;
+      const ang = sim.t * spin.speed + spin.phase;
+      out.push({
+        id: plat.id,
+        kind: plat.kind,
+        x: spin.cx + Math.cos(ang) * spin.r - plat.w / 2,
+        y: spin.cy + Math.sin(ang) * spin.r,
+        w: plat.w,
+        h: plat.h,
+      });
+      continue;
+    }
     if (plat.id === "r5" && sim.crack > 0.55) continue;
     const crackShake = plat.id === "r5" && sim.crack > 0 ? Math.sin(sim.t * 46) * 5 : 0;
     const rest = sim.crumbles[plat.id];

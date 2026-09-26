@@ -16,6 +16,8 @@ export type Platform = {
   y1?: number;
   /** Where a gate rests when a plate is holding it open. */
   openY?: number;
+  /** A tooth on a turning gear. The platform rides the rim. */
+  gear?: { cx: number; cy: number; r: number; speed: number; phase: number; teeth: number };
 };
 
 export type Rect = {

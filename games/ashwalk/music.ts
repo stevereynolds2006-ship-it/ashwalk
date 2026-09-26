@@ -7,6 +7,7 @@ export type MusicScene =
   | "gale"
   | "choir"
   | "chant"
+  | "works"
   | "hunt"
   | "rite"
   | "clear";
@@ -96,6 +97,15 @@ const SCENES: Record<MusicScene, SceneScore> = {
     sustain: 2.5,
     steps: [[0], [3], [5], [7], [10], [7], [5], [3]],
     noise: 0,
+  },
+  works: {
+    step: 0.5,
+    drones: [36, 43, 48],
+    pluck: 60,
+    wave: "square",
+    gain: 0.08,
+    steps: [[0], [], [7], [], [0, 12], [], [5], []],
+    noise: 0.05,
   },
   hunt: {
     step: 0.42,

@@ -1,4 +1,16 @@
-import { SHORE, type Level } from "./level";
+import { SHORE, type Level, type Platform } from "./level";
+
+function gearTeeth(id: string, cx: number, cy: number, r: number, speed: number, teeth: number): Platform[] {
+  return Array.from({ length: teeth }, (_, i) => ({
+    id: `${id}-${i}`,
+    kind: "oneway" as const,
+    x: cx,
+    y: cy,
+    w: 96,
+    h: 14,
+    gear: { cx, cy, r, speed, phase: (i / teeth) * Math.PI * 2, teeth },
+  }));
+}
 
 /** Plates open gates. Solo is a sprint. A friend who stays keeps the gate up. */
 const LATCH: Level = {
@@ -266,6 +278,71 @@ const CHOIR: Level = {
   light: { x: 1400, y: 120 },
 };
 
+/** A gear hall. Teeth carry you over the wheel, then drop. */
+const GEAR: Level = {
+  id: "gear",
+  title: "The works",
+  kicker: "The teeth do not wait.",
+  rule: "Jump onto a tooth and ride it over the gear. Step off before it turns down. Two bells wake the plate.",
+  together: "The gears turn for everyone. The bells are shared.",
+  clearKicker: "The works",
+  clearTitle: "The wheel let you off",
+  worldW: 3900,
+  killY: 760,
+  poster: 1100,
+  introCrow: false,
+  platforms: [
+    { id: "start", kind: "solid", terrain: true, x: 0, y: 470, w: 860, h: 420 },
+    ...gearTeeth("a", 1180, 1010, 540, 0.48, 8),
+    { id: "mid", kind: "solid", terrain: true, x: 1480, y: 470, w: 620, h: 420 },
+    ...gearTeeth("b", 2580, 980, 510, -0.62, 8),
+    { id: "end", kind: "solid", terrain: true, x: 2860, y: 470, w: 980, h: 420 },
+    { id: "gExit", kind: "gate", x: 3340, y: 252, w: 24, h: 218, openY: 20 },
+  ],
+  moths: [
+    { id: "m1", x: 240, y: 410 },
+    { id: "m2", x: 1680, y: 410 },
+    { id: "m3", x: 1900, y: 410 },
+    { id: "m4", x: 3000, y: 410 },
+    { id: "m5", x: 3540, y: 410 },
+  ],
+  checkpoints: [
+    { id: "start", x: 180, surface: 470 },
+    { id: "mid", x: 1640, surface: 470 },
+    { id: "end", x: 3020, surface: 470 },
+  ],
+  rope: null,
+  shrines: [{ id: "shrine-end", x: 3600, y: 340, w: 80, h: 130 }],
+  beacons: [
+    { id: "b1", x: 1760, y: 360, w: 80, h: 110 },
+    { id: "b2", x: 3080, y: 360, w: 80, h: 110 },
+  ],
+  plates: [{ id: "pExit", gate: "gExit", x: 3200, y: 386, w: 100, h: 84, latch: 3.4, whenLit: true }],
+  goal: { id: "goal", x: 3680, y: 300, w: 90, h: 170 },
+  pit: null,
+  wind: null,
+  birds: [],
+  spiders: [
+    {
+      id: "mid",
+      mode: "crawl",
+      x0: 1560,
+      x1: 1960,
+      y: 448,
+      ceil: 0,
+      speed: 36,
+      reach: 0,
+      period: 1,
+      phase: 0.2,
+    },
+  ],
+  chapters: [
+    { x: 0, id: "works", title: "The works", kicker: "Ride the tooth. Jump off." },
+    { x: 2860, id: "bells", title: "The square light", kicker: "Two bells, then the plate." },
+  ],
+  light: { x: 1680, y: 80 },
+};
+
 /** Rooftops under a broken sign. Three letters wake the plate beneath the white one. */
 const ROOF: Level = {
   id: "roof",
@@ -428,7 +505,7 @@ const ANTLER: Level = {
   },
 };
 
-export const LEVELS: readonly Level[] = [SHORE, LATCH, GALE, CHOIR, ROOF, ANTLER];
+export const LEVELS: readonly Level[] = [SHORE, LATCH, GALE, CHOIR, GEAR, ROOF, ANTLER];
 
 export function previousFog(id: string): string | null {
   const index = LEVELS.findIndex((level) => level.id === id);
