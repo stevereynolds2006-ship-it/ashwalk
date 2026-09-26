@@ -159,7 +159,7 @@ export function createAshMusic(): AshMusic {
   function masterTarget() {
     if (muted || hidden) return 0.0001;
     if (paused) return 0.1;
-    return 0.58;
+    return 0.9;
   }
 
   function applyMaster() {
@@ -198,7 +198,7 @@ export function createAshMusic(): AshMusic {
         const drone = drones[index];
         if (!drone) return;
         drone.osc.frequency.setTargetAtTime(hz(midi), now, 0.4);
-        drone.gain.gain.setTargetAtTime(0.11, now, 0.4);
+        drone.gain.gain.setTargetAtTime(0.2, now, 0.4);
       });
       return;
     }
@@ -210,7 +210,7 @@ export function createAshMusic(): AshMusic {
       osc.type = "sine";
       osc.frequency.value = hz(midi);
       gain.gain.value = 0.0001;
-      gain.gain.setTargetAtTime(0.11, now, 0.45);
+      gain.gain.setTargetAtTime(0.2, now, 0.45);
       if (lfoGain) lfoGain.connect(gain.gain);
       osc.connect(gain);
       gain.connect(master);
@@ -297,12 +297,24 @@ export function createAshMusic(): AshMusic {
   function unlock(): Promise<boolean> {
     if (disposed || muted || hidden) return Promise.resolve(false);
     if (unlocked && ctx?.state === "running") return Promise.resolve(true);
-    if (pending) return pending;
     const AudioContextClass =
       typeof globalThis.AudioContext !== "undefined"
         ? globalThis.AudioContext
         : (globalThis as typeof globalThis & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
     if (!AudioContextClass) return Promise.resolve(false);
+    if (ctx && ctx.state !== "running") {
+      try {
+        void ctx.close();
+      } catch {
+        /* already closed */
+      }
+      ctx = null;
+      master = null;
+      unlocked = false;
+      pending = null;
+      stopDrones();
+      noiseGain = null;
+    }
     try {
       if (!ctx || ctx.state === "closed") {
         ctx = new AudioContextClass();
@@ -328,7 +340,13 @@ export function createAshMusic(): AshMusic {
       return Promise.resolve(false);
     }
     const active = ctx;
-    const attempt = (active.state === "running" ? Promise.resolve() : active.resume())
+    let resume: Promise<void>;
+    try {
+      resume = active.state === "running" ? Promise.resolve() : active.resume();
+    } catch {
+      return Promise.resolve(false);
+    }
+    const attempt = resume
       .then(() => {
         if (disposed || muted || hidden || ctx !== active || active.state !== "running") return false;
         unlocked = true;

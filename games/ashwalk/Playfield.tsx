@@ -308,9 +308,9 @@ export function Playfield({
       void kit.unlock();
       void music.unlock();
     };
-    startAudio();
     const onGesture = () => startAudio();
     window.addEventListener("pointerdown", onGesture, true);
+    window.addEventListener("touchstart", onGesture, { capture: true, passive: true });
     window.addEventListener("keydown", onGesture, true);
     const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
     const apply = () => {
@@ -323,6 +323,7 @@ export function Playfield({
     preference.addEventListener("change", apply);
     return () => {
       window.removeEventListener("pointerdown", onGesture, true);
+      window.removeEventListener("touchstart", onGesture, { capture: true });
       window.removeEventListener("keydown", onGesture, true);
       kit.dispose();
       music.dispose();
