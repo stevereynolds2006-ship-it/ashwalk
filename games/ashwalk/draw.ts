@@ -322,13 +322,10 @@ function drawOutfit(
   bottom: number,
   facing: 1 | -1,
   layer: "back" | "front",
-  t: number,
-  walking: boolean,
 ) {
   ctx.save();
   ctx.translate(center, bottom);
   ctx.scale(facing === -1 ? -1 : 1, 1);
-  const sway = Math.sin(t * (walking ? 9 : 1.6)) * (walking ? 3.2 : 0.8);
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
   const ink = "#070708";
@@ -338,236 +335,177 @@ function drawOutfit(
 
   if (layer === "back" && cloth === "cloak") {
     ctx.beginPath();
-    ctx.moveTo(-6, -40);
-    ctx.quadraticCurveTo(-22 + sway, -22, -20 + sway, -2);
-    ctx.lineTo(18 + sway * 0.4, -2);
-    ctx.quadraticCurveTo(22 - sway * 0.3, -22, 8, -40);
+    ctx.moveTo(-8, -46);
+    ctx.quadraticCurveTo(-20, -28, -18, -4);
+    ctx.quadraticCurveTo(-6, 2, 4, -2);
+    ctx.quadraticCurveTo(16, 4, 18, -6);
+    ctx.quadraticCurveTo(20, -28, 10, -46);
     ctx.closePath();
     ctx.fill();
-    ctx.lineWidth = 1.25;
-    ctx.stroke();
+    ctx.lineWidth = 1.4;
     ctx.beginPath();
-    ctx.moveTo(-2, -36);
-    ctx.quadraticCurveTo(-4 + sway * 0.4, -18, -1 + sway, -4);
-    ctx.moveTo(4, -34);
-    ctx.quadraticCurveTo(8 + sway * 0.2, -16, 10 + sway * 0.3, -5);
+    ctx.moveTo(0, -40);
+    ctx.quadraticCurveTo(-2, -20, 2, -4);
     ctx.stroke();
-    ctx.fillStyle = edge;
-    ctx.beginPath();
-    ctx.arc(1, -38, 2.2, 0, Math.PI * 2);
-    ctx.fill();
   }
 
   if (layer === "back" && cloth === "cape") {
     ctx.beginPath();
-    ctx.moveTo(-4, -42);
-    ctx.quadraticCurveTo(-18 + sway, -26, -14 + sway, -10);
-    ctx.quadraticCurveTo(-4, -6, 2, -12);
-    ctx.quadraticCurveTo(8, -6, 16 - sway * 0.4, -10);
-    ctx.quadraticCurveTo(18 - sway * 0.3, -26, 6, -42);
+    ctx.moveTo(-6, -44);
+    ctx.quadraticCurveTo(-16, -24, -12, -8);
+    ctx.lineTo(14, -8);
+    ctx.quadraticCurveTo(18, -24, 8, -44);
     ctx.closePath();
     ctx.fill();
-    ctx.lineWidth = 1.2;
-    ctx.stroke();
     ctx.fillStyle = edge;
-    for (const spot of [
-      [-8, -30],
-      [2, -24],
-      [8, -32],
-      [-2, -16],
-    ]) {
-      ctx.beginPath();
-      ctx.ellipse(spot[0] + sway * 0.15, spot[1], 2.2, 1.4, 0.4, 0, Math.PI * 2);
-      ctx.fill();
-    }
+    ctx.fillRect(-8, -30, 2.4, 2.4);
+    ctx.fillRect(2, -22, 2, 2);
+    ctx.fillRect(6, -32, 2, 2);
     ctx.beginPath();
-    ctx.arc(1, -40, 2.4, 0, Math.PI * 2);
+    ctx.arc(0, -40, 2.2, 0, Math.PI * 2);
     ctx.fill();
   }
 
   if (layer === "back" && cloth === "coat") {
     ctx.beginPath();
-    ctx.moveTo(-12, -38);
-    ctx.lineTo(-15 + sway * 0.3, -16);
-    ctx.lineTo(-10 + sway, -2);
-    ctx.lineTo(-2, -8);
-    ctx.lineTo(2 + sway * 0.2, -2);
-    ctx.lineTo(14 - sway * 0.2, -6);
-    ctx.lineTo(13, -38);
-    ctx.quadraticCurveTo(0, -32, -12, -38);
+    ctx.moveTo(-14, -40);
+    ctx.lineTo(-16, -8);
+    ctx.quadraticCurveTo(-8, -2, 0, -6);
+    ctx.quadraticCurveTo(10, -2, 16, -8);
+    ctx.lineTo(14, -40);
+    ctx.quadraticCurveTo(0, -34, -14, -40);
     ctx.fill();
-    ctx.lineWidth = 1.15;
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(0, -30);
-    ctx.lineTo(-1 + sway * 0.5, -4);
-    ctx.stroke();
   }
   if (layer === "front" && cloth === "coat") {
-    ctx.lineWidth = 1.7;
-    ctx.beginPath();
-    ctx.moveTo(-9, -38);
-    ctx.quadraticCurveTo(-4, -28, -6, -16);
-    ctx.moveTo(9, -38);
-    ctx.quadraticCurveTo(4, -28, 6, -16);
-    ctx.stroke();
-    ctx.fillStyle = edge;
-    ctx.fillRect(-10, -39, 7, 2.4);
-    ctx.fillRect(3, -39, 7, 2.4);
-    for (const by of [-32, -26, -20]) ctx.fillRect(-1.1, by, 2.2, 2.2);
-  }
-
-  if (layer === "back" && cloth === "hood") {
-    ctx.beginPath();
-    ctx.moveTo(-14, -28);
-    ctx.quadraticCurveTo(-18, -50, 0, -58);
-    ctx.quadraticCurveTo(18, -50, 14, -28);
-    ctx.lineTo(8, -30);
-    ctx.quadraticCurveTo(0, -48, -8, -30);
-    ctx.closePath();
-    ctx.fill();
-    ctx.lineWidth = 1.2;
-    ctx.stroke();
-  }
-  if (layer === "front" && cloth === "hood") {
     ctx.lineWidth = 1.6;
     ctx.beginPath();
-    ctx.moveTo(-11, -34);
-    ctx.quadraticCurveTo(0, -44, 11, -34);
+    ctx.moveTo(-10, -38);
+    ctx.lineTo(-6, -16);
+    ctx.moveTo(10, -38);
+    ctx.lineTo(6, -16);
     ctx.stroke();
-    ctx.fillStyle = edge;
-    ctx.fillRect(-8, -33, 3, 2);
-    ctx.fillRect(5, -33, 3, 2);
+    ctx.fillRect(-11, -40, 6, 3);
+    ctx.fillRect(5, -40, 6, 3);
+  }
+
+  if (layer === "front" && cloth === "hood") {
+    ctx.beginPath();
+    ctx.moveTo(-12, -30);
+    ctx.quadraticCurveTo(-16, -52, 0, -56);
+    ctx.quadraticCurveTo(16, -52, 12, -30);
+    ctx.quadraticCurveTo(0, -36, -12, -30);
+    ctx.fill();
+    ctx.lineWidth = 1.3;
+    ctx.beginPath();
+    ctx.moveTo(-7, -34);
+    ctx.quadraticCurveTo(0, -42, 7, -34);
+    ctx.stroke();
   }
 
   if (layer === "front" && cloth === "scarf") {
     ctx.fillStyle = edge;
     ctx.beginPath();
-    ctx.moveTo(-13, -36);
-    ctx.quadraticCurveTo(0, -30, 13, -36);
-    ctx.quadraticCurveTo(10, -32, 0, -27);
-    ctx.quadraticCurveTo(-10, -32, -13, -36);
+    ctx.moveTo(-12, -34);
+    ctx.quadraticCurveTo(0, -28, 12, -34);
+    ctx.quadraticCurveTo(8, -30, 0, -26);
+    ctx.quadraticCurveTo(-8, -30, -12, -34);
     ctx.fill();
     ctx.fillStyle = ink;
-    const tail = (x0: number, lean: number) => {
-      ctx.beginPath();
-      ctx.moveTo(x0, -31);
-      ctx.quadraticCurveTo(x0 + lean + sway * 0.35, -16, x0 + lean * 0.4 + sway, -4);
-      ctx.lineTo(x0 + lean * 0.4 + 4 + sway, -4);
-      ctx.quadraticCurveTo(x0 + 4, -16, x0 + 5, -31);
-      ctx.closePath();
-      ctx.fill();
-      ctx.strokeStyle = edge;
-      ctx.lineWidth = 1;
-      ctx.stroke();
-    };
-    tail(-8, -4);
-    tail(2, 5);
-    ctx.fillStyle = edge;
-    ctx.fillRect(-10 + sway, -4, 2, 4);
-    ctx.fillRect(-6 + sway, -3, 2, 3);
-    ctx.fillRect(4 + sway, -4, 2, 4);
-    ctx.fillRect(8 + sway, -3, 2, 3);
+    ctx.beginPath();
+    ctx.moveTo(-8, -30);
+    ctx.quadraticCurveTo(-12, -16, -6, -6);
+    ctx.lineTo(-2, -8);
+    ctx.quadraticCurveTo(-6, -16, -4, -30);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(6, -30);
+    ctx.quadraticCurveTo(10, -12, 4, -2);
+    ctx.lineTo(1, -4);
+    ctx.quadraticCurveTo(4, -14, 3, -30);
+    ctx.fill();
+    ctx.strokeStyle = edge;
+    ctx.lineWidth = 1;
+    ctx.stroke();
   }
 
   if (layer === "front" && cloth === "veil") {
-    ctx.fillStyle = edge;
-    ctx.globalAlpha = 0.9;
+    ctx.globalAlpha = 0.92;
     ctx.beginPath();
-    ctx.moveTo(-12, -50);
-    ctx.quadraticCurveTo(0, -58, 12, -50);
-    ctx.lineTo(8, -46);
-    ctx.quadraticCurveTo(0, -52, -8, -46);
-    ctx.closePath();
-    ctx.fill();
-    ctx.globalAlpha = 0.42;
-    ctx.beginPath();
-    ctx.moveTo(-10, -48);
-    ctx.quadraticCurveTo(-12 + sway * 0.2, -28, -6 + sway * 0.4, -14);
-    ctx.lineTo(-1, -16);
-    ctx.quadraticCurveTo(-4, -30, -2, -46);
+    ctx.moveTo(-11, -50);
+    ctx.quadraticCurveTo(-14, -28, -8, -12);
+    ctx.lineTo(-3, -14);
+    ctx.quadraticCurveTo(-6, -30, -2, -48);
     ctx.closePath();
     ctx.fill();
     ctx.beginPath();
-    ctx.moveTo(10, -48);
-    ctx.quadraticCurveTo(12 - sway * 0.2, -28, 6 + sway * 0.2, -14);
-    ctx.lineTo(1, -16);
-    ctx.quadraticCurveTo(4, -30, 2, -46);
+    ctx.moveTo(11, -50);
+    ctx.quadraticCurveTo(14, -28, 8, -12);
+    ctx.lineTo(3, -14);
+    ctx.quadraticCurveTo(6, -30, 2, -48);
     ctx.closePath();
     ctx.fill();
-    ctx.globalAlpha = 1;
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(-10, -50);
+    ctx.quadraticCurveTo(0, -58, 10, -50);
+    ctx.stroke();
   }
 
   if (layer === "front" && cloth === "crown") {
-    ctx.fillStyle = edge;
+    ctx.lineWidth = 1.8;
     ctx.beginPath();
-    ctx.moveTo(-14, -46);
-    ctx.lineTo(-9, -62);
-    ctx.lineTo(-5, -48);
-    ctx.lineTo(0, -66);
-    ctx.lineTo(5, -48);
-    ctx.lineTo(9, -62);
-    ctx.lineTo(14, -46);
+    ctx.moveTo(-13, -48);
+    ctx.lineTo(-8, -62);
+    ctx.lineTo(-3, -50);
+    ctx.lineTo(0, -64);
+    ctx.lineTo(3, -50);
+    ctx.lineTo(8, -62);
+    ctx.lineTo(13, -48);
     ctx.closePath();
-    ctx.fill();
-    ctx.fillStyle = ink;
-    ctx.fillRect(-1.2, -60, 2.4, 4);
-    ctx.beginPath();
-    ctx.arc(-9, -56, 1.3, 0, Math.PI * 2);
-    ctx.arc(9, -56, 1.3, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.stroke();
     ctx.fillStyle = edge;
-    ctx.fillRect(-12, -46, 24, 2.5);
+    ctx.fillRect(-1.2, -60, 2.4, 2.4);
   }
 
   if (layer === "front" && cloth === "wreath") {
-    ctx.strokeStyle = edge;
-    ctx.lineWidth = 2.2;
+    ctx.lineWidth = 1.7;
     ctx.beginPath();
-    ctx.arc(0, -44, 12, Math.PI * 1.08, Math.PI * 1.92);
+    ctx.arc(0, -46, 11, Math.PI * 0.15, Math.PI * 0.85, true);
     ctx.stroke();
-    ctx.lineWidth = 1.3;
-    const sprigs: [number, number, number, number][] = [
-      [-10, -50, -16, -64],
-      [-4, -54, -2, -68],
-      [4, -54, 8, -68],
-      [10, -50, 16, -62],
-      [-6, -48, -12, -42],
-      [7, -48, 13, -42],
-    ];
-    for (const [x0, y0, x1, y1] of sprigs) {
-      ctx.beginPath();
-      ctx.moveTo(x0, y0);
-      ctx.quadraticCurveTo((x0 + x1) / 2 + 2, (y0 + y1) / 2, x1, y1);
-      ctx.stroke();
-      ctx.fillStyle = edge;
-      ctx.beginPath();
-      ctx.ellipse(x1, y1, 2.1, 1.1, 0.6, 0, Math.PI * 2);
-      ctx.fill();
-    }
+    ctx.beginPath();
+    ctx.moveTo(-8, -52);
+    ctx.quadraticCurveTo(-16, -66, -10, -74);
+    ctx.moveTo(8, -52);
+    ctx.quadraticCurveTo(16, -66, 10, -74);
+    ctx.moveTo(-2, -56);
+    ctx.lineTo(-6, -64);
+    ctx.moveTo(3, -56);
+    ctx.lineTo(7, -66);
+    ctx.stroke();
   }
 
   if (layer === "front" && cloth === "cord") {
     ctx.strokeStyle = edge;
-    ctx.lineWidth = 1.35;
+    ctx.lineWidth = 1.2;
     ctx.beginPath();
-    ctx.moveTo(-6, -34);
-    ctx.quadraticCurveTo(0, -30, 6, -34);
-    ctx.moveTo(0, -32);
-    ctx.quadraticCurveTo(2 + sway * 0.15, -24, 0, -18);
+    ctx.moveTo(0, -36);
+    ctx.quadraticCurveTo(3, -28, 0, -20);
     ctx.stroke();
     ctx.fillStyle = edge;
     ctx.beginPath();
-    ctx.moveTo(-5, -18);
-    ctx.quadraticCurveTo(0, -22, 5, -18);
-    ctx.lineTo(4, -10);
-    ctx.quadraticCurveTo(0, -7, -4, -10);
-    ctx.closePath();
+    ctx.arc(0, -18, 3.4, 0, Math.PI * 2);
     ctx.fill();
     ctx.fillStyle = ink;
-    ctx.fillRect(-1.2, -16, 2.4, 5);
     ctx.beginPath();
-    ctx.arc(0, -8.5, 1.5, 0, Math.PI * 2);
+    ctx.arc(0, -18, 1.3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = edge;
+    ctx.fillRect(-1, -16, 2, 14);
+    ctx.beginPath();
+    ctx.moveTo(-4, -2);
+    ctx.lineTo(0, 4);
+    ctx.lineTo(4, -2);
+    ctx.closePath();
     ctx.fill();
   }
 
@@ -599,7 +537,7 @@ function drawFriend(
   const rows = spriteFrame(sprites, facing, body.walking, frame, facing).frame.rows;
   const left = Math.round(center - (16 * scale) / 2);
   const top = Math.round(bottom - 16 * scale);
-  if (cloth) drawOutfit(ctx, cloth, center, bottom, body.facing, "back", t, body.walking);
+  if (cloth) drawOutfit(ctx, cloth, center, bottom, body.facing, "back");
   ctx.save();
   if (body.hurt > 0 && Math.floor(t * 24) % 2 === 0) ctx.globalAlpha = 0.35;
   const pixels: [number, number][] = [];
@@ -615,7 +553,7 @@ function drawFriend(
     ctx.fillRect(left + px * scale, top + py * scale, scale, scale);
   }
   ctx.restore();
-  if (cloth) drawOutfit(ctx, cloth, center, bottom, body.facing, "front", t, body.walking);
+  if (cloth) drawOutfit(ctx, cloth, center, bottom, body.facing, "front");
 }
 
 const COIN = [
