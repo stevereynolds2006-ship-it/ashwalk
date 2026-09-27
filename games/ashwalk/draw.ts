@@ -245,7 +245,7 @@ function drawTerrain(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) 
   }
 }
 
-function drawDrainTrash(ctx: CanvasRenderingContext2D) {
+function drawDrainTrash(ctx: CanvasRenderingContext2D, t: number, reduced: boolean) {
   const ground = 1180;
   const pile = (x: number, kind: number) => {
     ctx.save();
@@ -293,19 +293,45 @@ function drawDrainTrash(ctx: CanvasRenderingContext2D) {
     ctx.restore();
   };
   const spots: [number, number][] = [
-    [2860, 0],
-    [2980, 4],
-    [3120, 2],
-    [3280, 1],
-    [3440, 0],
-    [3580, 3],
-    [3720, 2],
-    [3880, 4],
-    [4040, 1],
-    [4180, 0],
-    [4320, 2],
+    [2740, 4],
+    [2820, 0],
+    [2900, 2],
+    [2980, 1],
+    [3060, 4],
+    [3140, 0],
+    [3220, 3],
+    [3300, 2],
+    [3380, 1],
+    [3460, 0],
+    [3540, 4],
+    [3620, 2],
+    [3700, 3],
+    [3780, 0],
+    [3860, 1],
+    [3940, 4],
+    [4020, 2],
+    [4100, 0],
+    [4180, 3],
+    [4260, 1],
+    [4340, 2],
   ];
   for (const [x, kind] of spots) pile(x, kind);
+  if (reduced) return;
+  ctx.save();
+  for (const [x] of spots) {
+    if ((x / 20) % 3 !== 0) continue;
+    for (let i = 0; i < 3; i++) {
+      const life = (t * 0.32 + i * 0.34 + x * 0.001) % 1;
+      const yy = -16 - life * 78;
+      const xx = Math.sin(t * 1.6 + i + x) * 10;
+      ctx.globalAlpha = (1 - life) * 0.4;
+      ctx.fillStyle = "#d5d5d0";
+      ctx.beginPath();
+      ctx.arc(x + xx, ground + yy, 2.5 + life * 7, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  ctx.restore();
 }
 
 function drawGrass(ctx: CanvasRenderingContext2D, rect: RectLike, tall: number) {
@@ -898,16 +924,16 @@ function drawGator(
   const snap = !reduced && Math.sin(t * 1.6 + x * 0.01) > 0.72;
   ctx.save();
   ctx.translate(x, y + swim);
-  ctx.scale(dir < 0 ? -1.35 : 1.35, 1.35);
+  ctx.scale(dir < 0 ? -1.9 : 1.9, 1.9);
   const body = () => {
     ctx.beginPath();
     ctx.ellipse(-8, 3, 24, 8, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.beginPath();
-    ctx.moveTo(8, 0);
-    ctx.lineTo(36, snap ? -7 : -1);
-    ctx.lineTo(36, snap ? 5 : 4);
-    ctx.lineTo(8, 6);
+    ctx.moveTo(8, -1);
+    ctx.lineTo(42, snap ? -14 : -4);
+    ctx.lineTo(42, snap ? 8 : 5);
+    ctx.lineTo(8, 7);
     ctx.closePath();
     ctx.fill();
     ctx.beginPath();
@@ -923,12 +949,55 @@ function drawGator(
   ctx.restore();
   ctx.fillStyle = "#070708";
   body();
-  if (snap) {
-    ctx.fillStyle = "#f4f1ea";
-    for (let i = 0; i < 4; i++) ctx.fillRect(16 + i * 4, 1, 1.2, 3);
-  }
   ctx.fillStyle = "#f4f1ea";
-  ctx.fillRect(6, -3, 2.4, 2.4);
+  for (let i = 0; i < 6; i++) ctx.fillRect(14 + i * 4, snap ? -2 : 0, 1.3, snap ? 5 : 3);
+  ctx.fillRect(4, -5, 2.6, 2.6);
+  ctx.fillRect(9, -4, 1.8, 1.8);
+  ctx.restore();
+}
+
+function drawRocket(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  dir: number,
+  t: number,
+  reduced: boolean,
+) {
+  const flame = reduced ? 8 : 8 + Math.sin(t * 28) * 4;
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(dir < 0 ? -1 : 1, 1);
+  ctx.fillStyle = "#f4f1ea";
+  ctx.globalAlpha = 0.55;
+  ctx.beginPath();
+  ctx.moveTo(-8, 0);
+  ctx.lineTo(-8 - flame, -3);
+  ctx.lineTo(-8 - flame * 0.6, 0);
+  ctx.lineTo(-8 - flame, 3);
+  ctx.fill();
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = "#070708";
+  ctx.beginPath();
+  ctx.moveTo(16, 0);
+  ctx.lineTo(6, -5);
+  ctx.lineTo(-10, -5);
+  ctx.lineTo(-10, 5);
+  ctx.lineTo(6, 5);
+  ctx.closePath();
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(-8, -5);
+  ctx.lineTo(-14, -9);
+  ctx.lineTo(-4, -5);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(-8, 5);
+  ctx.lineTo(-14, 9);
+  ctx.lineTo(-4, 5);
+  ctx.fill();
+  ctx.fillStyle = "#f4f1ea";
+  ctx.fillRect(4, -1.2, 2, 2.4);
   ctx.restore();
 }
 
@@ -1212,12 +1281,14 @@ function drawMirrorFog(ctx: CanvasRenderingContext2D, camera: Camera, sim: Sim, 
   ctx.fillRect(0, 340, sim.level.worldW, 200);
 
   ctx.fillStyle = "#101114";
-  ctx.fillRect(0, 500, sim.level.worldW, 320);
+  ctx.fillRect(0, 500, sim.level.worldW, 1400);
   if (!reduced) {
     ctx.strokeStyle = "rgba(220,220,216,0.12)";
     ctx.lineWidth = 1;
-    for (let i = 0; i < 6; i++) {
-      const y = 512 + i * 16 + Math.sin(sim.t * 0.6 + i) * 1.5;
+    for (let i = 0; i < 18; i++) {
+      const y = 512 + i * 28 + Math.sin(sim.t * 0.6 + i) * 1.5;
+      const fade = Math.max(0.04, 0.14 - i * 0.006);
+      ctx.strokeStyle = `rgba(220,220,216,${fade})`;
       ctx.beginPath();
       ctx.moveTo(0, y);
       ctx.lineTo(sim.level.worldW, y + 2);
@@ -1231,7 +1302,7 @@ function drawMoonFog(ctx: CanvasRenderingContext2D, camera: Camera, t: number, r
   ctx.save();
   ctx.translate(camera.x, camera.y);
   ctx.fillStyle = "#f4f6f8";
-  for (let i = 0; i < 90; i++) {
+  for (let i = 0; i < 240; i++) {
     const sx = ((i * 137) % Math.max(1, Math.floor(camera.w))) + (i % 5);
     const sy = ((i * 89) % Math.max(1, Math.floor(camera.h))) + (i % 3);
     ctx.fillRect(sx, sy, i % 11 === 0 ? 2 : 1, i % 11 === 0 ? 2 : 1);
@@ -1480,7 +1551,7 @@ export function renderFrame(
   }
 
   drawTerrain(ctx, sim, reduced);
-  if (sim.level.id === "roof") drawDrainTrash(ctx);
+  if (sim.level.id === "roof") drawDrainTrash(ctx, sim.t, reduced);
   if (sim.level.combo) drawLatchLock(ctx, sim);
 
   for (const plate of sim.level.plates) {
@@ -1519,6 +1590,7 @@ export function renderFrame(
     if (bird.kind === "rat") drawRat(ctx, bird.x, bird.y, bird.dir, sim.t, reduced);
     else if (bird.kind === "turtle") drawTurtle(ctx, bird.x, bird.y, bird.dir, sim.t);
     else if (bird.kind === "gator") drawGator(ctx, bird.x, bird.y, bird.dir, sim.t, reduced);
+    else if (bird.kind === "rocket") drawRocket(ctx, bird.x, bird.y, bird.dir, sim.t, reduced);
     else drawCrow(ctx, bird.x, bird.y, sim.t * 14, bird.dir);
   }
 
@@ -2358,8 +2430,9 @@ export function frameCamera(
       y -= 36 * huntPull;
     }
   }
+  const yMin = sim.level.id === "moon" ? -1400 : -40;
   x = Math.max(0, Math.min(Math.max(0, sim.level.worldW - viewW), x));
-  y = Math.max(-40, Math.min(worldH - viewH, y));
+  y = Math.max(yMin, Math.min(worldH - viewH, y));
   return { x, y, w: viewW, h: viewH };
 }
 

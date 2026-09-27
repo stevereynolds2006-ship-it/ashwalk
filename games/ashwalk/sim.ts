@@ -620,8 +620,8 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
     if (bird.x > spec.x1) bird.dir = -1;
     if (bird.x < spec.x0) bird.dir = 1;
     const birdY = spec.y + Math.sin(sim.t * 2.1) * (reduced ? 0 : spec.amp);
-    const hitW = spec.kind === "gator" ? 64 : spec.kind === "turtle" ? 34 : spec.kind === "rat" ? 28 : 22;
-    const hitH = spec.kind === "gator" ? 22 : spec.kind === "turtle" ? 26 : spec.kind === "rat" ? 20 : 14;
+    const hitW = spec.kind === "gator" ? 86 : spec.kind === "rocket" ? 48 : spec.kind === "turtle" ? 34 : spec.kind === "rat" ? 28 : 22;
+    const hitH = spec.kind === "gator" ? 30 : spec.kind === "rocket" ? 18 : spec.kind === "turtle" ? 26 : spec.kind === "rat" ? 20 : 14;
     if (
       sim.invuln <= 0 &&
       sim.x < bird.x + hitW &&
