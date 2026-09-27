@@ -1107,12 +1107,19 @@ function drawMoonFog(ctx: CanvasRenderingContext2D, camera: Camera, t: number, r
 }
 
 function tintBoards(ctx: CanvasRenderingContext2D, cssW: number, cssH: number) {
-  ctx.save();
-  ctx.globalCompositeOperation = "color";
   const wash = ctx.createLinearGradient(0, 0, cssW, cssH);
-  wash.addColorStop(0, "#6aa7ff");
-  wash.addColorStop(0.45, "#e2b15a");
-  wash.addColorStop(1, "#d2654a");
+  wash.addColorStop(0, "#3ee0ff");
+  wash.addColorStop(0.28, "#ffe14a");
+  wash.addColorStop(0.55, "#ff4d6a");
+  wash.addColorStop(0.78, "#5dff6e");
+  wash.addColorStop(1, "#7aa6ff");
+  ctx.save();
+  ctx.globalCompositeOperation = "screen";
+  ctx.globalAlpha = 0.78;
+  ctx.fillStyle = wash;
+  ctx.fillRect(0, 0, cssW, cssH);
+  ctx.globalAlpha = 1;
+  ctx.globalCompositeOperation = "color";
   ctx.fillStyle = wash;
   ctx.fillRect(0, 0, cssW, cssH);
   ctx.restore();
