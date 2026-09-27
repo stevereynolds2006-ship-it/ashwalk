@@ -41,7 +41,7 @@ const LIVES = 3;
 const ALPHABET = "abcdefghjkmnpqrstuvwxyz23456789";
 
 function dimBoard(id: string) {
-  return id === "shore" || id === "roof" || id === "choir";
+  return id === "shore" || id === "roof" || id === "choir" || id === "tunnel";
 }
 
 function makeCode() {
@@ -1593,6 +1593,7 @@ function musicScene(phase: Phase, sim: Sim): MusicScene {
   if (phase === "rite") return "rite";
   if (phase === "clear") return "clear";
   if (phase === "title" || phase === "levels" || phase === "lobby" || phase === "clothes") return "title";
+  if (sim.level.id === "tunnel") return "latch";
   if (sim.level.id === "mirror") return "mirror";
   if (sim.level.id === "moon") return "moon";
   if (sim.level.id === "antler") return "hunt";

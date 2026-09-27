@@ -67,6 +67,7 @@ const SKY: Record<string, [string, string, string, string]> = {
   roof: ["#2a2a2c", "#c8c8c6", "#6a6a6c", "#121214"],
   antler: ["#101114", "#c5c3be", "#6d6b68", "#101114"],
   moon: ["#050506", "#101218", "#1a1c22", "#050506"],
+  tunnel: ["#050506", "#6e6e6a", "#1a1a1c", "#050506"],
 };
 
 function drawTree(ctx: CanvasRenderingContext2D, tree: Tree, alpha: number) {
@@ -1331,6 +1332,67 @@ function drawJungle(ctx: CanvasRenderingContext2D, t: number, reduced: boolean) 
   }
 }
 
+function drawCave(ctx: CanvasRenderingContext2D, camera: Camera, t: number, reduced: boolean) {
+  const world = 6700;
+  ctx.save();
+  ctx.translate(camera.x * 0.35, camera.y * 0.08);
+  ctx.fillStyle = "rgba(8,8,10,0.9)";
+  ctx.fillRect(-200, -80, world + 400, 210);
+  ctx.fillStyle = "#070708";
+  for (let x = -40; x < world; x += 34) {
+    const h = 36 + ((x * 17) % 90);
+    ctx.beginPath();
+    ctx.moveTo(x, -20);
+    ctx.lineTo(x + 6, h);
+    ctx.lineTo(x + 14, -20);
+    ctx.fill();
+  }
+  ctx.restore();
+
+  const shafts = [900, 2100, 3600, 5200];
+  for (const x of shafts) {
+    const g = ctx.createLinearGradient(x, 0, x + 80, 520);
+    g.addColorStop(0, "rgba(244,241,234,0.22)");
+    g.addColorStop(1, "rgba(244,241,234,0)");
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.moveTo(x, -40);
+    ctx.lineTo(x + 70, -40);
+    ctx.lineTo(x + 150, 560);
+    ctx.lineTo(x + 40, 560);
+    ctx.fill();
+  }
+
+  ctx.save();
+  ctx.translate(camera.x * 0.2, 0);
+  ctx.fillStyle = "#070708";
+  for (let x = 80; x < world; x += 70) {
+    const h = 28 + ((x * 13) % 70);
+    ctx.beginPath();
+    ctx.moveTo(x, 640);
+    ctx.lineTo(x + 8, 640 - h);
+    ctx.lineTo(x + 18, 640);
+    ctx.fill();
+  }
+  drawHangFrame(ctx, 1680, 80, reduced ? 0 : t * 0.5, false);
+  ctx.strokeStyle = "#070708";
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(3260, 80);
+  ctx.lineTo(3260, 520);
+  ctx.moveTo(3348, 80);
+  ctx.lineTo(3348, 520);
+  ctx.stroke();
+  ctx.lineWidth = 3;
+  for (let y = 100; y < 520; y += 28) {
+    ctx.beginPath();
+    ctx.moveTo(3260, y);
+    ctx.lineTo(3348, y);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
 function drawMirrorFog(ctx: CanvasRenderingContext2D, camera: Camera, sim: Sim, reduced: boolean) {
   ctx.save();
   ctx.translate(camera.x * 0.62, camera.y * 0.2);
@@ -1594,6 +1656,8 @@ export function renderFrame(
     drawMoonFog(ctx, camera, sim.t, reduced);
   } else if (sim.level.id === "mirror") {
     drawMirrorFog(ctx, camera, sim, reduced);
+  } else if (sim.level.id === "tunnel") {
+    drawCave(ctx, camera, sim.t, reduced);
   } else if (sim.level.id === "latch") {
     drawLatchFog(ctx, camera, sim.t, reduced);
   } else if (sim.level.id === "gale") {
