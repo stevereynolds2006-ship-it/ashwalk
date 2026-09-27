@@ -1032,6 +1032,61 @@ function drawBell(ctx: CanvasRenderingContext2D, x: number, ground: number, lit:
   ctx.fillRect(x - 1.5, ground - 24, 3, 8);
 }
 
+function drawMirrorFog(ctx: CanvasRenderingContext2D, camera: Camera, sim: Sim, reduced: boolean) {
+  ctx.save();
+  ctx.translate(camera.x * 0.62, camera.y * 0.2);
+  for (const tree of SHORE_FAR) drawDeadwood(ctx, tree, 0.5);
+  ctx.restore();
+
+  const wash = ctx.createLinearGradient(0, 360, 0, 520);
+  wash.addColorStop(0, "rgba(8,8,10,0)");
+  wash.addColorStop(0.55, "rgba(196,196,192,0.16)");
+  wash.addColorStop(1, "rgba(8,8,10,0)");
+  ctx.fillStyle = wash;
+  ctx.fillRect(0, 340, sim.level.worldW, 200);
+
+  ctx.fillStyle = "#101114";
+  ctx.fillRect(0, 500, sim.level.worldW, 320);
+  if (!reduced) {
+    ctx.strokeStyle = "rgba(220,220,216,0.12)";
+    ctx.lineWidth = 1;
+    for (let i = 0; i < 6; i++) {
+      const y = 512 + i * 16 + Math.sin(sim.t * 0.6 + i) * 1.5;
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(sim.level.worldW, y + 2);
+      ctx.stroke();
+    }
+  }
+
+  const met = sim.beacons.size > 0;
+  const pulse = reduced ? 0.8 : 0.7 + Math.sin(sim.t * 1.6) * 0.18;
+  ctx.save();
+  ctx.translate(3040, 530);
+  ctx.fillStyle = "#050506";
+  ctx.beginPath();
+  ctx.moveTo(-90, -20);
+  ctx.quadraticCurveTo(-150, -210, -46, -340);
+  ctx.lineTo(-28, -358);
+  ctx.lineTo(-62, -392);
+  ctx.lineTo(-16, -372);
+  ctx.lineTo(8, -438);
+  ctx.lineTo(36, -378);
+  ctx.lineTo(78, -418);
+  ctx.lineTo(96, -360);
+  ctx.quadraticCurveTo(170, -280, 120, -20);
+  ctx.closePath();
+  ctx.fill();
+  ctx.shadowColor = "#f4f1ea";
+  ctx.shadowBlur = met ? 22 : 10;
+  ctx.fillStyle = `rgba(244,241,234,${met ? 1 : pulse})`;
+  ctx.beginPath();
+  ctx.arc(-22, -312, met ? 4 : 3.1, 0, Math.PI * 2);
+  ctx.arc(-8, -308, met ? 4 : 3.1, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
 function drawMoonFog(ctx: CanvasRenderingContext2D, camera: Camera, t: number, reduced: boolean) {
   ctx.save();
   ctx.translate(camera.x, camera.y);
@@ -1262,6 +1317,8 @@ export function renderFrame(
     ctx.restore();
   } else if (sim.level.id === "moon") {
     drawMoonFog(ctx, camera, sim.t, reduced);
+  } else if (sim.level.id === "mirror") {
+    drawMirrorFog(ctx, camera, sim, reduced);
   } else if (sim.level.id === "latch") {
     drawLatchFog(ctx, camera, sim.t, reduced);
   } else if (sim.level.id === "gale") {

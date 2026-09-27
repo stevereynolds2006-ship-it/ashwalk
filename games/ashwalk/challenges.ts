@@ -647,7 +647,72 @@ const MOON: Level = {
   light: { x: 900, y: 200 },
 };
 
-export const LEVELS: readonly Level[] = [SHORE, LATCH, GALE, CHOIR, GEAR, ROOF, ANTLER, MOON];
+/** Walk to the giant. The door you passed is the way out. */
+const MIRROR: Level = {
+  id: "mirror",
+  title: "The mirror",
+  kicker: "He is ahead.",
+  rule: "Cross the water. Light what he is. Then turn around. The door is behind you.",
+  together: "The bell is shared. The door opens for whoever lit him.",
+  clearKicker: "The mirror",
+  clearTitle: "You walked back out",
+  worldW: 3800,
+  killY: 760,
+  poster: 400,
+  introCrow: false,
+  platforms: [
+    { id: "start", kind: "solid", terrain: true, x: 0, y: 468, w: 540, h: 420 },
+    { id: "s1", kind: "oneway", x: 660, y: 448, w: 130, h: 12 },
+    { id: "s2", kind: "oneway", x: 900, y: 424, w: 120, h: 12 },
+    { id: "s3", kind: "oneway", x: 1140, y: 452, w: 130, h: 12 },
+    { id: "isle", kind: "solid", terrain: true, x: 1380, y: 468, w: 360, h: 420 },
+    { id: "s4", kind: "oneway", x: 1860, y: 440, w: 130, h: 12 },
+    { id: "s5", kind: "oneway", x: 2100, y: 412, w: 120, h: 12 },
+    { id: "s6", kind: "oneway", x: 2340, y: 448, w: 140, h: 12 },
+    { id: "far", kind: "solid", terrain: true, x: 2560, y: 468, w: 1100, h: 420 },
+  ],
+  moths: [
+    { id: "m1", x: 720, y: 390 },
+    { id: "m2", x: 960, y: 366 },
+    { id: "m3", x: 1500, y: 400 },
+    { id: "m4", x: 2160, y: 354 },
+    { id: "m5", x: 2700, y: 400 },
+  ],
+  checkpoints: [
+    { id: "start", x: 280, surface: 468 },
+    { id: "isle", x: 1520, surface: 468 },
+    { id: "far", x: 2720, surface: 468 },
+  ],
+  rope: null,
+  shrines: [],
+  beacons: [{ id: "him", x: 3000, y: 348, w: 72, h: 120 }],
+  plates: [],
+  goal: { id: "goal", x: 70, y: 298, w: 80, h: 170 },
+  pit: null,
+  wind: null,
+  birds: [],
+  spiders: [
+    {
+      id: "isle",
+      mode: "crawl",
+      x0: 1420,
+      x1: 1680,
+      y: 446,
+      ceil: 0,
+      speed: 40,
+      reach: 0,
+      period: 1,
+      phase: 0.3,
+    },
+  ],
+  chapters: [
+    { x: 0, id: "mirror", title: "The mirror", kicker: "Walk to him. Then the way out is back." },
+    { x: 2560, id: "him", title: "Himself", kicker: "Light what he is. Turn around." },
+  ],
+  light: { x: 1900, y: 180 },
+};
+
+export const LEVELS: readonly Level[] = [SHORE, LATCH, GALE, CHOIR, GEAR, ROOF, ANTLER, MOON, MIRROR];
 
 export function previousFog(id: string): string | null {
   const index = LEVELS.findIndex((level) => level.id === id);
@@ -660,7 +725,10 @@ export function fogReleased(id: string, now = new Date()) {
   return now >= new Date(2026, 9, 1);
 }
 
-/** Demo: only the shore can be walked. */
+/** The mirror stays shut until it is opened on purpose. */
+export function fogHeld(id: string) {
+  return id === "mirror";
+}
 export function demoLocked(id: string) {
   return id !== "shore";
 }

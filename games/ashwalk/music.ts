@@ -9,6 +9,7 @@ export type MusicScene =
   | "chant"
   | "works"
   | "moon"
+  | "mirror"
   | "hunt"
   | "rite"
   | "clear";
@@ -117,6 +118,16 @@ const SCENES: Record<MusicScene, SceneScore> = {
     sustain: 1.8,
     steps: [[0, 7], [], [3], [10], [7], [], [12], [3]],
     noise: 0,
+  },
+  mirror: {
+    step: 1.4,
+    drones: [34, 41, 46],
+    pluck: 58,
+    wave: "sine",
+    gain: 0.09,
+    sustain: 2.2,
+    steps: [[0], [], [7], [], [3], [], [10], []],
+    noise: 0.02,
   },
   hunt: {
     step: 0.42,

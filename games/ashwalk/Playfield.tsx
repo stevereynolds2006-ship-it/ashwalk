@@ -4,7 +4,7 @@ import { RF } from "@rarefriends/friendsdk/game";
 import { createFriendReader, type GenerationSprites } from "@rarefriends/friendsdk/sprites";
 import { createFriendSoundKit, type FriendSoundKit } from "@rarefriends/friendsdk/sounds";
 import type { PeerInfo } from "@/lib/multiplayer";
-import { LEVELS, demoLocked, fogReleased, fogUnlocked, getLevel, previousFog } from "./challenges";
+import { LEVELS, demoLocked, fogHeld, fogReleased, fogUnlocked, getLevel, previousFog } from "./challenges";
 import { windAccel, chapterAt } from "./level";
 import { Online, type NetApi } from "./online";
 import type { Ghost } from "./net";
@@ -174,7 +174,7 @@ export function Playfield({
   clothRef.current = ledger.equipped;
 
   function fogOpen(id: string) {
-    if (demoLocked(id) || !fogReleased(id)) return false;
+    if (demoLocked(id) || fogHeld(id) || !fogReleased(id)) return false;
     return allOpenRef.current || fogUnlocked(id, clearedRef.current);
   }
 
@@ -271,6 +271,10 @@ export function Playfield({
   };
 
   function startLevel(id: string) {
+    if (fogHeld(id)) {
+      setStakeMsg("The mirror stays shut.");
+      return;
+    }
     if (demoLocked(id)) {
       setStakeMsg("That fog is locked. Only the shore is open.");
       return;
@@ -575,7 +579,10 @@ export function Playfield({
 
       const nextChapter = chapterAt(sim.level, sim.x + 7);
       let nextKicker = nextChapter.kicker;
-      if (sim.level.beacons.length > 0) {
+      if (sim.level.id === "mirror") {
+        nextKicker =
+          sim.beacons.size > 0 ? "Turn back. The door is behind you." : "Walk to him. Then the way out is back.";
+      } else if (sim.level.beacons.length > 0) {
         nextKicker = `${sim.beacons.size} of ${sim.level.beacons.length} bells`;
       } else if (sim.level.wind?.mode === "tide" && phaseNow === "play") {
         const accel = windAccel(sim.level.wind, sim.x + 7, Date.now() / 1000);
@@ -1206,7 +1213,7 @@ export function Playfield({
                 <button
                   type="button"
                   className="ash-btn"
-                  disabled={demoLocked(pickId) || !fogReleased(pickId) || (!ledger.allFogs && !fogUnlocked(pickId, new Set(cleared)))}
+                  disabled={fogHeld(pickId) || demoLocked(pickId) || !fogReleased(pickId) || (!ledger.allFogs && !fogUnlocked(pickId, new Set(cleared)))}
                   onClick={openFog}
                 >
                   Open this fog
@@ -1414,7 +1421,8 @@ function LevelList({
   return (
     <div className="ash-levels">
       {LEVELS.map((level) => {
-        const soon = !fogReleased(level.id);
+        const held = fogHeld(level.id);
+        const soon = !held && !fogReleased(level.id);
         const open = level.id === "shore";
         return (
           <button
@@ -1425,7 +1433,7 @@ function LevelList({
             disabled={!open}
             onClick={() => onPick(level.id)}
           >
-            <span>{soon ? `${level.title} · coming soon` : level.title}</span>
+            <span>{soon ? `${level.title} · coming soon` : held ? `${level.title} · locked` : level.title}</span>
             <small>{soon ? "Coming soon. Opens October 1." : open ? level.rule : "Locked."}</small>
           </button>
         );
@@ -1523,6 +1531,7 @@ function musicScene(phase: Phase, sim: Sim): MusicScene {
   if (phase === "rite") return "rite";
   if (phase === "clear") return "clear";
   if (phase === "title" || phase === "levels" || phase === "lobby" || phase === "clothes") return "title";
+  if (sim.level.id === "mirror") return "mirror";
   if (sim.level.id === "moon") return "moon";
   if (sim.level.id === "antler") return "hunt";
   if (sim.level.id === "choir") return "chant";
