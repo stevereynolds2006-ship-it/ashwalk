@@ -655,6 +655,11 @@ export function previousFog(id: string): string | null {
   return LEVELS[index - 1]!.id;
 }
 
+export function fogReleased(id: string, now = new Date()) {
+  if (id !== "moon") return true;
+  return now >= new Date(2026, 9, 1);
+}
+
 export function fogUnlocked(id: string, cleared: ReadonlySet<string>) {
   const prev = previousFog(id);
   return prev == null || cleared.has(prev);

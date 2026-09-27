@@ -4,7 +4,7 @@ import { RF } from "@rarefriends/friendsdk/game";
 import { createFriendReader, type GenerationSprites } from "@rarefriends/friendsdk/sprites";
 import { createFriendSoundKit, type FriendSoundKit } from "@rarefriends/friendsdk/sounds";
 import type { PeerInfo } from "@/lib/multiplayer";
-import { LEVELS, fogUnlocked, getLevel, previousFog } from "./challenges";
+import { LEVELS, fogReleased, fogUnlocked, getLevel, previousFog } from "./challenges";
 import { windAccel, chapterAt } from "./level";
 import { Online, type NetApi } from "./online";
 import type { Ghost } from "./net";
@@ -173,6 +173,7 @@ export function Playfield({
   allOpenRef.current = true;
 
   function fogOpen(id: string) {
+    if (!fogReleased(id)) return false;
     return allOpenRef.current || fogUnlocked(id, clearedRef.current);
   }
 
@@ -235,6 +236,10 @@ export function Playfield({
   };
 
   function startLevel(id: string) {
+    if (!fogReleased(id)) {
+      setStakeMsg("The moon opens October 1. Coming soon.");
+      return;
+    }
     if (!fogOpen(id)) {
       const prev = previousFog(id);
       setStakeMsg(prev ? `Beat ${getLevel(prev).title} before this fog.` : "That fog is still shut.");
@@ -955,7 +960,7 @@ export function Playfield({
                 : `You have ${formatRareCoins(spendable(rareBalance, account) ?? 0n)} Rare coins.`}
           </p>
           <p>The shore is free. You start that walk with 5 coins. Every fog after it costs 5 Rare coins. 20 Rare coins opens every fog.</p>
-          <p>Every month a new map opens, and a new cape is there to own. This month the map is The moon. The way out is up.</p>
+          <p>Every month a new map opens, and a new cape is there to own. The moon opens October 1. Coming soon.</p>
           {stakeMsg && (
             <p className="ash-error" role="alert">
               {stakeMsg}
@@ -1165,7 +1170,7 @@ export function Playfield({
                 <button
                   type="button"
                   className="ash-btn"
-                  disabled={!ledger.allFogs && !fogUnlocked(pickId, new Set(cleared))}
+                  disabled={!fogReleased(pickId) || (!ledger.allFogs && !fogUnlocked(pickId, new Set(cleared)))}
                   onClick={openFog}
                 >
                   Open this fog
@@ -1271,7 +1276,13 @@ export function Playfield({
             )}
             {!session && (() => {
               const next = LEVELS[LEVELS.findIndex((level) => level.id === clearLevel.id) + 1];
-              if (!next) return null;
+              if (!next || !fogReleased(next.id)) {
+                return next ? (
+                  <button type="button" className="ash-btn" disabled>
+                    {next.title} · coming soon
+                  </button>
+                ) : null;
+              }
               return (
                 <button type="button" className="ash-btn" onClick={() => startLevel(next.id)}>
                   {ledger.allFogs ? `Continue to ${next.title}` : `Continue · ${STAKE} Rare coins`}
@@ -1330,7 +1341,8 @@ function LevelList({
   return (
     <div className="ash-levels">
       {LEVELS.map((level) => {
-        const open = allOpen || fogUnlocked(level.id, done);
+        const soon = !fogReleased(level.id);
+        const open = !soon && (allOpen || fogUnlocked(level.id, done));
         const prev = previousFog(level.id);
         return (
           <button
@@ -1341,8 +1353,8 @@ function LevelList({
             disabled={!open}
             onClick={() => onPick(level.id)}
           >
-            <span>{level.title}{level.id === "moon" ? " · this month" : ""}</span>
-            <small>{open ? level.rule : `Beat ${prev ? getLevel(prev).title : "the fog before"} first.`}</small>
+            <span>{soon ? `${level.title} · coming soon` : level.title}</span>
+            <small>{soon ? "Coming soon. Opens October 1." : open ? level.rule : `Beat ${prev ? getLevel(prev).title : "the fog before"} first.`}</small>
           </button>
         );
       })}
