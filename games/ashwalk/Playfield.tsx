@@ -185,12 +185,8 @@ export function Playfield({
   }
 
   function buyOutfit(id: string) {
-    const who = accountRef.current;
-    const balance = rareRef.current;
-    if (!who || balance == null) {
-      setStakeMsg("Connect a wallet. The cape is 10 Rare coins.");
-      return;
-    }
+    const who = accountRef.current ?? "guest";
+    const balance = rareRef.current ?? 0n;
     if (!buyCloth(who, balance, id)) {
       setStakeMsg("The cape wants 10 Rare coins.");
       return;
@@ -201,8 +197,7 @@ export function Playfield({
   }
 
   function wearOutfit(id: string | null) {
-    const who = accountRef.current;
-    if (!who) return;
+    const who = accountRef.current ?? "guest";
     equipCloth(who, id);
     refreshLedger(who);
     onWardrobe?.();
@@ -1015,12 +1010,12 @@ export function Playfield({
           )}
           <p className="ash-note">
             {!account
-              ? "Connect a wallet. The cape is 10 Rare coins."
+              ? "The cape is free to try."
               : rareBalance == null
                 ? "Reading Rare coins…"
                 : `You have ${formatRareCoins(spendable(rareBalance, account) ?? 0n)} Rare coins.`}
           </p>
-          <p className="ash-note">Only the red cape is for sale. It costs 10 Rare coins.</p>
+          <p className="ash-note">The red cape is free to try. Press it to wear it.</p>
           <div className="ash-levels">
             {outfitList().map((cloth) => {
               const owned = ledger.owned.includes(cloth.id);
@@ -1039,7 +1034,7 @@ export function Playfield({
                       ? wearing
                         ? "Wearing. Press to take it off."
                         : `${cloth.note} Press to wear.`
-                      : `${cloth.note} ${cloth.cost} Rare coins.`}
+                      : `${cloth.note} Free to try.`}
                   </small>
                 </button>
               );
