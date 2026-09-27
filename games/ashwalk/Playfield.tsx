@@ -965,7 +965,7 @@ export function Playfield({
                 : `You have ${formatRareCoins(spendable(rareBalance, account) ?? 0n)} Rare coins.`}
           </p>
           <p>The shore is free. You start that walk with 5 coins. Every fog after it costs 5 Rare coins. 20 Rare coins opens every fog.</p>
-          <p>Every month a new map opens, and a new cape is there to own. The moon and the white cape open October 1. Coming soon.</p>
+          <p>Every month a new map opens, and a new cape is there to own. The moon opens October 1. Coming soon. The white cape is open to try.</p>
           {stakeMsg && (
             <p className="ash-error" role="alert">
               {stakeMsg}
@@ -1026,7 +1026,7 @@ export function Playfield({
                 ? "Reading Rare coins…"
                 : `You have ${formatRareCoins(spendable(rareBalance, account) ?? 0n)} Rare coins.`}
           </p>
-          <p className="ash-note">The red cape is free to try. The white cape opens October 1. Coming soon. It will cost 10 Rare coins.</p>
+          <p className="ash-note">The red cape is free to try. The white cape is open so you can test it. Press it to wear it.</p>
           <div className="ash-levels">
             {outfitList().map((cloth) => {
               const soon = !clothReleased(cloth.id);
