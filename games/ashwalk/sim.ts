@@ -755,6 +755,8 @@ function stepStalker(sim: Sim, dt: number, events: StepEvents) {
   if (!spec) return;
   const lit = sim.level.beacons.length > 0 && sim.beacons.size >= sim.level.beacons.length;
   if (!lit) return;
+  const passed = sim.x + PW / 2 > spec.x + 260;
+  if (sim.wake <= 0 && !passed) return;
   if (sim.wake < 1) {
     sim.wake = Math.min(1, sim.wake + dt / 1.15);
     return;

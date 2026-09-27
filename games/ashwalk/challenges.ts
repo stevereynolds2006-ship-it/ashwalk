@@ -603,12 +603,12 @@ const ANTLER: Level = {
   ],
   chapters: [
     { x: 0, id: "mound", title: "The antler", kicker: "The bells are across the gaps." },
-    { x: 2900, id: "hunt", title: "The hunt", kicker: "Do not stop." },
+    { x: 2900, id: "hunt", title: "The hunt", kicker: "Walk past him. Then he climbs out." },
     { x: 4300, id: "cage", title: "The cage", kicker: "Lead it in. Stand on the plate." },
   ],
   light: { x: 1200, y: 80 },
   stalker: {
-    x: 3280,
+    x: 3120,
     surface: 500,
     cageX0: 4360,
     cageX1: 4740,

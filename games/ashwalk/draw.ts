@@ -214,7 +214,10 @@ function drawTerrain(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) 
       ctx.lineTo(px, rect.y + jag);
     }
     ctx.lineTo(rect.x + rect.w + 10, rect.y + 16);
-    ctx.lineTo(rect.x + rect.w + 30, rect.y + Math.min(rect.h, 420) + 40);
+    const deep = sim.level.id === "mirror" || sim.level.id === "antler";
+    const drop = deep ? 1400 : Math.min(rect.h, 420) + 40;
+    ctx.lineTo(rect.x + rect.w + 30, rect.y + drop);
+    ctx.lineTo(rect.x - 40, rect.y + drop);
     ctx.closePath();
     ctx.fill();
     if (sim.level.id !== "roof" && sim.level.id !== "gale" && sim.level.id !== "choir" && sim.level.id !== "gear") drawGrass(ctx, rect, 26);
@@ -240,6 +243,69 @@ function drawTerrain(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) 
       ctx.fillRect(rect.x, rect.y, rect.w, 2);
     }
   }
+}
+
+function drawDrainTrash(ctx: CanvasRenderingContext2D) {
+  const ground = 1180;
+  const pile = (x: number, kind: number) => {
+    ctx.save();
+    ctx.translate(x, ground);
+    ctx.fillStyle = "#050506";
+    if (kind === 0) {
+      ctx.beginPath();
+      ctx.moveTo(-16, 0);
+      ctx.quadraticCurveTo(-18, -22, -4, -28);
+      ctx.quadraticCurveTo(8, -34, 14, -16);
+      ctx.quadraticCurveTo(18, -6, 12, 0);
+      ctx.fill();
+      ctx.fillRect(-6, -8, 8, 6);
+    } else if (kind === 1) {
+      ctx.fillRect(-14, -18, 28, 18);
+      ctx.fillStyle = "#f4f1ea";
+      ctx.fillRect(-14, -18, 28, 2);
+      ctx.fillRect(-2, -16, 2, 16);
+    } else if (kind === 2) {
+      ctx.beginPath();
+      ctx.moveTo(-4, 0);
+      ctx.lineTo(-6, -16);
+      ctx.lineTo(-2, -22);
+      ctx.lineTo(2, -16);
+      ctx.lineTo(4, 0);
+      ctx.fill();
+      ctx.fillRect(-7, -8, 3, 8);
+    } else if (kind === 3) {
+      ctx.beginPath();
+      ctx.ellipse(0, -6, 14, 6, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#101114";
+      ctx.beginPath();
+      ctx.ellipse(0, -6, 6, 2.4, 0, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      ctx.beginPath();
+      ctx.moveTo(-18, 0);
+      ctx.lineTo(-10, -8);
+      ctx.lineTo(2, -3);
+      ctx.lineTo(12, -11);
+      ctx.lineTo(18, 0);
+      ctx.fill();
+    }
+    ctx.restore();
+  };
+  const spots: [number, number][] = [
+    [2860, 0],
+    [2980, 4],
+    [3120, 2],
+    [3280, 1],
+    [3440, 0],
+    [3580, 3],
+    [3720, 2],
+    [3880, 4],
+    [4040, 1],
+    [4180, 0],
+    [4320, 2],
+  ];
+  for (const [x, kind] of spots) pile(x, kind);
 }
 
 function drawGrass(ctx: CanvasRenderingContext2D, rect: RectLike, tall: number) {
@@ -1414,6 +1480,7 @@ export function renderFrame(
   }
 
   drawTerrain(ctx, sim, reduced);
+  if (sim.level.id === "roof") drawDrainTrash(ctx);
   if (sim.level.combo) drawLatchLock(ctx, sim);
 
   for (const plate of sim.level.plates) {
