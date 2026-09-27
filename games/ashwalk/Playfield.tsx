@@ -632,7 +632,8 @@ export function Playfield({
       const caught = Boolean(sim.level.stalker && sim.caged && sim.cage >= 1);
       if ((sim.level.stalker || sim.level.hunter) && sim.wake > 0 && !caught) huntZoomRef.current = 1;
       else huntZoomRef.current = Math.max(0, huntZoomRef.current - dt * 0.35);
-      const zoom = 1 + 0.75 * huntZoomRef.current;
+      const pull = sim.level.hunter ? 0.5 : 0.75;
+      const zoom = 1 + pull * huntZoomRef.current;
       const follow = phaseNow === "play" || phaseNow === "pause" || phaseNow === "lives" || phaseNow === "rite" || phaseNow === "clear";
       const camera = frameCamera(
         sim,
