@@ -106,7 +106,7 @@ const GALE: Level = {
     { id: "end", kind: "solid", terrain: true, x: 3000, y: 470, w: 640, h: 420 },
     { id: "gh1", kind: "oneway", x: 3220, y: 392, w: 100, h: 12 },
     { id: "gh2", kind: "oneway", x: 3380, y: 312, w: 110, h: 12 },
-    { id: "gExit", kind: "gate", x: 3636, y: 252, w: 24, h: 218, openY: 24 },
+    { id: "gExit", kind: "gate", x: 3636, y: 50, w: 24, h: 420, openY: -120 },
     { id: "calm", kind: "solid", terrain: true, x: 3660, y: 470, w: 640, h: 420 },
   ],
   moths: [
@@ -302,7 +302,7 @@ const GEAR: Level = {
     { id: "j8", kind: "oneway", x: 3200, y: 368, w: 110, h: 12 },
     { id: "j9", kind: "oneway", x: 3400, y: 430, w: 120, h: 12 },
     { id: "end", kind: "solid", terrain: true, x: 3620, y: 470, w: 1480, h: 420 },
-    { id: "gExit", kind: "gate", x: 4520, y: 252, w: 24, h: 218, openY: 20 },
+    { id: "gExit", kind: "gate", x: 4520, y: 50, w: 24, h: 420, openY: -120 },
   ],
   moths: [
     { id: "m1", x: 740, y: 400 },
@@ -370,7 +370,7 @@ const ROOF: Level = {
     { id: "step", kind: "oneway", x: 1720, y: 400, w: 100, h: 12 },
     { id: "r3", kind: "solid", terrain: true, x: 1960, y: 348, w: 260, h: 520 },
     { id: "r4", kind: "solid", terrain: true, x: 2360, y: 468, w: 520, h: 440 },
-    { id: "gSign", kind: "gate", x: 2876, y: 250, w: 24, h: 218, openY: 20 },
+    { id: "gSign", kind: "gate", x: 2876, y: 48, w: 24, h: 420, openY: -120 },
     { id: "r5", kind: "solid", terrain: true, x: 2900, y: 468, w: 700, h: 440 },
     { id: "sewer", kind: "solid", terrain: true, x: 2680, y: 1180, w: 1680, h: 420 },
     { id: "pipe", kind: "solid", terrain: true, x: 3920, y: 1040, w: 280, h: 28 },

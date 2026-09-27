@@ -179,7 +179,7 @@ export const SHORE: Level = {
     { id: "hall", kind: "solid", terrain: true, x: 5030, y: 480, w: 680, h: 420 },
     { id: "h1", kind: "oneway", x: 5280, y: 392, w: 110, h: 12 },
     { id: "h2", kind: "oneway", x: 5460, y: 278, w: 130, h: 12 },
-    { id: "gDoor", kind: "gate", x: 5704, y: 262, w: 24, h: 218, openY: 28 },
+    { id: "gDoor", kind: "gate", x: 5704, y: 60, w: 24, h: 420, openY: -120 },
     { id: "sanctum", kind: "solid", terrain: true, x: 5728, y: 480, w: 820, h: 420 },
   ],
   moths: [
