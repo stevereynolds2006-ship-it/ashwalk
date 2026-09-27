@@ -246,8 +246,7 @@ function drawTerrain(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) 
 }
 
 function drawDrainTrash(ctx: CanvasRenderingContext2D, t: number, reduced: boolean) {
-  const ground = 1180;
-  const pile = (x: number, kind: number) => {
+  const pile = (x: number, ground: number, kind: number) => {
     ctx.save();
     ctx.translate(x, ground);
     ctx.fillStyle = "#050506";
@@ -292,34 +291,55 @@ function drawDrainTrash(ctx: CanvasRenderingContext2D, t: number, reduced: boole
     }
     ctx.restore();
   };
-  const spots: [number, number][] = [
-    [2740, 4],
-    [2820, 0],
-    [2900, 2],
-    [2980, 1],
-    [3060, 4],
-    [3140, 0],
-    [3220, 3],
-    [3300, 2],
-    [3380, 1],
-    [3460, 0],
-    [3540, 4],
-    [3620, 2],
-    [3700, 3],
-    [3780, 0],
-    [3860, 1],
-    [3940, 4],
-    [4020, 2],
-    [4100, 0],
-    [4180, 3],
-    [4260, 1],
-    [4340, 2],
+  const spots: [number, number, number][] = [
+    [80, 468, 1],
+    [180, 468, 0],
+    [280, 468, 4],
+    [400, 468, 2],
+    [760, 430, 1],
+    [860, 430, 3],
+    [960, 430, 0],
+    [1240, 468, 4],
+    [1360, 468, 1],
+    [1480, 468, 2],
+    [2020, 348, 0],
+    [2120, 348, 3],
+    [2420, 468, 1],
+    [2540, 468, 4],
+    [2660, 468, 2],
+    [2740, 1180, 4],
+    [2800, 1180, 0],
+    [2860, 1180, 2],
+    [2920, 1180, 1],
+    [2980, 1180, 3],
+    [3040, 1180, 0],
+    [3100, 1180, 4],
+    [3160, 1180, 2],
+    [3220, 1180, 1],
+    [3280, 1180, 0],
+    [3340, 1180, 3],
+    [3400, 1180, 2],
+    [3460, 1180, 4],
+    [3520, 1180, 1],
+    [3580, 1180, 0],
+    [3640, 1180, 2],
+    [3700, 1180, 3],
+    [3760, 1180, 4],
+    [3820, 1180, 1],
+    [3880, 1180, 0],
+    [3940, 1180, 2],
+    [4000, 1180, 4],
+    [4060, 1180, 1],
+    [4120, 1180, 3],
+    [4180, 1180, 0],
+    [4240, 1180, 2],
+    [4300, 1180, 4],
   ];
-  for (const [x, kind] of spots) pile(x, kind);
+  for (const [x, ground, kind] of spots) pile(x, ground, kind);
   if (reduced) return;
   ctx.save();
-  for (const [x] of spots) {
-    if ((x / 20) % 3 !== 0) continue;
+  for (const [x, ground] of spots) {
+    if (ground !== 1180 || (x / 20) % 2 !== 0) continue;
     for (let i = 0; i < 3; i++) {
       const life = (t * 0.32 + i * 0.34 + x * 0.001) % 1;
       const yy = -16 - life * 78;
@@ -1267,10 +1287,54 @@ function drawBell(ctx: CanvasRenderingContext2D, x: number, ground: number, lit:
   ctx.fillRect(x - 1.5, ground - 24, 3, 8);
 }
 
+function drawJungle(ctx: CanvasRenderingContext2D, t: number, reduced: boolean) {
+  ctx.fillStyle = "rgba(5,5,6,0.5)";
+  for (let i = 0; i < 20; i++) {
+    const x = -120 + i * 250;
+    const y = 150 + (i % 4) * 28;
+    ctx.beginPath();
+    ctx.ellipse(x, y, 170, 78, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(x + 50, y + 16, 70, 18, -0.5, 0, Math.PI * 2);
+    ctx.ellipse(x - 40, y + 22, 64, 14, 0.4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "rgba(5,5,6,0.75)";
+    ctx.lineWidth = 2.2;
+    ctx.lineCap = "round";
+    const vines = 4;
+    for (let v = 0; v < vines; v++) {
+      const vx = x - 70 + v * 42;
+      const sway = reduced ? 0 : Math.sin(t * 0.7 + i + v) * 10;
+      const drop = 140 + ((i + v) % 3) * 36;
+      ctx.beginPath();
+      ctx.moveTo(vx, y + 10);
+      ctx.quadraticCurveTo(vx + sway, y + drop * 0.55, vx + sway * 0.3, y + drop);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.ellipse(vx + sway * 0.3, y + drop, 10, 4, 0.6, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  for (let i = 0; i < 16; i++) {
+    const x = i * 300;
+    ctx.save();
+    ctx.translate(x, 490);
+    ctx.fillStyle = "rgba(5,5,6,0.72)";
+    for (let f = 0; f < 6; f++) {
+      const a = -1.15 + f * 0.42;
+      ctx.beginPath();
+      ctx.ellipse(Math.cos(a) * 34, Math.sin(a) * 16 - 8, 30, 7, a, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+}
+
 function drawMirrorFog(ctx: CanvasRenderingContext2D, camera: Camera, sim: Sim, reduced: boolean) {
   ctx.save();
   ctx.translate(camera.x * 0.62, camera.y * 0.2);
-  for (const tree of SHORE_FAR) drawDeadwood(ctx, tree, 0.5);
+  drawJungle(ctx, sim.t, reduced);
   ctx.restore();
 
   const wash = ctx.createLinearGradient(0, 360, 0, 520);
