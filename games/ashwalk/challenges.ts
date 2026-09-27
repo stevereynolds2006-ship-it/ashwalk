@@ -660,6 +660,11 @@ export function fogReleased(id: string, now = new Date()) {
   return now >= new Date(2026, 9, 1);
 }
 
+/** Demo: only the shore can be walked. */
+export function demoLocked(id: string) {
+  return id !== "shore";
+}
+
 export function fogUnlocked(id: string, cleared: ReadonlySet<string>) {
   const prev = previousFog(id);
   return prev == null || cleared.has(prev);

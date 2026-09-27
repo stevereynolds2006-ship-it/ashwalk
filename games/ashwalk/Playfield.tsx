@@ -4,7 +4,7 @@ import { RF } from "@rarefriends/friendsdk/game";
 import { createFriendReader, type GenerationSprites } from "@rarefriends/friendsdk/sprites";
 import { createFriendSoundKit, type FriendSoundKit } from "@rarefriends/friendsdk/sounds";
 import type { PeerInfo } from "@/lib/multiplayer";
-import { LEVELS, fogReleased, fogUnlocked, getLevel, previousFog } from "./challenges";
+import { LEVELS, demoLocked, fogReleased, fogUnlocked, getLevel, previousFog } from "./challenges";
 import { windAccel, chapterAt } from "./level";
 import { Online, type NetApi } from "./online";
 import type { Ghost } from "./net";
@@ -16,7 +16,6 @@ import {
   clothReleased,
   equipCloth,
   formatRareCoins,
-  hasWhole,
   outfitList,
   readLedger,
   spendWhole,
@@ -34,7 +33,6 @@ const LAMP_PRICE = 5;
 const LIGHT_PRICE = 1;
 const LIGHT_SECONDS = 10;
 const STAKE = 5;
-const UNLOCK_COST = 20;
 const LIVES = 3;
 const ALPHABET = "abcdefghjkmnpqrstuvwxyz23456789";
 
@@ -123,7 +121,7 @@ export function Playfield({
   const [stakeMsg, setStakeMsg] = useState("");
   const clearedRef = useRef(new Set<string>());
   const [cleared, setCleared] = useState<string[]>([]);
-  const [ledger, setLedger] = useState<Ledger>({ spent: 0n, allFogs: true, owned: [], equipped: null });
+  const [ledger, setLedger] = useState<Ledger>({ spent: 0n, allFogs: false, owned: [], equipped: null });
   const markClearRef = useRef<(id: string) => void>(() => {});
   const shoreGlowRef = useRef(0);
   const huntZoomRef = useRef(0);
@@ -171,18 +169,16 @@ export function Playfield({
   accountRef.current = account;
   rareRef.current = rareBalance;
   clothRef.current = ledger.equipped;
-  allOpenRef.current = true;
 
   function fogOpen(id: string) {
-    if (!fogReleased(id)) return false;
+    if (demoLocked(id) || !fogReleased(id)) return false;
     return allOpenRef.current || fogUnlocked(id, clearedRef.current);
   }
 
   function refreshLedger(nextAccount = accountRef.current) {
     const next = readLedger(nextAccount);
-    next.allFogs = true;
     setLedger(next);
-    allOpenRef.current = true;
+    allOpenRef.current = next.allFogs;
     clothRef.current = next.equipped;
   }
 
@@ -241,6 +237,10 @@ export function Playfield({
   };
 
   function startLevel(id: string) {
+    if (demoLocked(id)) {
+      setStakeMsg("That fog is locked. Only the shore is open.");
+      return;
+    }
     if (!fogReleased(id)) {
       setStakeMsg("The moon opens October 1. Coming soon.");
       return;
@@ -964,7 +964,7 @@ export function Playfield({
                 ? "Reading Rare coins…"
                 : `You have ${formatRareCoins(spendable(rareBalance, account) ?? 0n)} Rare coins.`}
           </p>
-          <p>The shore is free. You start that walk with 5 coins. Every fog after it costs 5 Rare coins. 20 Rare coins opens every fog.</p>
+          <p>Only the shore is open. The other fogs are locked.</p>
           <p>Every month a new map opens, and a new cape is there to own. The moon and the white cape open October 1. Coming soon.</p>
           {stakeMsg && (
             <p className="ash-error" role="alert">
@@ -1078,28 +1078,12 @@ export function Playfield({
           )}
           <p className="ash-note">
             {!account
-              ? "Connect a wallet when you are ready to pay. The shore is free. Later fogs cost 5 Rare coins."
+              ? "Connect a wallet to read your Rare coins. Only the shore is open."
               : rareBalance == null
                 ? "Reading Rare coins…"
-                : `You have ${formatRareCoins(spendable(rareBalance, account) ?? 0n)} Rare coins. The shore is free. Every fog after it costs 5.`}
+                : `You have ${formatRareCoins(spendable(rareBalance, account) ?? 0n)} Rare coins. Only the shore is open.`}
           </p>
-          <p className="ash-note">
-            {ledger.allFogs
-              ? "Every fog is open."
-              : "The shore is free. Each fog after it opens when you beat the one before, and costs 5 Rare coins. Or pay 20 Rare coins for all of them."}
-          </p>
-          {!ledger.allFogs && (
-            <div className="ash-actions">
-              <button
-                type="button"
-                className="ash-btn"
-                onClick={buyEveryFog}
-                disabled={!hasWhole(rareBalance, account, UNLOCK_COST)}
-              >
-                Open every fog · {UNLOCK_COST} Rare coins
-              </button>
-            </div>
-          )}
+          <p className="ash-note">Only the shore is open. The other fogs are locked.</p>
           <LevelList
             current={pickId}
             cleared={cleared}
@@ -1184,7 +1168,7 @@ export function Playfield({
                 <button
                   type="button"
                   className="ash-btn"
-                  disabled={!fogReleased(pickId) || (!ledger.allFogs && !fogUnlocked(pickId, new Set(cleared)))}
+                  disabled={demoLocked(pickId) || !fogReleased(pickId) || (!ledger.allFogs && !fogUnlocked(pickId, new Set(cleared)))}
                   onClick={openFog}
                 >
                   Open this fog
@@ -1290,7 +1274,15 @@ export function Playfield({
             )}
             {!session && (() => {
               const next = LEVELS[LEVELS.findIndex((level) => level.id === clearLevel.id) + 1];
-              if (!next || !fogReleased(next.id)) {
+              if (!next) return null;
+              if (demoLocked(next.id)) {
+                return (
+                  <button type="button" className="ash-btn" disabled>
+                    {next.title} · locked
+                  </button>
+                );
+              }
+              if (!fogReleased(next.id)) {
                 return next ? (
                   <button type="button" className="ash-btn" disabled>
                     {next.title} · coming soon
@@ -1351,13 +1343,13 @@ function LevelList({
   allOpen: boolean;
   onPick: (id: string) => void;
 }) {
-  const done = new Set(cleared);
+  void cleared;
+  void allOpen;
   return (
     <div className="ash-levels">
       {LEVELS.map((level) => {
         const soon = !fogReleased(level.id);
-        const open = !soon && (allOpen || fogUnlocked(level.id, done));
-        const prev = previousFog(level.id);
+        const open = level.id === "shore";
         return (
           <button
             key={level.id}
@@ -1368,7 +1360,7 @@ function LevelList({
             onClick={() => onPick(level.id)}
           >
             <span>{soon ? `${level.title} · coming soon` : level.title}</span>
-            <small>{soon ? "Coming soon. Opens October 1." : open ? level.rule : `Beat ${prev ? getLevel(prev).title : "the fog before"} first.`}</small>
+            <small>{soon ? "Coming soon. Opens October 1." : open ? level.rule : "Locked."}</small>
           </button>
         );
       })}
