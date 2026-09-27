@@ -4,7 +4,7 @@ import { RF } from "@rarefriends/friendsdk/game";
 import { createFriendReader, type GenerationSprites } from "@rarefriends/friendsdk/sprites";
 import { createFriendSoundKit, type FriendSoundKit } from "@rarefriends/friendsdk/sounds";
 import type { PeerInfo } from "@/lib/multiplayer";
-import { LEVELS, demoLocked, fogHeld, fogReleased, fogUnlocked, getLevel, previousFog } from "./challenges";
+import { LEVELS, demoLocked, fogHeld, fogReleased, getLevel, previousFog } from "./challenges";
 import { windAccel, chapterAt } from "./level";
 import { Online, type NetApi } from "./online";
 import type { Ghost } from "./net";
@@ -173,9 +173,7 @@ export function Playfield({
   clothRef.current = ledger.equipped;
 
   function fogOpen(id: string) {
-    if (id === "shore" || id === "mirror") return fogReleased(id);
-    if (demoLocked(id) || fogHeld(id) || !fogReleased(id)) return false;
-    return allOpenRef.current || fogUnlocked(id, clearedRef.current);
+    return !demoLocked(id) && !fogHeld(id) && fogReleased(id);
   }
 
   function refreshLedger(nextAccount = accountRef.current) {
@@ -281,7 +279,7 @@ export function Playfield({
       setStakeMsg(prev ? `Beat ${getLevel(prev).title} before this fog.` : "That fog is still shut.");
       return;
     }
-    const fee = allOpenRef.current || id === "shore" || id === "mirror" ? 0 : STAKE;
+    const fee = 0;
     if (fee > 0) {
       const who = accountRef.current;
       const balance = rareRef.current;
@@ -1000,7 +998,7 @@ export function Playfield({
                 ? "Reading Rare coins…"
                 : `You have ${formatRareCoins(spendable(rareBalance, account) ?? 0n)} Rare coins.`}
           </p>
-          <p>The shore is open. The mirror is open to try. The other fogs are locked.</p>
+          <p>Every fog is open to try.</p>
           <p>Every month a new map opens, and a new cape is there to own. The moon and the white cape open October 1. Coming soon.</p>
           {stakeMsg && (
             <p className="ash-error" role="alert">
@@ -1114,12 +1112,12 @@ export function Playfield({
           )}
           <p className="ash-note">
             {!account
-              ? "Connect a wallet to read your Rare coins. The shore and the mirror are open."
+              ? "Connect a wallet to read your Rare coins. Every fog is open to try."
               : rareBalance == null
                 ? "Reading Rare coins…"
-                : `You have ${formatRareCoins(spendable(rareBalance, account) ?? 0n)} Rare coins. The shore and the mirror are open.`}
+                : `You have ${formatRareCoins(spendable(rareBalance, account) ?? 0n)} Rare coins. Every fog is open to try.`}
           </p>
-          <p className="ash-note">The shore is open. The mirror is open to try. The other fogs are locked.</p>
+          <p className="ash-note">Every fog is open to try. None of them charge to start.</p>
           <LevelList
             current={pickId}
             cleared={cleared}
@@ -1204,15 +1202,7 @@ export function Playfield({
                 <button
                   type="button"
                   className="ash-btn"
-                  disabled={
-                    fogHeld(pickId) ||
-                    demoLocked(pickId) ||
-                    !fogReleased(pickId) ||
-                    (pickId !== "shore" &&
-                      pickId !== "mirror" &&
-                      !ledger.allFogs &&
-                      !fogUnlocked(pickId, new Set(cleared)))
-                  }
+                  disabled={fogHeld(pickId) || demoLocked(pickId) || !fogReleased(pickId)}
                   onClick={openFog}
                 >
                   Open this fog
@@ -1422,7 +1412,7 @@ function LevelList({
       {LEVELS.map((level) => {
         const held = fogHeld(level.id);
         const soon = !held && !fogReleased(level.id);
-        const open = level.id === "shore" || level.id === "mirror";
+        const open = !soon && !held;
         return (
           <button
             key={level.id}
