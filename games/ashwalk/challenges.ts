@@ -821,8 +821,8 @@ export function fogReleased(id: string, now = new Date()) {
 export function fogHeld(_id: string) {
   return false;
 }
-export function demoLocked(id: string) {
-  return id !== "shore";
+export function demoLocked(_id: string) {
+  return false;
 }
 
 export function fogUnlocked(id: string, cleared: ReadonlySet<string>) {

@@ -4,7 +4,7 @@ import { RF } from "@rarefriends/friendsdk/game";
 import { createFriendReader, type GenerationSprites } from "@rarefriends/friendsdk/sprites";
 import { createFriendSoundKit, type FriendSoundKit } from "@rarefriends/friendsdk/sounds";
 import type { PeerInfo } from "@/lib/multiplayer";
-import { LEVELS, demoLocked, fogHeld, fogReleased, getLevel, previousFog } from "./challenges";
+import { LEVELS, fogHeld, fogReleased, fogUnlocked, getLevel, previousFog } from "./challenges";
 import { windAccel, chapterAt } from "./level";
 import { Online, type NetApi } from "./online";
 import type { Ghost } from "./net";
@@ -18,7 +18,9 @@ import {
   equipCloth,
   formatRareCoins,
   outfitList,
+  openRoad,
   readLedger,
+  ROAD_COST,
   spendWhole,
   spendable,
   unlockAllFogs,
@@ -123,7 +125,15 @@ export function Playfield({
   const [stakeMsg, setStakeMsg] = useState("");
   const clearedRef = useRef(new Set<string>());
   const [cleared, setCleared] = useState<string[]>([]);
-  const [ledger, setLedger] = useState<Ledger>({ spent: 0n, allFogs: false, burned: 0, owned: [], equipped: null });
+  const [ledger, setLedger] = useState<Ledger>({
+    spent: 0n,
+    allFogs: false,
+    road: false,
+    burned: 0,
+    owned: [],
+    equipped: null,
+  });
+  const roadRef = useRef(false);
   const markClearRef = useRef<(id: string) => void>(() => {});
   const shoreGlowRef = useRef(0);
   const huntZoomRef = useRef(0);
@@ -173,14 +183,36 @@ export function Playfield({
   clothRef.current = ledger.equipped;
 
   function fogOpen(id: string) {
-    return !demoLocked(id) && !fogHeld(id) && fogReleased(id);
+    if (id === "shore") return true;
+    if (fogHeld(id) || !fogReleased(id)) return false;
+    if (!clearedRef.current.has("shore") || !roadRef.current) return false;
+    return fogUnlocked(id, clearedRef.current);
   }
 
   function refreshLedger(nextAccount = accountRef.current) {
     const next = readLedger(nextAccount);
     setLedger(next);
     allOpenRef.current = next.allFogs;
+    roadRef.current = next.road;
     clothRef.current = next.equipped;
+  }
+
+  function payRoad() {
+    const who = accountRef.current;
+    const balance = rareRef.current;
+    if (!who || balance == null) {
+      setStakeMsg("Connect a wallet. Continuing costs 10 Rare coins.");
+      return false;
+    }
+    if (!openRoad(who, balance)) {
+      setStakeMsg("You need 10 Rare coins to continue.");
+      return false;
+    }
+    roadRef.current = true;
+    refreshLedger(who);
+    onWardrobe?.();
+    setShopError(`Burned ${burnedHalf(ROAD_COST)} Rare coins.`);
+    return true;
   }
 
   function buyOutfit(id: string) {
@@ -266,10 +298,6 @@ export function Playfield({
       setStakeMsg("The mirror stays shut.");
       return;
     }
-    if (demoLocked(id)) {
-      setStakeMsg("That fog is locked. Only the shore is open.");
-      return;
-    }
     if (!fogReleased(id)) {
       setStakeMsg(
         id === "mirror"
@@ -278,10 +306,20 @@ export function Playfield({
       );
       return;
     }
-    if (!fogOpen(id)) {
-      const prev = previousFog(id);
-      setStakeMsg(prev ? `Beat ${getLevel(prev).title} before this fog.` : "That fog is still shut.");
-      return;
+    if (id !== "shore") {
+      if (!clearedRef.current.has("shore")) {
+        setStakeMsg("Beat the shore first.");
+        return;
+      }
+      if (!roadRef.current) {
+        setStakeMsg("Continuing costs 10 Rare coins.");
+        return;
+      }
+      if (!fogUnlocked(id, clearedRef.current)) {
+        const prev = previousFog(id);
+        setStakeMsg(prev ? `Beat ${getLevel(prev).title} before this fog.` : "That fog is still shut.");
+        return;
+      }
     }
     const fee = 0;
     if (fee > 0) {
@@ -1003,7 +1041,7 @@ export function Playfield({
                 ? "Reading Rare coins…"
                 : `You have ${formatRareCoins(spendable(rareBalance, account) ?? 0n)} Rare coins.`}
           </p>
-          <p>The shore is open. The other fogs are locked.</p>
+          <p>The shore is free. Beat it, then 10 Rare coins opens the road. After that, beat a fog to open the next one.</p>
           <p>Every month a new map opens, and a new cape is there to own. The moon and the white cape open October 1. The mirror opens November 1. Coming soon.</p>
           {stakeMsg && (
             <p className="ash-error" role="alert">
@@ -1117,16 +1155,18 @@ export function Playfield({
           )}
           <p className="ash-note">
             {!account
-              ? "Connect a wallet to read your Rare coins. The shore is the only fog open."
+              ? "Connect a wallet to read your Rare coins. Beat the shore, then 10 Rare coins continues the road."
               : rareBalance == null
                 ? "Reading Rare coins…"
-                : `You have ${formatRareCoins(spendable(rareBalance, account) ?? 0n)} Rare coins. The shore is the only fog open.`}
+                : `You have ${formatRareCoins(spendable(rareBalance, account) ?? 0n)} Rare coins. Beat the shore, then 10 Rare coins continues the road.`}
           </p>
-          <p className="ash-note">The shore is open. The other fogs are locked. The moon opens October 1. The mirror opens November 1.</p>
+          <p className="ash-note">
+            The shore is free. After you beat it, 10 Rare coins opens the next fog. Then each fog opens when you beat the one before it. The moon opens October 1. The mirror opens November 1.
+          </p>
           <LevelList
             current={pickId}
             cleared={cleared}
-            allOpen={ledger.allFogs}
+            allOpen={ledger.road}
             onPick={(id) => {
               armAudio();
               startLevel(id);
@@ -1207,7 +1247,7 @@ export function Playfield({
                 <button
                   type="button"
                   className="ash-btn"
-                  disabled={fogHeld(pickId) || demoLocked(pickId) || !fogReleased(pickId)}
+                  disabled={!fogOpen(pickId)}
                   onClick={openFog}
                 >
                   Open this fog
@@ -1325,6 +1365,9 @@ export function Playfield({
             {session && company === 0 && peers.length > 0 ? " Everyone is through." : ""} The lantern rite is
             simulated. One lantern costs 1 RF and returns less, on average, than it takes.
           </p>
+          {clearLevel.id === "shore" && !ledger.road && (
+            <p className="ash-note">Pay 10 Rare coins to continue. After that, each fog opens when you beat the one before it.</p>
+          )}
           <div className="ash-actions">
             <button type="button" className="ash-btn" onClick={() => go("rite")}>
               Light a lantern
@@ -1342,23 +1385,37 @@ export function Playfield({
             {!session && (() => {
               const next = LEVELS[LEVELS.findIndex((level) => level.id === clearLevel.id) + 1];
               if (!next) return null;
-              if (demoLocked(next.id)) {
-                return (
-                  <button type="button" className="ash-btn" disabled>
-                    {next.title} · locked
-                  </button>
-                );
-              }
               if (!fogReleased(next.id)) {
-                return next ? (
+                return (
                   <button type="button" className="ash-btn" disabled>
                     {next.title} · coming soon
                   </button>
-                ) : null;
+                );
+              }
+              if (!ledger.road) {
+                return (
+                  <button
+                    type="button"
+                    className="ash-btn"
+                    onClick={() => {
+                      if (payRoad()) startLevel(next.id);
+                    }}
+                  >
+                    Continue · {ROAD_COST} Rare coins
+                  </button>
+                );
+              }
+              if (!fogUnlocked(next.id, new Set(cleared))) {
+                const prev = previousFog(next.id);
+                return (
+                  <button type="button" className="ash-btn" disabled>
+                    {prev ? `Beat ${getLevel(prev).title} first` : `${next.title} · locked`}
+                  </button>
+                );
               }
               return (
                 <button type="button" className="ash-btn" onClick={() => startLevel(next.id)}>
-                  {ledger.allFogs ? `Continue to ${next.title}` : `Continue · ${STAKE} Rare coins`}
+                  Continue to {next.title}
                 </button>
               );
             })()}
@@ -1410,14 +1467,26 @@ function LevelList({
   allOpen: boolean;
   onPick: (id: string) => void;
 }) {
-  void cleared;
-  void allOpen;
   return (
     <div className="ash-levels">
       {LEVELS.map((level) => {
         const opens = level.id === "moon" ? "October 1" : level.id === "mirror" ? "November 1" : null;
         const soon = opens != null && !fogReleased(level.id);
-        const open = level.id === "shore";
+        const prev = previousFog(level.id);
+        const paid = allOpen;
+        const beaten = prev == null || cleared.includes(prev);
+        const open = level.id === "shore" || (!soon && paid && beaten);
+        const note = soon
+          ? `Coming soon. Opens ${opens}.`
+          : open
+            ? level.rule
+            : !cleared.includes("shore")
+              ? "Beat the shore first."
+              : !paid
+                ? "10 Rare coins to continue."
+                : prev
+                  ? `Beat ${getLevel(prev).title} first.`
+                  : "Locked.";
         return (
           <button
             key={level.id}
@@ -1428,7 +1497,7 @@ function LevelList({
             onClick={() => onPick(level.id)}
           >
             <span>{soon ? `${level.title} · coming soon` : open ? level.title : `${level.title} · locked`}</span>
-            <small>{soon ? `Coming soon. Opens ${opens}.` : open ? level.rule : "Locked."}</small>
+            <small>{note}</small>
           </button>
         );
       })}

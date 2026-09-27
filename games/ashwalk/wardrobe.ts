@@ -70,6 +70,7 @@ export function rareOnOffer(id: string, now = new Date()) {
 export type Ledger = {
   spent: bigint;
   allFogs: boolean;
+  road: boolean;
   burned: number;
   owned: string[];
   equipped: string | null;
@@ -81,7 +82,7 @@ export function clothById(id: string | null): Cloth | null {
 }
 
 function empty(): Ledger {
-  return { spent: 0n, allFogs: false, burned: 0, owned: [], equipped: null };
+  return { spent: 0n, allFogs: false, road: false, burned: 0, owned: [], equipped: null };
 }
 
 function storageKey(account: string) {
@@ -96,6 +97,7 @@ export function readLedger(account: string | null): Ledger {
     const parsed = JSON.parse(raw) as {
       spent?: string;
       allFogs?: boolean;
+      road?: boolean;
       burned?: number;
       owned?: unknown;
       equipped?: unknown;
@@ -103,6 +105,7 @@ export function readLedger(account: string | null): Ledger {
     return {
       spent: BigInt(parsed.spent ?? "0"),
       allFogs: parsed.allFogs === true,
+      road: parsed.road === true,
       burned: typeof parsed.burned === "number" && parsed.burned > 0 ? Math.floor(parsed.burned) : 0,
       owned: Array.isArray(parsed.owned)
         ? parsed.owned.filter((id): id is string => typeof id === "string" && clothById(id) != null)
@@ -123,6 +126,7 @@ function writeLedger(account: string, ledger: Ledger) {
     JSON.stringify({
       spent: ledger.spent.toString(),
       allFogs: ledger.allFogs,
+      road: ledger.road,
       burned: ledger.burned,
       owned: ledger.owned,
       equipped: ledger.equipped,
@@ -203,6 +207,18 @@ export function equipCloth(account: string, id: string | null) {
   if (id && (!ledger.owned.includes(id) || !clothReleased(id))) return;
   ledger.equipped = id;
   writeLedger(account, ledger);
+}
+
+export const ROAD_COST = 10;
+
+export function openRoad(account: string, balance: bigint) {
+  const ledger = readLedger(account);
+  if (ledger.road) return true;
+  if (!pay(account, balance, ROAD_COST)) return false;
+  const next = readLedger(account);
+  next.road = true;
+  writeLedger(account, next);
+  return true;
 }
 
 export function unlockAllFogs(account: string, balance: bigint) {
