@@ -13,6 +13,7 @@ import { burst, frameCamera, renderFrame, viewSize } from "./draw";
 import { createAshMusic, type AshMusic, type MusicScene } from "./music";
 import {
   buyCloth,
+  clothReleased,
   equipCloth,
   formatRareCoins,
   hasWhole,
@@ -186,10 +187,14 @@ export function Playfield({
   }
 
   function buyOutfit(id: string) {
+    if (!clothReleased(id)) {
+      setStakeMsg("The white cape opens October 1. Coming soon.");
+      return;
+    }
     const who = accountRef.current ?? "guest";
     const balance = rareRef.current ?? 0n;
     if (!buyCloth(who, balance, id)) {
-      setStakeMsg("The cape wants 10 Rare coins.");
+      setStakeMsg("The white cape wants 10 Rare coins.");
       return;
     }
     setStakeMsg("");
@@ -960,7 +965,7 @@ export function Playfield({
                 : `You have ${formatRareCoins(spendable(rareBalance, account) ?? 0n)} Rare coins.`}
           </p>
           <p>The shore is free. You start that walk with 5 coins. Every fog after it costs 5 Rare coins. 20 Rare coins opens every fog.</p>
-          <p>Every month a new map opens, and a new cape is there to own. The moon opens October 1. Coming soon.</p>
+          <p>Every month a new map opens, and a new cape is there to own. The moon and the white cape open October 1. Coming soon.</p>
           {stakeMsg && (
             <p className="ash-error" role="alert">
               {stakeMsg}
@@ -1021,9 +1026,10 @@ export function Playfield({
                 ? "Reading Rare coins…"
                 : `You have ${formatRareCoins(spendable(rareBalance, account) ?? 0n)} Rare coins.`}
           </p>
-          <p className="ash-note">The red cape is free to try. Press it to wear it.</p>
+          <p className="ash-note">The red cape is free to try. The white cape opens October 1. Coming soon. It will cost 10 Rare coins.</p>
           <div className="ash-levels">
             {outfitList().map((cloth) => {
+              const soon = !clothReleased(cloth.id);
               const owned = ledger.owned.includes(cloth.id);
               const wearing = ledger.equipped === cloth.id;
               return (
@@ -1032,15 +1038,20 @@ export function Playfield({
                   type="button"
                   className="ash-level"
                   aria-current={wearing ? "true" : undefined}
+                  disabled={soon}
                   onClick={() => (owned ? wearOutfit(wearing ? null : cloth.id) : buyOutfit(cloth.id))}
                 >
-                  <span>{cloth.name}</span>
+                  <span>{soon ? `${cloth.name} · coming soon` : cloth.name}</span>
                   <small>
-                    {owned
-                      ? wearing
-                        ? "Wearing. Press to take it off."
-                        : `${cloth.note} Press to wear.`
-                      : `${cloth.note} Free to try.`}
+                    {soon
+                      ? "Coming soon. Opens October 1. 10 Rare coins."
+                      : owned
+                        ? wearing
+                          ? "Wearing. Press to take it off."
+                          : `${cloth.note} Press to wear.`
+                        : cloth.cost > 0
+                          ? `${cloth.note} ${cloth.cost} Rare coins.`
+                          : `${cloth.note} Free to try.`}
                   </small>
                 </button>
               );

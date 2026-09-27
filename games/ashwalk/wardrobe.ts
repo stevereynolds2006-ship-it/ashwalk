@@ -10,9 +10,15 @@ export type Cloth = {
 
 export const CLOTHES: readonly Cloth[] = [
   { id: "cape", name: "Red cape", cost: 0, rare: false, note: "A long red cape behind you." },
+  { id: "white", name: "White cape", cost: 10, rare: false, note: "Next month's cape." },
 ];
 
 const WEEKLY: readonly Cloth[] = [];
+
+export function clothReleased(id: string, now = new Date()) {
+  if (id !== "white") return true;
+  return now >= new Date(2026, 9, 1);
+}
 
 export const ALL_FOGS_COST = 20;
 
@@ -94,7 +100,9 @@ export function readLedger(account: string | null): Ledger {
         ? parsed.owned.filter((id): id is string => typeof id === "string" && clothById(id) != null)
         : [],
       equipped:
-        typeof parsed.equipped === "string" && clothById(parsed.equipped) ? parsed.equipped : null,
+        typeof parsed.equipped === "string" && clothById(parsed.equipped) && clothReleased(parsed.equipped)
+          ? parsed.equipped
+          : null,
     };
   } catch {
     return empty();
@@ -150,6 +158,7 @@ function pay(account: string, balance: bigint, whole: number) {
 export function buyCloth(account: string, balance: bigint, id: string, now = new Date()) {
   const cloth = clothById(id);
   if (!cloth) return false;
+  if (!clothReleased(id, now)) return false;
   if (cloth.cost > 0 && !rareOnOffer(id, now)) return false;
   const ledger = readLedger(account);
   if (ledger.owned.includes(id)) {
@@ -167,7 +176,7 @@ export function buyCloth(account: string, balance: bigint, id: string, now = new
 
 export function equipCloth(account: string, id: string | null) {
   const ledger = readLedger(account);
-  if (id && !ledger.owned.includes(id)) return;
+  if (id && (!ledger.owned.includes(id) || !clothReleased(id))) return;
   ledger.equipped = id;
   writeLedger(account, ledger);
 }

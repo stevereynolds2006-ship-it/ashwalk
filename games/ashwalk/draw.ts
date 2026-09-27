@@ -385,7 +385,7 @@ function drawOutfit(
     ctx.stroke();
   }
 
-  if (layer === "back" && cloth === "cape") {
+  if (layer === "back" && (cloth === "cape" || cloth === "white")) {
     const rows = [
       "................kkkkkkkkk.....",
       ".............kkrrrrrrrrrrk....",
@@ -406,7 +406,10 @@ function drawOutfit(
       "..............krrrrk..........",
       "...............kkkk...........",
     ];
-    const tone: Record<string, string> = { r: "#e10600", d: "#8d0906", k: "#240406" };
+    const tone: Record<string, string> =
+      cloth === "white"
+        ? { r: "#f7f7f7", d: "#9a9a9e", k: "#1a1a1c" }
+        : { r: "#e10600", d: "#8d0906", k: "#240406" };
     const size = 2;
     const along = vx * facing;
     const run = Math.max(-1, Math.min(1, along / 180));
