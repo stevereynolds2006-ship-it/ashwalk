@@ -27,7 +27,7 @@ import {
 } from "./wardrobe";
 import "./ashwalk.css";
 
-type Phase = "title" | "levels" | "lobby" | "play" | "pause" | "rite" | "clear" | "clothes";
+type Phase = "title" | "levels" | "lobby" | "play" | "pause" | "lives" | "rite" | "clear" | "clothes";
 type Holds = { left: boolean; right: boolean; jump: boolean; down: boolean; use: boolean };
 type Session = { code: string; host: boolean };
 
@@ -35,6 +35,7 @@ const LAMP_PRICE = 5;
 const LIGHT_PRICE = 1;
 const LIGHT_SECONDS = 10;
 const STAKE = 5;
+const LIFE_PRICE = 10;
 const LIVES = 3;
 const ALPHABET = "abcdefghjkmnpqrstuvwxyz23456789";
 
@@ -209,6 +210,26 @@ export function Playfield({
     setStakeMsg(`Burned ${burnedHalf(10)} Rare coins.`);
     refreshLedger(who);
     onWardrobe?.();
+  }
+
+  function buyLife() {
+    const who = accountRef.current;
+    const balance = rareRef.current;
+    if (!who || balance == null) {
+      setStakeMsg("Connect a wallet. A life is 10 Rare coins.");
+      return;
+    }
+    if (!spendWhole(who, balance, LIFE_PRICE)) {
+      setStakeMsg("You need 10 Rare coins for a life.");
+      return;
+    }
+    refreshLedger(who);
+    onWardrobe?.();
+    livesRef.current = 1;
+    setLives(1);
+    setStakeMsg("");
+    setShopError(`Burned ${burnedHalf(LIFE_PRICE)} Rare coins.`);
+    go("play");
   }
 
   function wearOutfit(id: string | null) {
@@ -486,9 +507,8 @@ export function Playfield({
             const burnNote =
               burned > 0 ? `Burned ${burned} coin${burned === 1 ? "" : "s"}.` : "No coins left to burn.";
             if (left <= 0) {
-              clearRun();
-              setStakeMsg(`Three lives are gone. ${burnNote} The shore is free. Every fog after it costs 5 Rare coins.`);
-              go("title");
+              setStakeMsg(`${burnNote} Buy one more life for ${LIFE_PRICE} Rare coins.`);
+              go("lives");
             } else {
               setShopError(`${left} ${left === 1 ? "life" : "lives"} left. ${burnNote}`);
             }
@@ -616,7 +636,7 @@ export function Playfield({
       if (sim.level.stalker && sim.wake > 0 && !caught) huntZoomRef.current = 1;
       else huntZoomRef.current = Math.max(0, huntZoomRef.current - dt * 0.35);
       const zoom = 1 + 0.75 * huntZoomRef.current;
-      const follow = phaseNow === "play" || phaseNow === "pause" || phaseNow === "rite" || phaseNow === "clear";
+      const follow = phaseNow === "play" || phaseNow === "pause" || phaseNow === "lives" || phaseNow === "rite" || phaseNow === "clear";
       const camera = frameCamera(
         sim,
         sized.viewW * zoom,
@@ -634,7 +654,7 @@ export function Playfield({
       musicRef.current?.sync({
         scene: musicScene(phaseNow, sim),
         reduced: reducedRef.current,
-        paused: phaseNow === "pause" || pausedRef.current,
+        paused: phaseNow === "pause" || phaseNow === "lives" || pausedRef.current,
         hidden: document.visibilityState === "hidden",
       });
       renderFrame(
@@ -1023,8 +1043,8 @@ export function Playfield({
           <p className="ash-note">
             A and D, or the left and right arrow keys, move. W, up, or space jumps. S drops through a cage.
             E pulls, lights a bell, or buys a lantern. A lantern lasts 10 seconds. Stand on a plank too long and it falls.
-            It comes back after 4 seconds. Three lives to a board. A death burns half the coins you are carrying.
-            Half of every coin you spend is burned. The shore is free. Every fog after it costs 5 Rare coins.
+            It comes back after 4 seconds. Three lives to a board. After that, one more life is 10 Rare coins.
+            A death burns half the coins you are carrying. Half of every coin you spend is burned.
           </p>
         </section>
       )}
@@ -1210,6 +1230,34 @@ export function Playfield({
               </div>
             </>
           )}
+        </section>
+      )}
+      {phase === "lives" && (
+        <section className="ash-panel" aria-label="Buy a life">
+          <p className="ash-kicker">No lives left</p>
+          <h2>Buy one more</h2>
+          <p>Three lives are gone. One more is {LIFE_PRICE} Rare coins. Half of that spend is burned.</p>
+          {stakeMsg && (
+            <p className="ash-error" role="alert">
+              {stakeMsg}
+            </p>
+          )}
+          <div className="ash-actions">
+            <button type="button" className="ash-btn" onClick={buyLife}>
+              Buy a life · {LIFE_PRICE} Rare coins
+            </button>
+            <button
+              type="button"
+              className="ash-btn-ghost"
+              onClick={() => {
+                clearRun();
+                setStakeMsg("Three lives are gone. The shore is free.");
+                go("title");
+              }}
+            >
+              Leave
+            </button>
+          </div>
         </section>
       )}
       {phase === "pause" && (

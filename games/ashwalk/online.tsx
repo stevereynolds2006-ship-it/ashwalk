@@ -11,10 +11,10 @@ export type NetApi = {
   peerCount: () => number;
 };
 
-type Phase = "title" | "levels" | "lobby" | "play" | "pause" | "rite" | "clear" | "clothes";
+type Phase = "title" | "levels" | "lobby" | "play" | "pause" | "lives" | "rite" | "clear" | "clothes";
 
 function inRun(phase: Phase) {
-  return phase === "play" || phase === "pause" || phase === "rite" || phase === "clear";
+  return phase === "play" || phase === "pause" || phase === "lives" || phase === "rite" || phase === "clear";
 }
 
 function stringList(value: unknown): string[] {
