@@ -21,7 +21,7 @@ import {
   spendWhole,
   spendable,
   unlockAllFogs,
-  unlockColor,
+  setBoardColor,
   type Ledger,
 } from "./wardrobe";
 import "./ashwalk.css";
@@ -208,17 +208,8 @@ export function Playfield({
   }
 
   function buyColor() {
-    if (colorRef.current) return;
-    const who = accountRef.current;
-    const balance = rareRef.current;
-    if (!who || balance == null) {
-      setStakeMsg("Connect a wallet. Color costs 100 Rare coins.");
-      return;
-    }
-    if (!unlockColor(who, balance)) {
-      setStakeMsg("You need 100 Rare coins.");
-      return;
-    }
+    const who = accountRef.current ?? "guest";
+    setBoardColor(who, !colorRef.current);
     setStakeMsg("");
     refreshLedger(who);
   }
@@ -979,7 +970,7 @@ export function Playfield({
           <p>Every month a new map opens, and a new cape is there to own. This month the map is The moon. The way out is up.</p>
           <div className="ash-actions">
             <button type="button" className="ash-btn-ghost" onClick={buyColor} disabled={ledger.color}>
-              {ledger.color ? "Every board is in color" : "Color every board · 100 Rare coins"}
+              {ledger.color ? "Color is on · press for ash" : "Try color · free"}
             </button>
           </div>
           {stakeMsg && (

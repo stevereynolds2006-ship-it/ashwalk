@@ -194,3 +194,9 @@ export function unlockColor(account: string, balance: bigint) {
   writeLedger(account, next);
   return true;
 }
+
+export function setBoardColor(account: string, on: boolean) {
+  const ledger = readLedger(account);
+  ledger.color = on;
+  writeLedger(account, ledger);
+}
