@@ -60,7 +60,7 @@ const MID: Tree[] = Array.from({ length: 7 }, (_, i) => ({
 
 const SKY: Record<string, [string, string, string, string]> = {
   shore: ["#141416", "#d9d7d2", "#8e8c88", "#121214"],
-  latch: ["#101014", "#c2c1c8", "#6e6c78", "#101012"],
+  latch: ["#2a2a2e", "#d4d2ce", "#9a9894", "#3a3a3e"],
   gale: ["#121214", "#7a7a7e", "#3c3c40", "#101012"],
   choir: ["#5a5a62", "#f4f2ec", "#ddd9d2", "#4a4a52"],
   gear: ["#16161a", "#c8c8cc", "#7a7a80", "#121214"],
@@ -996,6 +996,93 @@ function drawBell(ctx: CanvasRenderingContext2D, x: number, ground: number, lit:
   ctx.fillRect(x - 1.5, ground - 24, 3, 8);
 }
 
+function drawHangFrame(ctx: CanvasRenderingContext2D, x: number, y: number, t: number, bird: boolean) {
+  const swing = Math.sin(t) * 3;
+  ctx.save();
+  ctx.translate(x + swing, y);
+  ctx.strokeStyle = "#141416";
+  ctx.fillStyle = "#121214";
+  ctx.lineWidth = 2.4;
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.lineTo(0, 78);
+  ctx.stroke();
+  ctx.lineWidth = 5;
+  ctx.strokeRect(-30, 78, 60, 86);
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(-38, 118);
+  ctx.lineTo(38, 118);
+  ctx.stroke();
+  ctx.fillRect(-36, 72, 10, 10);
+  ctx.fillRect(26, 72, 10, 10);
+  ctx.fillRect(-36, 156, 10, 10);
+  ctx.fillRect(26, 156, 10, 10);
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(0, 176, 7, Math.PI, 0);
+  ctx.stroke();
+  ctx.fillRect(-8, 176, 16, 20);
+  if (bird) drawCrow(ctx, -8, 70, t * 6, 1);
+  ctx.restore();
+}
+
+function drawLatchFog(ctx: CanvasRenderingContext2D, camera: Camera, t: number, reduced: boolean) {
+  ctx.save();
+  ctx.translate(camera.x * 0.62, camera.y * 0.18);
+  ctx.fillStyle = "rgba(28,28,30,0.72)";
+  for (let x = -300; x < 6400; x += 980) {
+    ctx.beginPath();
+    ctx.moveTo(x, 460);
+    ctx.lineTo(x + 30, 300);
+    ctx.lineTo(x + 70, 360);
+    ctx.lineTo(x + 120, 210);
+    ctx.lineTo(x + 160, 340);
+    ctx.lineTo(x + 230, 160);
+    ctx.lineTo(x + 280, 390);
+    ctx.lineTo(x + 360, 240);
+    ctx.lineTo(x + 430, 470);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(x + 700, 190);
+    ctx.lineTo(x + 760, 470);
+    ctx.lineTo(x + 960, 490);
+    ctx.lineTo(x + 930, 230);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.restore();
+
+  ctx.save();
+  ctx.translate(camera.x * 0.3, 0);
+  ctx.fillStyle = "rgba(210,208,204,0.22)";
+  ctx.fillRect(-200, 250, 7600, 90);
+  ctx.fillRect(-200, 360, 7600, 70);
+  ctx.restore();
+
+  ctx.save();
+  ctx.translate(camera.x * 0.22, camera.y * 0.04);
+  ctx.strokeStyle = "#161618";
+  ctx.lineCap = "round";
+  for (let x = -200; x < 6800; x += 1200) {
+    ctx.lineWidth = 9;
+    ctx.beginPath();
+    ctx.moveTo(x, 36);
+    ctx.quadraticCurveTo(x + 480, -16, x + 1040, 58);
+    ctx.stroke();
+    ctx.lineWidth = 1.6;
+    for (let i = 0; i < 9; i++) {
+      ctx.beginPath();
+      ctx.moveTo(x + 70 + i * 110, 28 + (i % 3) * 8);
+      ctx.quadraticCurveTo(x + 30 + i * 100, 90, x + 10 + i * 108, 160);
+      ctx.stroke();
+    }
+    drawHangFrame(ctx, x + 220, 24, reduced ? 0 : t * 0.6, true);
+    drawHangFrame(ctx, x + 620, 40, reduced ? 0.4 : t * 0.6 + 1.2, false);
+  }
+  ctx.restore();
+}
+
 export function renderFrame(
   ctx: CanvasRenderingContext2D,
   cssW: number,
@@ -1060,6 +1147,8 @@ export function renderFrame(
     ctx.translate(camera.x * 0.4, camera.y * 0.15);
     for (const tree of SHORE_NEAR) drawDeadwood(ctx, tree, 0.88);
     ctx.restore();
+  } else if (sim.level.id === "latch") {
+    drawLatchFog(ctx, camera, sim.t, reduced);
   } else if (sim.level.id === "gale") {
     drawGaleStorm(ctx, camera, sim.t, reduced);
   } else if (sim.level.id === "choir") {
