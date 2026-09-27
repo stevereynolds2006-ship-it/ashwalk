@@ -582,7 +582,7 @@ export function Playfield({
       let nextKicker = nextChapter.kicker;
       if (sim.level.id === "mirror") {
         nextKicker =
-          sim.beacons.size > 0 ? "Turn back. The door is behind you." : "Walk to him. Then the way out is back.";
+          sim.wake >= 1 ? "Run. The door is behind you." : sim.wake > 0 ? "He is waking." : "Walk to him. Then you run.";
       } else if (sim.level.beacons.length > 0) {
         nextKicker = `${sim.beacons.size} of ${sim.level.beacons.length} bells`;
       } else if (sim.level.wind?.mode === "tide" && phaseNow === "play") {
@@ -641,7 +641,7 @@ export function Playfield({
       const cssH = canvas.clientHeight;
       const sized = viewSize(cssW, cssH);
       const caught = Boolean(sim.level.stalker && sim.caged && sim.cage >= 1);
-      if (sim.level.stalker && sim.wake > 0 && !caught) huntZoomRef.current = 1;
+      if ((sim.level.stalker || sim.level.hunter) && sim.wake > 0 && !caught) huntZoomRef.current = 1;
       else huntZoomRef.current = Math.max(0, huntZoomRef.current - dt * 0.35);
       const zoom = 1 + 0.75 * huntZoomRef.current;
       const follow = phaseNow === "play" || phaseNow === "pause" || phaseNow === "lives" || phaseNow === "rite" || phaseNow === "clear";
@@ -1574,7 +1574,7 @@ function promptFor(sim: Sim, phase: Phase) {
   if (sim.gateSeconds > 0) return `Gate ${sim.gateSeconds.toFixed(1)}`;
   if (sim.nearGoal && sim.doorLocked) {
     if (sim.level.combo && !comboSet(sim)) return "The lock is not the code";
-    if (sim.level.stalker && sim.beacons.size >= sim.level.beacons.length) return "Trap it in the cage first";
+    if (sim.level.hunter && sim.wake < 1) return "Reach him. Then the door opens behind you.";
     return "The door wants every bell";
   }
   if (sim.nearTrap) return "Wait until it is inside";

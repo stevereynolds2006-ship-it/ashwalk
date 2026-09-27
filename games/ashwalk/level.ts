@@ -75,6 +75,13 @@ export type Stalker = {
   plate: Zone;
 };
 
+/** Stands until you reach wakeX, then hunts you back to the door. */
+export type Hunter = {
+  x: number;
+  surface: number;
+  wakeX: number;
+};
+
 export type Spider = {
   id: string;
   mode: "hang" | "crawl";
@@ -118,6 +125,7 @@ export type Level = {
   chapters: readonly Chapter[];
   light: { x: number; y: number };
   stalker?: Stalker;
+  hunter?: Hunter;
   /** Exit lock. The code is the marks on the gates. */
   combo?: { code: readonly number[]; x: number; span: number; y: number };
 };

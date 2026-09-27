@@ -188,7 +188,7 @@ export function createSim(level: Level = SHORE): Sim {
     remotes: [],
     linked: false,
     wake: 0,
-    stalkX: level.stalker?.x ?? 0,
+    stalkX: level.hunter?.x ?? level.stalker?.x ?? 0,
     stalkDir: 1,
     caged: false,
     cage: 0,
@@ -418,6 +418,12 @@ function respawn(sim: Sim) {
     sim.wake = 1;
     sim.stalkX = Math.min(spot.x - 340, stalk.cageX0 - 80);
     sim.stalkDir = 1;
+  }
+  const hunter = sim.level.hunter;
+  if (hunter && sim.wake > 0) {
+    sim.wake = 1;
+    sim.stalkX = spot.x + PW / 2 + 420;
+    sim.stalkDir = -1;
   }
   if (!sim.linked) {
     for (const id of Object.keys(sim.crumbles)) {
@@ -717,11 +723,13 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
   }
 
   stepStalker(sim, dt, events);
+  stepHunter(sim, dt, events);
 
   if (events.beacon === "lock") events.beacon = null;
   sim.doorLocked =
     (level.beacons.length > 0 && sim.beacons.size < level.beacons.length) ||
     (!!level.stalker && !sim.caged) ||
+    (!!level.hunter && sim.wake < 1) ||
     !comboSet(sim);
   sim.nearGoal = zoneHit(sim.x, sim.y, level.goal);
   if (!sim.won && sim.nearGoal && !sim.doorLocked) {
@@ -782,6 +790,37 @@ function stepStalker(sim: Sim, dt: number, events: StepEvents) {
     return;
   }
   if (onPlate) sim.nearTrap = true;
+}
+
+function stepHunter(sim: Sim, dt: number, events: StepEvents) {
+  const spec = sim.level.hunter;
+  if (!spec || sim.won) return;
+  const prey = sim.x + PW / 2;
+  if (sim.wake <= 0) {
+    if (prey >= spec.wakeX) sim.wake = 0.02;
+    return;
+  }
+  if (sim.wake < 1) {
+    sim.wake = Math.min(1, sim.wake + dt / 0.7);
+    sim.stalkX = spec.x;
+    sim.stalkDir = -1;
+    return;
+  }
+  const speed = 168;
+  if (sim.stalkX > prey + 28) {
+    sim.stalkX -= speed * dt;
+    sim.stalkDir = -1;
+  }
+  if (
+    sim.invuln <= 0 &&
+    sim.dead <= 0 &&
+    prey > sim.stalkX - 108 &&
+    prey < sim.stalkX + 20 &&
+    sim.y < spec.surface &&
+    sim.y + PH > spec.surface - 200
+  ) {
+    kill(sim, events);
+  }
 }
 
 function blocksSide(kind: Kind) {

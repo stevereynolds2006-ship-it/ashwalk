@@ -1059,10 +1059,12 @@ function drawMirrorFog(ctx: CanvasRenderingContext2D, camera: Camera, sim: Sim, 
     }
   }
 
-  const met = sim.beacons.size > 0;
+  const awake = sim.wake > 0;
   const pulse = reduced ? 0.8 : 0.7 + Math.sin(sim.t * 1.6) * 0.18;
+  const step = !awake || sim.wake < 1 || reduced ? 0 : Math.sin(sim.t * 8) * 18;
+  const home = sim.level.hunter?.x ?? 3080;
   ctx.save();
-  ctx.translate(3040, 530);
+  ctx.translate(awake ? sim.stalkX : home, 530);
   ctx.fillStyle = "#050506";
   ctx.beginPath();
   ctx.moveTo(-90, -20);
@@ -1077,12 +1079,23 @@ function drawMirrorFog(ctx: CanvasRenderingContext2D, camera: Camera, sim: Sim, 
   ctx.quadraticCurveTo(170, -280, 120, -20);
   ctx.closePath();
   ctx.fill();
+  if (sim.wake >= 1) {
+    ctx.lineWidth = 16;
+    ctx.lineCap = "round";
+    ctx.strokeStyle = "#050506";
+    ctx.beginPath();
+    ctx.moveTo(-20, -30);
+    ctx.lineTo(-48 - step, 8);
+    ctx.moveTo(24, -24);
+    ctx.lineTo(52 + step, 8);
+    ctx.stroke();
+  }
   ctx.shadowColor = "#f4f1ea";
-  ctx.shadowBlur = met ? 22 : 10;
-  ctx.fillStyle = `rgba(244,241,234,${met ? 1 : pulse})`;
+  ctx.shadowBlur = sim.wake >= 1 ? 26 : 10;
+  ctx.fillStyle = `rgba(244,241,234,${sim.wake >= 1 ? 1 : pulse})`;
   ctx.beginPath();
-  ctx.arc(-22, -312, met ? 4 : 3.1, 0, Math.PI * 2);
-  ctx.arc(-8, -308, met ? 4 : 3.1, 0, Math.PI * 2);
+  ctx.arc(-22, -312, sim.wake >= 1 ? 4.4 : 3.1, 0, Math.PI * 2);
+  ctx.arc(-8, -308, sim.wake >= 1 ? 4.4 : 3.1, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
 }
