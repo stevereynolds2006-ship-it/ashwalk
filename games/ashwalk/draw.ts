@@ -66,7 +66,7 @@ const SKY: Record<string, [string, string, string, string]> = {
   gear: ["#16161a", "#c8c8cc", "#7a7a80", "#121214"],
   roof: ["#2a2a2c", "#c8c8c6", "#6a6a6c", "#121214"],
   antler: ["#101114", "#c5c3be", "#6d6b68", "#101114"],
-  moon: ["#1c1c22", "#e4e2dc", "#b7b4ae", "#2a2a30"],
+  moon: ["#050506", "#101218", "#1a1c22", "#050506"],
 };
 
 function drawTree(ctx: CanvasRenderingContext2D, tree: Tree, alpha: number) {
@@ -1031,49 +1031,90 @@ function drawBell(ctx: CanvasRenderingContext2D, x: number, ground: number, lit:
 
 function drawMoonFog(ctx: CanvasRenderingContext2D, camera: Camera, t: number, reduced: boolean) {
   ctx.save();
-  ctx.translate(camera.x * 0.18, camera.y * 0.05);
-  const mx = 1280;
-  const my = 120;
-  const glow = ctx.createRadialGradient(mx, my, 10, mx, my, 260);
-  glow.addColorStop(0, "rgba(255,255,255,0.9)");
-  glow.addColorStop(0.35, "rgba(236,236,230,0.28)");
-  glow.addColorStop(1, "rgba(236,236,230,0)");
-  ctx.fillStyle = glow;
+  ctx.translate(camera.x, camera.y);
+  ctx.fillStyle = "#f4f6f8";
+  for (let i = 0; i < 90; i++) {
+    const sx = ((i * 137) % Math.max(1, Math.floor(camera.w))) + (i % 5);
+    const sy = ((i * 89) % Math.max(1, Math.floor(camera.h))) + (i % 3);
+    ctx.fillRect(sx, sy, i % 11 === 0 ? 2 : 1, i % 11 === 0 ? 2 : 1);
+  }
+  const sx = camera.w * 0.62;
+  const sy = camera.h * 0.22;
+  const star = ctx.createRadialGradient(sx, sy, 4, sx, sy, 180);
+  star.addColorStop(0, "rgba(255,255,255,0.95)");
+  star.addColorStop(0.2, "rgba(255,255,255,0.35)");
+  star.addColorStop(1, "rgba(255,255,255,0)");
+  ctx.fillStyle = star;
   ctx.beginPath();
-  ctx.arc(mx, my, 260, 0, Math.PI * 2);
+  ctx.arc(sx, sy, 180, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = "#f7f5f0";
+  ctx.fillStyle = "#fff";
   ctx.beginPath();
-  ctx.arc(mx, my, 58, 0, Math.PI * 2);
+  ctx.arc(sx, sy, 7, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = "#c9c7c1";
+  ctx.strokeStyle = "rgba(255,255,255,0.35)";
+  ctx.lineWidth = 1;
   ctx.beginPath();
-  ctx.arc(mx + 26, my - 6, 48, 0, Math.PI * 2);
+  ctx.moveTo(sx - 90, sy);
+  ctx.lineTo(sx + 90, sy);
+  ctx.moveTo(sx, sy - 70);
+  ctx.lineTo(sx, sy + 70);
+  ctx.stroke();
+  ctx.fillStyle = "#d5d7dc";
+  ctx.beginPath();
+  ctx.arc(camera.w * 0.28, camera.h * 0.16, 16, 0.5, Math.PI + 0.4);
+  ctx.lineTo(camera.w * 0.28 + 6, camera.h * 0.16);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(camera.w * 0.84, camera.h * 0.38, 8, 0.6, Math.PI + 0.2);
   ctx.fill();
   ctx.restore();
 
   ctx.save();
-  ctx.translate(camera.x * 0.45, camera.y * 0.12);
-  ctx.fillStyle = "rgba(22,22,26,0.55)";
-  for (let x = -200; x < 5600; x += 820) {
+  ctx.translate(camera.x * 0.35, camera.y * 0.35);
+  ctx.fillStyle = "#14161a";
+  for (let i = 0; i < 8; i++) {
+    const y = -200 + i * 280;
     ctx.beginPath();
-    ctx.moveTo(x, 520);
-    ctx.quadraticCurveTo(x + 180, 300, x + 420, 520);
+    ctx.moveTo(-40, y);
+    ctx.lineTo(280, y + 40);
+    ctx.lineTo(340, y + 160);
+    ctx.lineTo(40, y + 210);
+    ctx.closePath();
     ctx.fill();
     ctx.beginPath();
-    ctx.arc(x + 240, 210, 34, 0.4, Math.PI - 0.2);
-    ctx.lineWidth = 8;
-    ctx.strokeStyle = "#141418";
+    ctx.moveTo(1180, y + 80);
+    ctx.lineTo(1680, y + 20);
+    ctx.lineTo(1720, y + 240);
+    ctx.lineTo(1100, y + 280);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "#0c0c0e";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(180, y + 90);
+    ctx.lineTo(160, y + 220);
     ctx.stroke();
+    ctx.beginPath();
+    ctx.ellipse(150, y + 250, 36, 28, 0.2, 0, Math.PI * 2);
+    ctx.fill();
+    const drift = reduced ? 0 : Math.sin(t * 0.4 + i) * 8;
+    ctx.beginPath();
+    ctx.ellipse(620 + drift, y + 140, 70, 16, -0.3, 0, Math.PI * 2);
+    ctx.fill();
   }
   ctx.restore();
+}
 
+function tintBoards(ctx: CanvasRenderingContext2D, cssW: number, cssH: number) {
   ctx.save();
-  ctx.translate(camera.x * 0.28, 0);
-  ctx.fillStyle = "rgba(255,255,255,0.14)";
-  const drift = reduced ? 0 : Math.sin(t * 0.15) * 20;
-  ctx.fillRect(-200 + drift, 180, 6200, 36);
-  ctx.fillRect(80 - drift, 250, 6200, 22);
+  ctx.globalCompositeOperation = "color";
+  const wash = ctx.createLinearGradient(0, 0, cssW, cssH);
+  wash.addColorStop(0, "#6aa7ff");
+  wash.addColorStop(0.45, "#e2b15a");
+  wash.addColorStop(1, "#d2654a");
+  ctx.fillStyle = wash;
+  ctx.fillRect(0, 0, cssW, cssH);
   ctx.restore();
 }
 
@@ -1178,6 +1219,7 @@ export function renderFrame(
   lamp = false,
   gloom = 0,
   cloth: string | null = null,
+  colored = false,
 ) {
   const dpr = Math.min(2, globalThis.devicePixelRatio || 1);
   const canvas = ctx.canvas;
@@ -1420,6 +1462,7 @@ export function renderFrame(
     }
     ctx.globalAlpha = 1;
   }
+  if (colored) tintBoards(ctx, cssW, cssH);
 }
 
 function paintLitBells(ctx: CanvasRenderingContext2D, cssW: number, sim: Sim, camera: Camera) {

@@ -64,6 +64,7 @@ export function rareOnOffer(id: string, now = new Date()) {
 export type Ledger = {
   spent: bigint;
   allFogs: boolean;
+  color: boolean;
   owned: string[];
   equipped: string | null;
 };
@@ -74,7 +75,7 @@ export function clothById(id: string | null): Cloth | null {
 }
 
 function empty(): Ledger {
-  return { spent: 0n, allFogs: false, owned: [], equipped: null };
+  return { spent: 0n, allFogs: false, color: false, owned: [], equipped: null };
 }
 
 function storageKey(account: string) {
@@ -86,10 +87,11 @@ export function readLedger(account: string | null): Ledger {
   try {
     const raw = localStorage.getItem(storageKey(account));
     if (!raw) return empty();
-    const parsed = JSON.parse(raw) as { spent?: string; allFogs?: boolean; owned?: unknown; equipped?: unknown };
+    const parsed = JSON.parse(raw) as { spent?: string; allFogs?: boolean; color?: boolean; owned?: unknown; equipped?: unknown };
     return {
       spent: BigInt(parsed.spent ?? "0"),
       allFogs: parsed.allFogs === true,
+      color: parsed.color === true,
       owned: Array.isArray(parsed.owned)
         ? parsed.owned.filter((id): id is string => typeof id === "string" && clothById(id) != null)
         : [],
@@ -107,6 +109,7 @@ function writeLedger(account: string, ledger: Ledger) {
     JSON.stringify({
       spent: ledger.spent.toString(),
       allFogs: ledger.allFogs,
+      color: ledger.color,
       owned: ledger.owned,
       equipped: ledger.equipped,
     }),
@@ -178,6 +181,16 @@ export function unlockAllFogs(account: string, balance: bigint) {
   if (!pay(account, balance, ALL_FOGS_COST)) return false;
   const next = readLedger(account);
   next.allFogs = true;
+  writeLedger(account, next);
+  return true;
+}
+
+export function unlockColor(account: string, balance: bigint) {
+  const ledger = readLedger(account);
+  if (ledger.color) return true;
+  if (!pay(account, balance, 100)) return false;
+  const next = readLedger(account);
+  next.color = true;
   writeLedger(account, next);
   return true;
 }

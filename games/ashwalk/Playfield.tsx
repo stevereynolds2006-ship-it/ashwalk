@@ -21,6 +21,7 @@ import {
   spendWhole,
   spendable,
   unlockAllFogs,
+  unlockColor,
   type Ledger,
 } from "./wardrobe";
 import "./ashwalk.css";
@@ -87,6 +88,7 @@ export function Playfield({
   const ghostsRef = useRef(new Map<string, Ghost>());
   const apiRef = useRef<NetApi | null>(null);
   const clothRef = useRef<string | null>(null);
+  const colorRef = useRef(false);
   const allOpenRef = useRef(false);
   const accountRef = useRef(account);
   const rareRef = useRef(rareBalance);
@@ -122,7 +124,7 @@ export function Playfield({
   const [stakeMsg, setStakeMsg] = useState("");
   const clearedRef = useRef(new Set<string>());
   const [cleared, setCleared] = useState<string[]>([]);
-  const [ledger, setLedger] = useState<Ledger>({ spent: 0n, allFogs: true, owned: [], equipped: null });
+  const [ledger, setLedger] = useState<Ledger>({ spent: 0n, allFogs: true, color: false, owned: [], equipped: null });
   const markClearRef = useRef<(id: string) => void>(() => {});
   const shoreGlowRef = useRef(0);
   const huntZoomRef = useRef(0);
@@ -170,6 +172,7 @@ export function Playfield({
   accountRef.current = account;
   rareRef.current = rareBalance;
   clothRef.current = ledger.equipped;
+  colorRef.current = ledger.color;
   allOpenRef.current = true;
 
   function fogOpen(id: string) {
@@ -182,6 +185,7 @@ export function Playfield({
     setLedger(next);
     allOpenRef.current = true;
     clothRef.current = next.equipped;
+    colorRef.current = next.color;
   }
 
   function buyOutfit(id: string) {
@@ -201,6 +205,22 @@ export function Playfield({
     equipCloth(who, id);
     refreshLedger(who);
     onWardrobe?.();
+  }
+
+  function buyColor() {
+    if (colorRef.current) return;
+    const who = accountRef.current;
+    const balance = rareRef.current;
+    if (!who || balance == null) {
+      setStakeMsg("Connect a wallet. Color costs 100 Rare coins.");
+      return;
+    }
+    if (!unlockColor(who, balance)) {
+      setStakeMsg("You need 100 Rare coins.");
+      return;
+    }
+    setStakeMsg("");
+    refreshLedger(who);
   }
 
   function buyEveryFog() {
@@ -632,6 +652,7 @@ export function Playfield({
           ? 0.86
           : 0,
         clothRef.current,
+        colorRef.current,
       );
     };
     frame = requestAnimationFrame(tick);
@@ -955,7 +976,12 @@ export function Playfield({
                 : `You have ${formatRareCoins(spendable(rareBalance, account) ?? 0n)} Rare coins.`}
           </p>
           <p>The shore is free. You start that walk with 5 coins. Every fog after it costs 5 Rare coins. 20 Rare coins opens every fog.</p>
-          <p>Every month a new map opens, and a new cape is there to own. This month the map is The moon.</p>
+          <p>Every month a new map opens, and a new cape is there to own. This month the map is The moon. The way out is up.</p>
+          <div className="ash-actions">
+            <button type="button" className="ash-btn-ghost" onClick={buyColor} disabled={ledger.color}>
+              {ledger.color ? "Every board is in color" : "Color every board · 100 Rare coins"}
+            </button>
+          </div>
           {stakeMsg && (
             <p className="ash-error" role="alert">
               {stakeMsg}
