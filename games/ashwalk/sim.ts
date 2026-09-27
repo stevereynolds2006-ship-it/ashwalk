@@ -814,10 +814,10 @@ function stepHunter(sim: Sim, dt: number, events: StepEvents) {
   if (
     sim.invuln <= 0 &&
     sim.dead <= 0 &&
-    prey > sim.stalkX - 108 &&
-    prey < sim.stalkX + 20 &&
+    prey > sim.stalkX - 86 &&
+    prey < sim.stalkX + 16 &&
     sim.y < spec.surface &&
-    sim.y + PH > spec.surface - 200
+    sim.y + PH > spec.surface - 140
   ) {
     kill(sim, events);
   }

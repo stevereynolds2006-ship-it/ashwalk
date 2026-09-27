@@ -602,6 +602,47 @@ function drawOutfit(
   ctx.restore();
 }
 
+function drawTwin(
+  ctx: CanvasRenderingContext2D,
+  sprites: GenerationSprites | null,
+  sim: Sim,
+  reduced: boolean,
+) {
+  const spec = sim.level.hunter;
+  if (!spec) return;
+  const scale = 11;
+  const center = sim.wake > 0 ? sim.stalkX : spec.x;
+  const bottom = spec.surface;
+  if (!sprites) return;
+  const facing = sim.stalkDir < 0 ? "left" : "right";
+  const walking = sim.wake >= 1 && !reduced;
+  const frame = walking ? Math.floor(sim.t / 0.09) % 8 : 0;
+  const rows = spriteFrame(sprites, facing, walking, frame, facing).frame.rows;
+  const left = Math.round(center - (16 * scale) / 2);
+  const top = Math.round(bottom - 16 * scale);
+  const pixels: [number, number][] = [];
+  rows.forEach((row, py) => {
+    for (let px = 0; px < row.length; px++) if (row[px] === "#") pixels.push([px, py]);
+  });
+  ctx.save();
+  ctx.fillStyle = "#f4f1ea";
+  for (const [px, py] of pixels) {
+    ctx.fillRect(left + px * scale - 3, top + py * scale - 3, scale + 6, scale + 6);
+  }
+  ctx.fillStyle = "#070708";
+  for (const [px, py] of pixels) {
+    ctx.fillRect(left + px * scale, top + py * scale, scale, scale);
+  }
+  const eye = sim.wake >= 1 ? 1 : 0.45 + Math.sin(sim.t * 2) * 0.15;
+  ctx.shadowColor = "#f7f4ee";
+  ctx.shadowBlur = sim.wake >= 1 ? 16 : 6;
+  ctx.fillStyle = `rgba(247,244,238,${eye})`;
+  const face = sim.stalkDir < 0 ? 4 : 9;
+  ctx.fillRect(left + face * scale, top + 5 * scale, scale * 1.1, scale * 1.1);
+  ctx.fillRect(left + (face + 2) * scale, top + 5 * scale, scale * 1.1, scale * 1.1);
+  ctx.restore();
+}
+
 function drawFriend(
   ctx: CanvasRenderingContext2D,
   sprites: GenerationSprites | null,
@@ -1059,45 +1100,6 @@ function drawMirrorFog(ctx: CanvasRenderingContext2D, camera: Camera, sim: Sim, 
     }
   }
 
-  const awake = sim.wake > 0;
-  const pulse = reduced ? 0.8 : 0.7 + Math.sin(sim.t * 1.6) * 0.18;
-  const step = !awake || sim.wake < 1 || reduced ? 0 : Math.sin(sim.t * 8) * 18;
-  const home = sim.level.hunter?.x ?? 3080;
-  ctx.save();
-  ctx.translate(awake ? sim.stalkX : home, 530);
-  ctx.fillStyle = "#050506";
-  ctx.beginPath();
-  ctx.moveTo(-90, -20);
-  ctx.quadraticCurveTo(-150, -210, -46, -340);
-  ctx.lineTo(-28, -358);
-  ctx.lineTo(-62, -392);
-  ctx.lineTo(-16, -372);
-  ctx.lineTo(8, -438);
-  ctx.lineTo(36, -378);
-  ctx.lineTo(78, -418);
-  ctx.lineTo(96, -360);
-  ctx.quadraticCurveTo(170, -280, 120, -20);
-  ctx.closePath();
-  ctx.fill();
-  if (sim.wake >= 1) {
-    ctx.lineWidth = 16;
-    ctx.lineCap = "round";
-    ctx.strokeStyle = "#050506";
-    ctx.beginPath();
-    ctx.moveTo(-20, -30);
-    ctx.lineTo(-48 - step, 8);
-    ctx.moveTo(24, -24);
-    ctx.lineTo(52 + step, 8);
-    ctx.stroke();
-  }
-  ctx.shadowColor = "#f4f1ea";
-  ctx.shadowBlur = sim.wake >= 1 ? 26 : 10;
-  ctx.fillStyle = `rgba(244,241,234,${sim.wake >= 1 ? 1 : pulse})`;
-  ctx.beginPath();
-  ctx.arc(-22, -312, sim.wake >= 1 ? 4.4 : 3.1, 0, Math.PI * 2);
-  ctx.arc(-8, -308, sim.wake >= 1 ? 4.4 : 3.1, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.restore();
 }
 
 function drawMoonFog(ctx: CanvasRenderingContext2D, camera: Camera, t: number, reduced: boolean) {
@@ -1394,6 +1396,7 @@ export function renderFrame(
   }
 
   if (sim.level.stalker) drawHunt(ctx, sim, reduced);
+  if (sim.level.hunter) drawTwin(ctx, sprites, sim, reduced);
 
   const goal = sim.level.goal;
   const doorX = goal.x + goal.w / 2 - 9;
