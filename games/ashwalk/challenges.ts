@@ -919,13 +919,14 @@ export function previousFog(id: string): string | null {
   return LEVELS[index - 1]!.id;
 }
 
-/** Try build. Set false to restore the shore, the 10-coin road, and the date locks. */
-export const TRY_ALL = true;
+/** Try build. Set true to open every fog. */
+export const TRY_ALL = false;
 
 export function fogReleased(id: string, now = new Date()) {
   if (TRY_ALL) return true;
   if (id === "moon") return now >= new Date(2026, 9, 1);
   if (id === "mirror") return now >= new Date(2026, 10, 1);
+  if (id === "tunnel") return now >= new Date(2026, 11, 1);
   return true;
 }
 

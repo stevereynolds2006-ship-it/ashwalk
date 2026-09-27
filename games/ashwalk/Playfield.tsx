@@ -303,7 +303,9 @@ export function Playfield({
       setStakeMsg(
         id === "mirror"
           ? "The mirror opens November 1. Coming soon."
-          : "The moon opens October 1. Coming soon.",
+          : id === "tunnel"
+            ? "The tunnel opens December 1. Coming soon."
+            : "The moon opens October 1. Coming soon.",
       );
       return;
     }
@@ -1042,8 +1044,8 @@ export function Playfield({
                 ? "Reading Rare coins…"
                 : `You have ${formatRareCoins(spendable(rareBalance, account) ?? 0n)} Rare coins.`}
           </p>
-          <p>Every fog is open to try.</p>
-          <p>Every month a new map opens, and a new cape is there to own. The moon and the white cape open October 1. The mirror opens November 1. Coming soon.</p>
+          <p>The shore is free. Beat it, then 10 Rare coins opens the road. After that, beat a fog to open the next one.</p>
+          <p>Every month a new map opens, and a new cape is there to own. The moon and the white cape open October 1. The mirror opens November 1. The tunnel opens December 1. Coming soon.</p>
           {stakeMsg && (
             <p className="ash-error" role="alert">
               {stakeMsg}
@@ -1156,12 +1158,14 @@ export function Playfield({
           )}
           <p className="ash-note">
             {!account
-              ? "Connect a wallet to read your Rare coins. Every fog is open to try."
+              ? "Connect a wallet to read your Rare coins. The shore is the only fog open."
               : rareBalance == null
                 ? "Reading Rare coins…"
-                : `You have ${formatRareCoins(spendable(rareBalance, account) ?? 0n)} Rare coins. Every fog is open to try.`}
+                : `You have ${formatRareCoins(spendable(rareBalance, account) ?? 0n)} Rare coins. The shore is the only fog open.`}
           </p>
-          <p className="ash-note">Every fog is open to try, including the moon and the mirror.</p>
+          <p className="ash-note">
+            The shore is free. After you beat it, 10 Rare coins opens the next fog. Then each fog opens when you beat the one before it. The moon opens October 1. The mirror opens November 1. The tunnel opens December 1.
+          </p>
           <LevelList
             current={pickId}
             cleared={cleared}
@@ -1469,7 +1473,8 @@ function LevelList({
   return (
     <div className="ash-levels">
       {LEVELS.map((level) => {
-        const opens = level.id === "moon" ? "October 1" : level.id === "mirror" ? "November 1" : null;
+        const opens =
+          level.id === "moon" ? "October 1" : level.id === "mirror" ? "November 1" : level.id === "tunnel" ? "December 1" : null;
         const soon = !TRY_ALL && opens != null && !fogReleased(level.id);
         const prev = previousFog(level.id);
         const paid = allOpen;
