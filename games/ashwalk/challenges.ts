@@ -813,8 +813,9 @@ export function previousFog(id: string): string | null {
 }
 
 export function fogReleased(id: string, now = new Date()) {
-  if (id !== "moon") return true;
-  return now >= new Date(2026, 9, 1);
+  if (id === "moon") return now >= new Date(2026, 9, 1);
+  if (id === "mirror") return now >= new Date(2026, 10, 1);
+  return true;
 }
 
 export function fogHeld(_id: string) {

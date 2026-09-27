@@ -271,7 +271,11 @@ export function Playfield({
       return;
     }
     if (!fogReleased(id)) {
-      setStakeMsg("The moon opens October 1. Coming soon.");
+      setStakeMsg(
+        id === "mirror"
+          ? "The mirror opens November 1. Coming soon."
+          : "The moon opens October 1. Coming soon.",
+      );
       return;
     }
     if (!fogOpen(id)) {
@@ -1000,7 +1004,7 @@ export function Playfield({
                 : `You have ${formatRareCoins(spendable(rareBalance, account) ?? 0n)} Rare coins.`}
           </p>
           <p>The shore is open. The other fogs are locked.</p>
-          <p>Every month a new map opens, and a new cape is there to own. The moon and the white cape open October 1. Coming soon.</p>
+          <p>Every month a new map opens, and a new cape is there to own. The moon and the white cape open October 1. The mirror opens November 1. Coming soon.</p>
           {stakeMsg && (
             <p className="ash-error" role="alert">
               {stakeMsg}
@@ -1118,7 +1122,7 @@ export function Playfield({
                 ? "Reading Rare coins…"
                 : `You have ${formatRareCoins(spendable(rareBalance, account) ?? 0n)} Rare coins. The shore is the only fog open.`}
           </p>
-          <p className="ash-note">The shore is open. The other fogs are locked. The moon opens October 1.</p>
+          <p className="ash-note">The shore is open. The other fogs are locked. The moon opens October 1. The mirror opens November 1.</p>
           <LevelList
             current={pickId}
             cleared={cleared}
@@ -1411,7 +1415,8 @@ function LevelList({
   return (
     <div className="ash-levels">
       {LEVELS.map((level) => {
-        const soon = level.id === "moon" && !fogReleased(level.id);
+        const opens = level.id === "moon" ? "October 1" : level.id === "mirror" ? "November 1" : null;
+        const soon = opens != null && !fogReleased(level.id);
         const open = level.id === "shore";
         return (
           <button
@@ -1423,7 +1428,7 @@ function LevelList({
             onClick={() => onPick(level.id)}
           >
             <span>{soon ? `${level.title} · coming soon` : open ? level.title : `${level.title} · locked`}</span>
-            <small>{soon ? "Coming soon. Opens October 1." : open ? level.rule : "Locked."}</small>
+            <small>{soon ? `Coming soon. Opens ${opens}.` : open ? level.rule : "Locked."}</small>
           </button>
         );
       })}
