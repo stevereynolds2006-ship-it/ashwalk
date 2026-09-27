@@ -19,7 +19,6 @@ import {
   formatRareCoins,
   outfitList,
   readLedger,
-  recordBurn,
   spendWhole,
   spendable,
   unlockAllFogs,
@@ -184,13 +183,6 @@ export function Playfield({
     setLedger(next);
     allOpenRef.current = next.allFogs;
     clothRef.current = next.equipped;
-  }
-
-  function burnSpend(whole: number) {
-    const who = accountRef.current ?? "guest";
-    recordBurn(who, whole);
-    setLedger(readLedger(who));
-    return burnedHalf(whole);
   }
 
   function buyOutfit(id: string) {
@@ -521,14 +513,13 @@ export function Playfield({
           if (events.shrine) go("rite");
           if (events.lamp) {
             if (purseRef.current < LIGHT_PRICE) {
-              setShopError("A lantern wants 1 coin.");
+              setShopError("A lantern wants 1 coin you picked up.");
             } else {
               const next = purseRef.current - LIGHT_PRICE;
               purseRef.current = next;
               setPurse(next);
-              burnSpend(LIGHT_PRICE);
               shoreGlowRef.current = LIGHT_SECONDS;
-              setShopError(`Burned ${burnedHalf(LIGHT_PRICE)} coin.`);
+              setShopError("Spent 1 coin you picked up.");
               sound?.play("purchase");
             }
           }
@@ -845,14 +836,13 @@ export function Playfield({
     try {
       const have = purseRef.current;
       if (have < LAMP_PRICE) {
-        setShopError(`The flashlight wants ${LAMP_PRICE} coins.`);
+        setShopError(`The flashlight wants ${LAMP_PRICE} coins you picked up.`);
         return;
       }
       const next = have - LAMP_PRICE;
       purseRef.current = next;
       setPurse(next);
-      burnSpend(LAMP_PRICE);
-      setShopError(`Burned ${burnedHalf(LAMP_PRICE)} coins.`);
+      setShopError(`Spent ${LAMP_PRICE} coins you picked up.`);
       lampOnRef.current = true;
       setLampOwned(true);
       setLampOn(true);
@@ -956,7 +946,7 @@ export function Playfield({
               aria-pressed={lampOwned ? lampOn : undefined}
               onClick={() => toggleLamp()}
             >
-              {lampOwned ? (lampOn ? "Light on" : "Light off") : `Buy light · ${LAMP_PRICE}`}
+              {lampOwned ? (lampOn ? "Light on" : "Light off") : `Buy light · ${LAMP_PRICE} picked up`}
             </button>
             <button
               type="button"
@@ -1050,7 +1040,7 @@ export function Playfield({
           </div>
           <p className="ash-note">
             A and D, or the left and right arrow keys, move. W, up, or space jumps. S drops through a cage.
-            E pulls, lights a bell, or buys a lantern. A lantern lasts 10 seconds. Stand on a plank too long and it falls.
+            E pulls, lights a bell, or buys a lantern. A lantern costs 1 coin you picked up and lasts 10 seconds. The flashlight costs 5 of those coins. Stand on a plank too long and it falls.
             It comes back after 4 seconds. Three lives to a board. After that, one more life is 10 Rare coins.
             A death burns half the coins you are carrying. Half of every coin you spend is burned.
           </p>
@@ -1295,7 +1285,7 @@ export function Playfield({
               Resume
             </button>
             <button type="button" className="ash-btn-ghost" onClick={() => toggleLamp()}>
-              {lampOwned ? (lampOn ? "Flashlight on" : "Flashlight off") : `Buy a flashlight · ${LAMP_PRICE} coins`}
+              {lampOwned ? (lampOn ? "Flashlight on" : "Flashlight off") : `Buy a flashlight · ${LAMP_PRICE} picked up`}
             </button>
             <button type="button" className="ash-btn-ghost" onClick={() => go("rite")}>
               Lantern rite
@@ -1568,7 +1558,7 @@ function promptFor(sim: Sim, phase: Phase) {
   if (sim.plateAsleep) return "Light every bell. The plate is asleep.";
   if (sim.nearRope) return "E · pull the rope";
   if (sim.nearShrine) return "E · light a lantern";
-  if (sim.nearLamp) return "E · buy light · 1 coin";
+  if (sim.nearLamp) return "E · buy light · 1 coin you picked up";
   if (sim.nearCombo != null) return comboSet(sim) ? "The lock is open" : "E · turn this wheel";
   if (sim.holding) return "Holding the gate";
   if (sim.gateSeconds > 0) return `Gate ${sim.gateSeconds.toFixed(1)}`;
