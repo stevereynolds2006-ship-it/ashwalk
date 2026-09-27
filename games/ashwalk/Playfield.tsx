@@ -955,7 +955,7 @@ export function Playfield({
                 : `You have ${formatRareCoins(spendable(rareBalance, account) ?? 0n)} Rare coins.`}
           </p>
           <p>The shore is free. You start that walk with 5 coins. Every fog after it costs 5 Rare coins. 20 Rare coins opens every fog.</p>
-          <p>Every month a new map opens, and a new cape is there to own.</p>
+          <p>Every month a new map opens, and a new cape is there to own. This month the map is The moon.</p>
           {stakeMsg && (
             <p className="ash-error" role="alert">
               {stakeMsg}
@@ -1341,7 +1341,7 @@ function LevelList({
             disabled={!open}
             onClick={() => onPick(level.id)}
           >
-            <span>{level.title}</span>
+            <span>{level.title}{level.id === "moon" ? " · this month" : ""}</span>
             <small>{open ? level.rule : `Beat ${prev ? getLevel(prev).title : "the fog before"} first.`}</small>
           </button>
         );
@@ -1439,6 +1439,7 @@ function musicScene(phase: Phase, sim: Sim): MusicScene {
   if (phase === "rite") return "rite";
   if (phase === "clear") return "clear";
   if (phase === "title" || phase === "levels" || phase === "lobby" || phase === "clothes") return "title";
+  if (sim.level.id === "moon") return "moon";
   if (sim.level.id === "antler") return "hunt";
   if (sim.level.id === "choir") return "chant";
   if (sim.level.id === "gear") return "works";

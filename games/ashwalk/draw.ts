@@ -66,6 +66,7 @@ const SKY: Record<string, [string, string, string, string]> = {
   gear: ["#16161a", "#c8c8cc", "#7a7a80", "#121214"],
   roof: ["#2a2a2c", "#c8c8c6", "#6a6a6c", "#121214"],
   antler: ["#101114", "#c5c3be", "#6d6b68", "#101114"],
+  moon: ["#1c1c22", "#e4e2dc", "#b7b4ae", "#2a2a30"],
 };
 
 function drawTree(ctx: CanvasRenderingContext2D, tree: Tree, alpha: number) {
@@ -1028,6 +1029,54 @@ function drawBell(ctx: CanvasRenderingContext2D, x: number, ground: number, lit:
   ctx.fillRect(x - 1.5, ground - 24, 3, 8);
 }
 
+function drawMoonFog(ctx: CanvasRenderingContext2D, camera: Camera, t: number, reduced: boolean) {
+  ctx.save();
+  ctx.translate(camera.x * 0.18, camera.y * 0.05);
+  const mx = 1280;
+  const my = 120;
+  const glow = ctx.createRadialGradient(mx, my, 10, mx, my, 260);
+  glow.addColorStop(0, "rgba(255,255,255,0.9)");
+  glow.addColorStop(0.35, "rgba(236,236,230,0.28)");
+  glow.addColorStop(1, "rgba(236,236,230,0)");
+  ctx.fillStyle = glow;
+  ctx.beginPath();
+  ctx.arc(mx, my, 260, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#f7f5f0";
+  ctx.beginPath();
+  ctx.arc(mx, my, 58, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#c9c7c1";
+  ctx.beginPath();
+  ctx.arc(mx + 26, my - 6, 48, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  ctx.save();
+  ctx.translate(camera.x * 0.45, camera.y * 0.12);
+  ctx.fillStyle = "rgba(22,22,26,0.55)";
+  for (let x = -200; x < 5600; x += 820) {
+    ctx.beginPath();
+    ctx.moveTo(x, 520);
+    ctx.quadraticCurveTo(x + 180, 300, x + 420, 520);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(x + 240, 210, 34, 0.4, Math.PI - 0.2);
+    ctx.lineWidth = 8;
+    ctx.strokeStyle = "#141418";
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  ctx.save();
+  ctx.translate(camera.x * 0.28, 0);
+  ctx.fillStyle = "rgba(255,255,255,0.14)";
+  const drift = reduced ? 0 : Math.sin(t * 0.15) * 20;
+  ctx.fillRect(-200 + drift, 180, 6200, 36);
+  ctx.fillRect(80 - drift, 250, 6200, 22);
+  ctx.restore();
+}
+
 function drawHangFrame(ctx: CanvasRenderingContext2D, x: number, y: number, t: number, bird: boolean) {
   const swing = Math.sin(t) * 3;
   ctx.save();
@@ -1179,6 +1228,8 @@ export function renderFrame(
     ctx.translate(camera.x * 0.4, camera.y * 0.15);
     for (const tree of SHORE_NEAR) drawDeadwood(ctx, tree, 0.88);
     ctx.restore();
+  } else if (sim.level.id === "moon") {
+    drawMoonFog(ctx, camera, sim.t, reduced);
   } else if (sim.level.id === "latch") {
     drawLatchFog(ctx, camera, sim.t, reduced);
   } else if (sim.level.id === "gale") {

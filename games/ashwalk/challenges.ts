@@ -560,7 +560,92 @@ const ANTLER: Level = {
   },
 };
 
-export const LEVELS: readonly Level[] = [SHORE, LATCH, GALE, CHOIR, GEAR, ROOF, ANTLER];
+/** This month's fog. A pale moon, three bells, one tall gate. */
+const MOON: Level = {
+  id: "moon",
+  title: "The moon",
+  kicker: "This month's fog.",
+  rule: "This month's map. Cross under the moon. Three bells wake the plate. Then the tall gate.",
+  together: "The bells are shared. Whoever stays on the plate keeps the gate up.",
+  clearKicker: "The moon",
+  clearTitle: "The month let you through",
+  worldW: 4700,
+  killY: 800,
+  poster: 980,
+  introCrow: false,
+  platforms: [
+    { id: "start", kind: "solid", terrain: true, x: 0, y: 470, w: 520, h: 420 },
+    { id: "j1", kind: "oneway", x: 660, y: 446, w: 110, h: 12 },
+    { id: "j2", kind: "oneway", x: 860, y: 376, w: 100, h: 12 },
+    { id: "rest1", kind: "solid", terrain: true, x: 1080, y: 470, w: 440, h: 420 },
+    { id: "c1", kind: "crumble", x: 1640, y: 446, w: 100, h: 12 },
+    { id: "c2", kind: "crumble", x: 1840, y: 372, w: 100, h: 12 },
+    { id: "rest2", kind: "solid", terrain: true, x: 2060, y: 470, w: 400, h: 420 },
+    { id: "j3", kind: "oneway", x: 2580, y: 438, w: 110, h: 12 },
+    { id: "j4", kind: "oneway", x: 2780, y: 356, w: 110, h: 12 },
+    { id: "j5", kind: "oneway", x: 2980, y: 428, w: 110, h: 12 },
+    { id: "end", kind: "solid", terrain: true, x: 3200, y: 470, w: 1460, h: 420 },
+    { id: "gMoon", kind: "gate", x: 4040, y: 50, w: 24, h: 420, openY: -120 },
+  ],
+  moths: [
+    { id: "m1", x: 715, y: 390 },
+    { id: "m2", x: 910, y: 320 },
+    { id: "m3", x: 1690, y: 390 },
+    { id: "m4", x: 2835, y: 300 },
+    { id: "m5", x: 3600, y: 410 },
+  ],
+  checkpoints: [
+    { id: "start", x: 160, surface: 470 },
+    { id: "rest1", x: 1240, surface: 470 },
+    { id: "rest2", x: 2220, surface: 470 },
+    { id: "end", x: 3480, surface: 470 },
+  ],
+  rope: null,
+  shrines: [{ id: "shrine-end", x: 4380, y: 340, w: 80, h: 130 }],
+  beacons: [
+    { id: "b1", x: 1200, y: 350, w: 76, h: 120 },
+    { id: "b2", x: 2180, y: 350, w: 76, h: 120 },
+    { id: "b3", x: 3480, y: 350, w: 76, h: 120 },
+  ],
+  plates: [{ id: "pMoon", gate: "gMoon", x: 3720, y: 386, w: 140, h: 84, latch: 4.4, whenLit: true }],
+  goal: { id: "goal", x: 4480, y: 300, w: 90, h: 170 },
+  pit: null,
+  wind: null,
+  birds: [],
+  spiders: [
+    {
+      id: "low",
+      mode: "crawl",
+      x0: 1160,
+      x1: 1440,
+      y: 448,
+      ceil: 0,
+      speed: 40,
+      reach: 0,
+      period: 1,
+      phase: 0.3,
+    },
+    {
+      id: "high",
+      mode: "hang",
+      x0: 2140,
+      x1: 2360,
+      y: 180,
+      ceil: 36,
+      speed: 28,
+      reach: 150,
+      period: 4.2,
+      phase: 0.6,
+    },
+  ],
+  chapters: [
+    { x: 0, id: "moon", title: "The moon", kicker: "This month's map." },
+    { x: 3200, id: "phase", title: "The last bell", kicker: "Then the plate." },
+  ],
+  light: { x: 1400, y: 90 },
+};
+
+export const LEVELS: readonly Level[] = [SHORE, LATCH, GALE, CHOIR, GEAR, ROOF, ANTLER, MOON];
 
 export function previousFog(id: string): string | null {
   const index = LEVELS.findIndex((level) => level.id === id);
