@@ -350,20 +350,36 @@ function drawOutfit(
   }
 
   if (layer === "back" && cloth === "cape") {
-    ctx.beginPath();
-    ctx.moveTo(-6, -44);
-    ctx.quadraticCurveTo(-16, -24, -12, -8);
-    ctx.lineTo(14, -8);
-    ctx.quadraticCurveTo(18, -24, 8, -44);
-    ctx.closePath();
-    ctx.fill();
-    ctx.fillStyle = edge;
-    ctx.fillRect(-8, -30, 2.4, 2.4);
-    ctx.fillRect(2, -22, 2, 2);
-    ctx.fillRect(6, -32, 2, 2);
-    ctx.beginPath();
-    ctx.arc(0, -40, 2.2, 0, Math.PI * 2);
-    ctx.fill();
+    const rows = [
+      "................kkkkkkkkk.....",
+      ".............kkrrrrrrrrrrk....",
+      "...........kkrrrrdrrrdrrrrk...",
+      ".........kkrrrrrrdrrrdrrrrrk..",
+      ".......kkrrrrrrrdrrrdrrrrrrrk.",
+      "kk...kkrrrrrrrrrdrrrdrrrrrrrrk",
+      "krrkrrrrrrrrrrrrdrrrdrrrrrrrrk",
+      "krrrrrrrrrrrrrrrdrrrdrrrrrrrrk",
+      "krrrrrrrrrrrrrrrdrrrdrrrrrrrk.",
+      ".krrrrrrrrrrrrrrdrrrdrrrrrrk..",
+      "..krrrrrrrrrrrrrdrrrdrrrrrk...",
+      "...krrrrrrkrrrrrdrrrdrrrrk....",
+      "....krrrrk.krrrrdrrrdrrrk.....",
+      ".....krrk...krrrrrrrrrrk......",
+      "......kk.....krrrrrrrrk.......",
+      ".............krrrrrrk.........",
+      "..............krrrrk..........",
+      "...............kkkk...........",
+    ];
+    const tone: Record<string, string> = { r: "#e10600", d: "#8d0906", k: "#240406" };
+    const size = 2;
+    rows.forEach((row, y) => {
+      for (let x = 0; x < row.length; x++) {
+        const color = tone[row[x] ?? ""];
+        if (!color) continue;
+        ctx.fillStyle = color;
+        ctx.fillRect(-4 - (row.length - x) * size, -50 + y * size, size, size);
+      }
+    });
   }
 
   if (layer === "back" && cloth === "coat") {
@@ -403,23 +419,31 @@ function drawOutfit(
   }
 
   if (layer === "front" && cloth === "cap") {
-    ctx.beginPath();
-    ctx.moveTo(-14, -30);
-    ctx.quadraticCurveTo(-17, -50, 0, -62);
-    ctx.quadraticCurveTo(17, -50, 14, -30);
-    ctx.quadraticCurveTo(0, -22, -14, -30);
-    ctx.moveTo(-7, -32);
-    ctx.quadraticCurveTo(-9, -46, 0, -48);
-    ctx.quadraticCurveTo(9, -46, 7, -32);
-    ctx.quadraticCurveTo(0, -26, -7, -32);
-    ctx.fill("evenodd");
-    ctx.lineWidth = 1.35;
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(0, -50);
-    ctx.quadraticCurveTo(6, -56, 2, -46);
-    ctx.quadraticCurveTo(-1, -50, 3, -40);
-    ctx.stroke();
+    const rows = [
+      "..kkkkkk..",
+      ".krrrrrrk.",
+      "krrrrrrrrk",
+      "krrrddrrrk",
+      "krr.kk.rrk",
+      "kr.k..k.rk",
+      "kr......rk",
+      "krr....rrk",
+      ".krrrrrrk.",
+    ];
+    const tone: Record<string, string> = { r: "#e10600", d: "#8d0906", k: "#240406" };
+    const size = 2;
+    rows.forEach((row, y) => {
+      for (let x = 0; x < row.length; x++) {
+        const color = tone[row[x] ?? ""];
+        if (!color) continue;
+        ctx.fillStyle = color;
+        ctx.fillRect(-10 + x * size, -62 + y * size, size, size);
+      }
+    });
+    ctx.fillStyle = "#f4d0d0";
+    ctx.fillRect(-2, -50, 2, 2);
+    ctx.fillRect(0, -48, 2, 2);
+    ctx.fillRect(2, -46, 2, 2);
   }
 
   if (layer === "front" && cloth === "scarf") {

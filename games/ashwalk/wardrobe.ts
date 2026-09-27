@@ -11,7 +11,7 @@ export type Cloth = {
 export const CLOTHES: readonly Cloth[] = [
   { id: "cloak", name: "Fog cloak", cost: 0, rare: false, note: "Hangs behind you." },
   { id: "hood", name: "Hood", cost: 0, rare: false, note: "Covers the head." },
-  { id: "cap", name: "Ash cap", cost: 0, rare: false, note: "Fits the head. Face stays open." },
+  { id: "cap", name: "Ash cap", cost: 0, rare: false, note: "Fitted red cap. Face stays open." },
   { id: "scarf", name: "Pale scarf", cost: 0, rare: false, note: "A light wrap at the neck." },
   { id: "coat", name: "Ash coat", cost: 0, rare: false, note: "Heavier shoulders." },
 ];
@@ -19,7 +19,7 @@ export const CLOTHES: readonly Cloth[] = [
 const WEEKLY: readonly Cloth[] = [
   { id: "veil", name: "White veil", cost: 0, rare: true, note: "Rare this week." },
   { id: "crown", name: "Ash crown", cost: 0, rare: true, note: "Rare this week." },
-  { id: "cape", name: "Moth cape", cost: 0, rare: true, note: "Rare this week." },
+  { id: "cape", name: "Red cape", cost: 0, rare: true, note: "A long red cape behind you." },
   { id: "wreath", name: "Antler wreath", cost: 0, rare: true, note: "Rare this week." },
   { id: "cord", name: "Bell cord", cost: 0, rare: true, note: "Rare this week." },
 ];
