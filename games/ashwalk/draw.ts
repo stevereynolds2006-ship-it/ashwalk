@@ -1106,25 +1106,6 @@ function drawMoonFog(ctx: CanvasRenderingContext2D, camera: Camera, t: number, r
   ctx.restore();
 }
 
-function tintBoards(ctx: CanvasRenderingContext2D, cssW: number, cssH: number) {
-  const wash = ctx.createLinearGradient(0, 0, cssW, cssH);
-  wash.addColorStop(0, "#3ee0ff");
-  wash.addColorStop(0.28, "#ffe14a");
-  wash.addColorStop(0.55, "#ff4d6a");
-  wash.addColorStop(0.78, "#5dff6e");
-  wash.addColorStop(1, "#7aa6ff");
-  ctx.save();
-  ctx.globalCompositeOperation = "screen";
-  ctx.globalAlpha = 0.78;
-  ctx.fillStyle = wash;
-  ctx.fillRect(0, 0, cssW, cssH);
-  ctx.globalAlpha = 1;
-  ctx.globalCompositeOperation = "color";
-  ctx.fillStyle = wash;
-  ctx.fillRect(0, 0, cssW, cssH);
-  ctx.restore();
-}
-
 function drawHangFrame(ctx: CanvasRenderingContext2D, x: number, y: number, t: number, bird: boolean) {
   const swing = Math.sin(t) * 3;
   ctx.save();
@@ -1226,7 +1207,6 @@ export function renderFrame(
   lamp = false,
   gloom = 0,
   cloth: string | null = null,
-  colored = false,
 ) {
   const dpr = Math.min(2, globalThis.devicePixelRatio || 1);
   const canvas = ctx.canvas;
@@ -1469,7 +1449,6 @@ export function renderFrame(
     }
     ctx.globalAlpha = 1;
   }
-  if (colored) tintBoards(ctx, cssW, cssH);
 }
 
 function paintLitBells(ctx: CanvasRenderingContext2D, cssW: number, sim: Sim, camera: Camera) {
