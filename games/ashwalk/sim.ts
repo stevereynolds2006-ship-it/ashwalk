@@ -756,7 +756,7 @@ function stepStalker(sim: Sim, dt: number, events: StepEvents) {
     sim.stalkX = Math.max(spec.cageX0 + 24, Math.min(spec.cageX1 - 24, sim.stalkX));
     return;
   }
-  const speed = 152;
+  const speed = 172;
   const prey = sim.x + PW / 2;
   if (sim.stalkX < prey - 6) {
     sim.stalkX += speed * dt;

@@ -955,6 +955,7 @@ export function Playfield({
                 : `You have ${formatRareCoins(spendable(rareBalance, account) ?? 0n)} Rare coins.`}
           </p>
           <p>The shore is free. You start that walk with 5 coins. Every fog after it costs 5 Rare coins. 20 Rare coins opens every fog.</p>
+          <p>Every month a new map opens, and a new cape is there to own.</p>
           {stakeMsg && (
             <p className="ash-error" role="alert">
               {stakeMsg}
