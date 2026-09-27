@@ -126,6 +126,8 @@ export type Level = {
   light: { x: number; y: number };
   stalker?: Stalker;
   hunter?: Hunter;
+  /** A low passage you have to walk before the door. */
+  tunnel?: { x: number; w: number; floor: number };
   /** Exit lock. The code is the marks on the gates. */
   combo?: { code: readonly number[]; x: number; span: number; y: number };
 };
@@ -189,6 +191,7 @@ export const SHORE: Level = {
     { id: "h2", kind: "oneway", x: 5460, y: 278, w: 130, h: 12 },
     { id: "gDoor", kind: "gate", x: 5704, y: 60, w: 24, h: 420, openY: -120 },
     { id: "sanctum", kind: "solid", terrain: true, x: 5728, y: 480, w: 820, h: 420 },
+    { id: "ceil-shore", kind: "solid", x: 5900, y: 388, w: 340, h: 42 },
   ],
   moths: [
     { id: "m1", x: 410, y: 332 },
@@ -231,6 +234,7 @@ export const SHORE: Level = {
   ],
   plates: [{ id: "pDoor", gate: "gDoor", x: 5600, y: 400, w: 90, h: 84, latch: 3.2, whenLit: true }],
   goal: { id: "goal", x: 6320, y: 310, w: 90, h: 170 },
+  tunnel: { x: 5900, w: 340, floor: 480 },
   pit: { x0: 3320, x1: 3940, y: 560 },
   wind: { x0: 4080, x1: 4680, strength: 240, period: 1.25, mode: "gust" },
   birds: [{ x0: 4160, x1: 4620, y: 338, amp: 16, speed: 92, start: 4200 }],

@@ -221,12 +221,26 @@ function drawTerrain(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) 
   }
   for (const rect of bodies) {
     if (rect.terrain) continue;
+    if (rect.id.startsWith("ceil")) continue;
     if (rect.kind === "gate") drawGate(ctx, rect);
     else if (sim.level.platforms.find((item) => item.id === rect.id)?.gear) continue;
     else if (rect.kind === "sway" || rect.kind === "rope") {
       drawCage(ctx, rect, sim.rope < 1 && rect.id === "cageC");
-    } else drawPlank(ctx, rect, rect.kind === "crumble" || (sim.crumbles[rect.id]?.timer ?? 0) > 0.9);
+    } else drawPlank(ctx, rect, rect.kind === "crumble" || (sim.crumbles[rect.id]?.timer ?? 0) > 0.9, sim.level.id === "choir");
   }
+  if (sim.level.id === "choir") {
+    for (const rect of bodies) {
+      if (rect.kind === "gate" || rect.id.startsWith("ceil")) continue;
+      const glow = ctx.createLinearGradient(rect.x, rect.y - 22, rect.x, rect.y + 6);
+      glow.addColorStop(0, "rgba(255,255,255,0)");
+      glow.addColorStop(1, "rgba(244,241,234,0.42)");
+      ctx.fillStyle = glow;
+      ctx.fillRect(rect.x, rect.y - 20, rect.w, 22);
+      ctx.fillStyle = "rgba(255,255,255,0.9)";
+      ctx.fillRect(rect.x, rect.y, rect.w, 2);
+    }
+  }
+  if (sim.level.tunnel) drawTunnel(ctx, sim.level.tunnel);
 }
 
 function drawGrass(ctx: CanvasRenderingContext2D, rect: RectLike, tall: number) {
@@ -247,15 +261,27 @@ function drawGrass(ctx: CanvasRenderingContext2D, rect: RectLike, tall: number) 
   }
 }
 
-function drawPlank(ctx: CanvasRenderingContext2D, rect: RectLike, rotten: boolean) {
+function drawPlank(ctx: CanvasRenderingContext2D, rect: RectLike, rotten: boolean, bright = false) {
   ctx.save();
   ctx.translate(rect.x + rect.w / 2, rect.y);
   if (rotten) ctx.rotate(-0.04);
-  ctx.fillStyle = "#0c0c0d";
+  ctx.fillStyle = bright ? "#1a1a1c" : "#0c0c0d";
   ctx.fillRect(-rect.w / 2, 0, rect.w, 10);
-  ctx.fillStyle = "rgba(255,255,255,0.18)";
-  ctx.fillRect(-rect.w / 2, 0, rect.w, 1);
+  ctx.fillStyle = bright ? "rgba(255,255,255,0.72)" : "rgba(255,255,255,0.18)";
+  ctx.fillRect(-rect.w / 2, 0, rect.w, bright ? 2 : 1);
   ctx.restore();
+}
+
+function drawTunnel(ctx: CanvasRenderingContext2D, tunnel: { x: number; w: number; floor: number }) {
+  const top = tunnel.floor - 92;
+  ctx.fillStyle = "#050506";
+  ctx.fillRect(tunnel.x, top, tunnel.w, 40);
+  ctx.fillStyle = "rgba(0,0,0,0.55)";
+  ctx.fillRect(tunnel.x, top + 40, tunnel.w, tunnel.floor - (top + 40));
+  ctx.fillStyle = "rgba(244,241,234,0.35)";
+  ctx.fillRect(tunnel.x, tunnel.floor - 54, tunnel.w, 2);
+  ctx.fillRect(tunnel.x, top, 8, tunnel.floor - top);
+  ctx.fillRect(tunnel.x + tunnel.w - 8, top, 8, tunnel.floor - top);
 }
 
 type RectLike = { x: number; y: number; w: number; h: number };
