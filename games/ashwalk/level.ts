@@ -118,6 +118,8 @@ export type Level = {
   chapters: readonly Chapter[];
   light: { x: number; y: number };
   stalker?: Stalker;
+  /** Exit lock. The code is the marks on the gates. */
+  combo?: { code: readonly number[]; x: number; span: number; y: number };
 };
 
 export const SHORE: Level = {

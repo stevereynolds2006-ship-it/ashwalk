@@ -305,6 +305,38 @@ function drawGate(ctx: CanvasRenderingContext2D, rect: RectLike) {
   ctx.fillRect(x - 2, y, rect.w + 4, 3);
 }
 
+function drawLatchLock(ctx: CanvasRenderingContext2D, sim: Sim) {
+  const lock = sim.level.combo;
+  if (!lock) return;
+  const gates = sim.level.platforms.filter((plat) => plat.kind === "gate");
+  ctx.fillStyle = "rgba(243,240,232,0.9)";
+  ctx.font = "22px sans-serif";
+  ctx.textAlign = "center";
+  lock.code.forEach((digit, index) => {
+    const gate = gates[index];
+    if (!gate) return;
+    ctx.fillText(String(digit), gate.x + gate.w / 2, 210);
+  });
+  const y = lock.y;
+  ctx.fillStyle = "#121214";
+  ctx.fillRect(lock.x + lock.span / 2 - 16, y - 78, 32, 22);
+  ctx.beginPath();
+  ctx.arc(lock.x + lock.span / 2, y - 78, 14, Math.PI, 0);
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = "#121214";
+  ctx.stroke();
+  const slot = lock.span / lock.code.length;
+  lock.code.forEach((_, index) => {
+    const x = lock.x + slot * index;
+    const hot = sim.nearCombo === index;
+    ctx.fillStyle = hot ? "#f4f1ea" : "#1a1a1c";
+    ctx.fillRect(x + 8, y - 54, slot - 16, 46);
+    ctx.fillStyle = hot ? "#121214" : "#f4f1ea";
+    ctx.font = "28px sans-serif";
+    ctx.fillText(String(sim.combo[index] ?? 0), x + slot / 2, y - 22);
+  });
+}
+
 function drawPlate(ctx: CanvasRenderingContext2D, plate: RectLike, hot: boolean) {
   const y = plate.y + plate.h - 6;
   ctx.fillStyle = hot ? "rgba(243,240,232,0.95)" : "rgba(243,240,232,0.28)";
@@ -1168,6 +1200,7 @@ export function renderFrame(
   }
 
   drawTerrain(ctx, sim, reduced);
+  if (sim.level.combo) drawLatchLock(ctx, sim);
 
   for (const plate of sim.level.plates) {
     const hot = (sim.latch[plate.id] ?? 0) > 0;
@@ -1835,6 +1868,22 @@ function drawGearHall(ctx: CanvasRenderingContext2D, camera: Camera, sim: Sim, r
   ctx.fillStyle = "#f7f7f4";
   ctx.fillRect(lx - 18, ly - 18, 36, 36);
   ctx.restore();
+
+  const specks = Array.from({ length: 28 }, (_, i) => ({
+    x: 40 + i * 190 + (i % 3) * 24,
+    y: 120 + (i % 5) * 58,
+    r: 22 + (i % 4) * 12,
+    speed: (i % 2 === 0 ? 0.35 : -0.28) + (i % 5) * 0.04,
+    teeth: 6 + (i % 3),
+  }));
+  for (const wheel of specks) {
+    ctx.save();
+    ctx.translate(wheel.x, wheel.y);
+    ctx.rotate(sim.t * (reduced ? wheel.speed * 0.35 : wheel.speed));
+    ctx.fillStyle = "rgba(12,12,14,0.72)";
+    drawCog(ctx, wheel.r, wheel.teeth);
+    ctx.restore();
+  }
 
   const wheels = [
     { x: 900, y: 780, r: 340, speed: 0.22, teeth: 10 },

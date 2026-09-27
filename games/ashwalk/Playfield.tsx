@@ -8,7 +8,7 @@ import { LEVELS, fogUnlocked, getLevel, previousFog } from "./challenges";
 import { windAccel, chapterAt } from "./level";
 import { Online, type NetApi } from "./online";
 import type { Ghost } from "./net";
-import { createSim, step, type Actions, type Sim } from "./sim";
+import { comboSet, createSim, step, type Actions, type Sim } from "./sim";
 import { burst, frameCamera, renderFrame, viewSize } from "./draw";
 import { createAshMusic, type AshMusic, type MusicScene } from "./music";
 import {
@@ -1465,9 +1465,11 @@ function promptFor(sim: Sim, phase: Phase) {
   if (sim.nearRope) return "E · pull the rope";
   if (sim.nearShrine) return "E · light a lantern";
   if (sim.nearLamp) return "E · buy light · 1 coin";
+  if (sim.nearCombo != null) return comboSet(sim) ? "The lock is open" : "E · turn this wheel";
   if (sim.holding) return "Holding the gate";
   if (sim.gateSeconds > 0) return `Gate ${sim.gateSeconds.toFixed(1)}`;
   if (sim.nearGoal && sim.doorLocked) {
+    if (sim.level.combo && !comboSet(sim)) return "The lock is not the code";
     if (sim.level.stalker && sim.beacons.size >= sim.level.beacons.length) return "Trap it in the cage first";
     return "The door wants every bell";
   }

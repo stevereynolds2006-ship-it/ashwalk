@@ -122,6 +122,8 @@ export type Sim = {
   /** 0 open, 1 slammed. */
   cage: number;
   nearTrap: boolean;
+  combo: number[];
+  nearCombo: number | null;
 };
 
 export function createSim(level: Level = SHORE): Sim {
@@ -191,6 +193,8 @@ export function createSim(level: Level = SHORE): Sim {
     caged: false,
     cage: 0,
     nearTrap: false,
+    combo: (level.combo?.code ?? []).map(() => 0),
+    nearCombo: null,
   };
 }
 
@@ -231,6 +235,12 @@ export function snapshotWorld(sim: Sim): SharedWorld {
     beacons: [...sim.beacons],
     crumbles: Object.entries(sim.crumbles).map(([id, crumb]) => ({ id, ...crumb })),
   };
+}
+
+export function comboSet(sim: Sim) {
+  const code = sim.level.combo?.code;
+  if (!code) return true;
+  return code.every((digit, index) => sim.combo[index] === digit);
 }
 
 function emptyEvents(): StepEvents {
@@ -671,6 +681,22 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
     }
   }
 
+  sim.nearCombo = null;
+  const lock = level.combo;
+  if (lock && !comboSet(sim)) {
+    const px = sim.x + PW / 2;
+    const onIt = px >= lock.x && px <= lock.x + lock.span && sim.y + PH > lock.y - 28 && sim.y < lock.y + 8;
+    if (onIt) {
+      const slot = lock.span / lock.code.length;
+      const index = Math.min(lock.code.length - 1, Math.max(0, Math.floor((px - lock.x) / slot)));
+      sim.nearCombo = index;
+      if (input.interactPressed && !events.beacon) {
+        sim.combo[index] = ((sim.combo[index] ?? 0) + 1) % 10;
+        events.beacon = "lock";
+      }
+    }
+  }
+
   sim.nearShrine = null;
   sim.nearLamp = false;
   if (!events.beacon) {
@@ -692,9 +718,11 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
 
   stepStalker(sim, dt, events);
 
+  if (events.beacon === "lock") events.beacon = null;
   sim.doorLocked =
     (level.beacons.length > 0 && sim.beacons.size < level.beacons.length) ||
-    (!!level.stalker && !sim.caged);
+    (!!level.stalker && !sim.caged) ||
+    !comboSet(sim);
   sim.nearGoal = zoneHit(sim.x, sim.y, level.goal);
   if (!sim.won && sim.nearGoal && !sim.doorLocked) {
     sim.won = true;
