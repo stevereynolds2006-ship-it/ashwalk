@@ -12,9 +12,7 @@ import { createSim, step, type Actions, type Sim } from "./sim";
 import { burst, frameCamera, renderFrame, viewSize } from "./draw";
 import { createAshMusic, type AshMusic, type MusicScene } from "./music";
 import {
-  CLOTHES,
   buyCloth,
-  clothById,
   equipCloth,
   formatRareCoins,
   hasWhole,
@@ -23,7 +21,6 @@ import {
   spendWhole,
   spendable,
   unlockAllFogs,
-  weekRare,
   type Ledger,
 } from "./wardrobe";
 import "./ashwalk.css";
@@ -188,10 +185,14 @@ export function Playfield({
   }
 
   function buyOutfit(id: string) {
-    const who = accountRef.current ?? "guest";
-    const balance = rareRef.current ?? 0n;
+    const who = accountRef.current;
+    const balance = rareRef.current;
+    if (!who || balance == null) {
+      setStakeMsg("Connect a wallet. The cape is 10 Rare coins.");
+      return;
+    }
     if (!buyCloth(who, balance, id)) {
-      setStakeMsg("Not enough Rare coins.");
+      setStakeMsg("The cape wants 10 Rare coins.");
       return;
     }
     setStakeMsg("");
@@ -200,7 +201,8 @@ export function Playfield({
   }
 
   function wearOutfit(id: string | null) {
-    const who = accountRef.current ?? "guest";
+    const who = accountRef.current;
+    if (!who) return;
     equipCloth(who, id);
     refreshLedger(who);
     onWardrobe?.();
@@ -1013,12 +1015,12 @@ export function Playfield({
           )}
           <p className="ash-note">
             {!account
-              ? "No wallet needed. Clothes are free to try."
+              ? "Connect a wallet. The cape is 10 Rare coins."
               : rareBalance == null
                 ? "Reading Rare coins…"
                 : `You have ${formatRareCoins(spendable(rareBalance, account) ?? 0n)} Rare coins.`}
           </p>
-          <p className="ash-note">Clothes are free to try. Press one to wear it. Press it again to take it off.</p>
+          <p className="ash-note">Only the red cape is for sale. It costs 10 Rare coins.</p>
           <div className="ash-levels">
             {outfitList().map((cloth) => {
               const owned = ledger.owned.includes(cloth.id);
@@ -1031,39 +1033,17 @@ export function Playfield({
                   aria-current={wearing ? "true" : undefined}
                   onClick={() => (owned ? wearOutfit(wearing ? null : cloth.id) : buyOutfit(cloth.id))}
                 >
-                  <span>
-                    {cloth.name}
-                    {cloth.rare ? " · rare" : ""}
-                  </span>
+                  <span>{cloth.name}</span>
                   <small>
                     {owned
                       ? wearing
                         ? "Wearing. Press to take it off."
                         : `${cloth.note} Press to wear.`
-                      : `${cloth.note} Free.`}
+                      : `${cloth.note} ${cloth.cost} Rare coins.`}
                   </small>
                 </button>
               );
             })}
-            {ledger.owned
-              .filter((id) => id !== weekRare().id && !CLOTHES.some((cloth) => cloth.id === id))
-              .map((id) => {
-                const cloth = clothById(id);
-                if (!cloth) return null;
-                const wearing = ledger.equipped === cloth.id;
-                return (
-                  <button
-                    key={cloth.id}
-                    type="button"
-                    className="ash-level"
-                    aria-current={wearing ? "true" : undefined}
-                    onClick={() => wearOutfit(wearing ? null : cloth.id)}
-                  >
-                    <span>{cloth.name} · kept</span>
-                    <small>{wearing ? "Wearing. Press to take it off." : "From another week. Press to wear."}</small>
-                  </button>
-                );
-              })}
           </div>
           <div className="ash-actions">
             <button type="button" className="ash-btn-ghost" onClick={() => go("title")}>
