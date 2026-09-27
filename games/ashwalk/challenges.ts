@@ -725,12 +725,12 @@ export function fogReleased(id: string, now = new Date()) {
   return now >= new Date(2026, 9, 1);
 }
 
-/** The mirror stays shut until it is opened on purpose. */
-export function fogHeld(id: string) {
-  return id === "mirror";
+/** The mirror can be tried. Set this back to id === "mirror" to shut it. */
+export function fogHeld(_id: string) {
+  return false;
 }
 export function demoLocked(id: string) {
-  return id !== "shore";
+  return id !== "shore" && id !== "mirror";
 }
 
 export function fogUnlocked(id: string, cleared: ReadonlySet<string>) {

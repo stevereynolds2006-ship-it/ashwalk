@@ -288,7 +288,7 @@ export function Playfield({
       setStakeMsg(prev ? `Beat ${getLevel(prev).title} before this fog.` : "That fog is still shut.");
       return;
     }
-    const fee = allOpenRef.current || id === "shore" ? 0 : STAKE;
+    const fee = allOpenRef.current || id === "shore" || id === "mirror" ? 0 : STAKE;
     if (fee > 0) {
       const who = accountRef.current;
       const balance = rareRef.current;
@@ -1009,7 +1009,7 @@ export function Playfield({
                 ? "Reading Rare coins…"
                 : `You have ${formatRareCoins(spendable(rareBalance, account) ?? 0n)} Rare coins.`}
           </p>
-          <p>Only the shore is open. The other fogs are locked.</p>
+          <p>The shore is open. The mirror is open to try. The other fogs are locked.</p>
           <p>Every month a new map opens, and a new cape is there to own. The moon and the white cape open October 1. Coming soon.</p>
           {stakeMsg && (
             <p className="ash-error" role="alert">
@@ -1123,12 +1123,12 @@ export function Playfield({
           )}
           <p className="ash-note">
             {!account
-              ? "Connect a wallet to read your Rare coins. Only the shore is open."
+              ? "Connect a wallet to read your Rare coins. The shore and the mirror are open."
               : rareBalance == null
                 ? "Reading Rare coins…"
-                : `You have ${formatRareCoins(spendable(rareBalance, account) ?? 0n)} Rare coins. Only the shore is open.`}
+                : `You have ${formatRareCoins(spendable(rareBalance, account) ?? 0n)} Rare coins. The shore and the mirror are open.`}
           </p>
-          <p className="ash-note">Only the shore is open. The other fogs are locked.</p>
+          <p className="ash-note">The shore is open. The mirror is open to try. The other fogs are locked.</p>
           <LevelList
             current={pickId}
             cleared={cleared}
@@ -1423,7 +1423,7 @@ function LevelList({
       {LEVELS.map((level) => {
         const held = fogHeld(level.id);
         const soon = !held && !fogReleased(level.id);
-        const open = level.id === "shore";
+        const open = level.id === "shore" || level.id === "mirror";
         return (
           <button
             key={level.id}
