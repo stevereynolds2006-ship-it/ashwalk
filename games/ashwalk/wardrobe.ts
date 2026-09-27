@@ -9,7 +9,7 @@ export type Cloth = {
 };
 
 export const CLOTHES: readonly Cloth[] = [
-  { id: "cape", name: "Red cape", cost: 0, rare: false, note: "A long red cape behind you." },
+  { id: "cape", name: "Red cape", cost: 10, rare: false, note: "A long red cape behind you." },
   { id: "white", name: "White cape", cost: 10, rare: false, note: "Next month's cape." },
 ];
 
@@ -17,7 +17,6 @@ const WEEKLY: readonly Cloth[] = [];
 
 export function clothReleased(id: string, now = new Date()) {
   if (id === "white") return now >= new Date(2026, 9, 1);
-  if (id === "cape") return false;
   return true;
 }
 
@@ -71,6 +70,7 @@ export function rareOnOffer(id: string, now = new Date()) {
 export type Ledger = {
   spent: bigint;
   allFogs: boolean;
+  burned: number;
   owned: string[];
   equipped: string | null;
 };
@@ -81,7 +81,7 @@ export function clothById(id: string | null): Cloth | null {
 }
 
 function empty(): Ledger {
-  return { spent: 0n, allFogs: false, owned: [], equipped: null };
+  return { spent: 0n, allFogs: false, burned: 0, owned: [], equipped: null };
 }
 
 function storageKey(account: string) {
@@ -93,10 +93,17 @@ export function readLedger(account: string | null): Ledger {
   try {
     const raw = localStorage.getItem(storageKey(account));
     if (!raw) return empty();
-    const parsed = JSON.parse(raw) as { spent?: string; allFogs?: boolean; owned?: unknown; equipped?: unknown };
+    const parsed = JSON.parse(raw) as {
+      spent?: string;
+      allFogs?: boolean;
+      burned?: number;
+      owned?: unknown;
+      equipped?: unknown;
+    };
     return {
       spent: BigInt(parsed.spent ?? "0"),
       allFogs: parsed.allFogs === true,
+      burned: typeof parsed.burned === "number" && parsed.burned > 0 ? Math.floor(parsed.burned) : 0,
       owned: Array.isArray(parsed.owned)
         ? parsed.owned.filter((id): id is string => typeof id === "string" && clothById(id) != null)
         : [],
@@ -116,6 +123,7 @@ function writeLedger(account: string, ledger: Ledger) {
     JSON.stringify({
       spent: ledger.spent.toString(),
       allFogs: ledger.allFogs,
+      burned: ledger.burned,
       owned: ledger.owned,
       equipped: ledger.equipped,
     }),
@@ -152,8 +160,23 @@ function pay(account: string, balance: bigint, whole: number) {
   const have = balance > ledger.spent ? balance - ledger.spent : 0n;
   if (have < cost) return false;
   ledger.spent += cost;
+  ledger.burned += burnedHalf(whole);
   writeLedger(account, ledger);
   return true;
+}
+
+/** Half of a spend is burned. Odd amounts burn the extra coin. */
+export function burnedHalf(whole: number) {
+  return whole - Math.floor(whole / 2);
+}
+
+export function recordBurn(account: string, whole: number) {
+  const burned = burnedHalf(whole);
+  if (burned <= 0) return 0;
+  const ledger = readLedger(account);
+  ledger.burned += burned;
+  writeLedger(account, ledger);
+  return burned;
 }
 
 export function buyCloth(account: string, balance: bigint, id: string, now = new Date()) {

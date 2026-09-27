@@ -13,11 +13,13 @@ import { burst, frameCamera, renderFrame, viewSize } from "./draw";
 import { createAshMusic, type AshMusic, type MusicScene } from "./music";
 import {
   buyCloth,
+  burnedHalf,
   clothReleased,
   equipCloth,
   formatRareCoins,
   outfitList,
   readLedger,
+  recordBurn,
   spendWhole,
   spendable,
   unlockAllFogs,
@@ -121,7 +123,7 @@ export function Playfield({
   const [stakeMsg, setStakeMsg] = useState("");
   const clearedRef = useRef(new Set<string>());
   const [cleared, setCleared] = useState<string[]>([]);
-  const [ledger, setLedger] = useState<Ledger>({ spent: 0n, allFogs: false, owned: [], equipped: null });
+  const [ledger, setLedger] = useState<Ledger>({ spent: 0n, allFogs: false, burned: 0, owned: [], equipped: null });
   const markClearRef = useRef<(id: string) => void>(() => {});
   const shoreGlowRef = useRef(0);
   const huntZoomRef = useRef(0);
@@ -182,18 +184,29 @@ export function Playfield({
     clothRef.current = next.equipped;
   }
 
+  function burnSpend(whole: number) {
+    const who = accountRef.current ?? "guest";
+    recordBurn(who, whole);
+    setLedger(readLedger(who));
+    return burnedHalf(whole);
+  }
+
   function buyOutfit(id: string) {
     if (!clothReleased(id)) {
-      setStakeMsg(id === "white" ? "The white cape opens October 1. Coming soon." : "That cape is locked.");
+      setStakeMsg("The white cape opens October 1. Coming soon.");
       return;
     }
-    const who = accountRef.current ?? "guest";
-    const balance = rareRef.current ?? 0n;
+    const who = accountRef.current;
+    const balance = rareRef.current;
+    if (!who || balance == null) {
+      setStakeMsg("Connect a wallet. The red cape is 10 Rare coins.");
+      return;
+    }
     if (!buyCloth(who, balance, id)) {
-      setStakeMsg("The white cape wants 10 Rare coins.");
+      setStakeMsg("The red cape wants 10 Rare coins.");
       return;
     }
-    setStakeMsg("");
+    setStakeMsg(`Burned ${burnedHalf(10)} Rare coins.`);
     refreshLedger(who);
     onWardrobe?.();
   }
@@ -264,13 +277,14 @@ export function Playfield({
       }
       refreshLedger(who);
       onWardrobe?.();
+      setShopError(`Burned ${burnedHalf(fee)} Rare coins.`);
     }
     livesRef.current = LIVES;
     setLives(LIVES);
     purseRef.current = STAKE;
     setPurse(STAKE);
     setStakeMsg("");
-    setShopError("");
+    if (fee === 0) setShopError("");
     const level = getLevel(id);
     const sim = createSim(level);
     sim.linked = (apiRef.current?.peerCount() ?? 0) > 0;
@@ -487,8 +501,9 @@ export function Playfield({
               const next = purseRef.current - LIGHT_PRICE;
               purseRef.current = next;
               setPurse(next);
+              burnSpend(LIGHT_PRICE);
               shoreGlowRef.current = LIGHT_SECONDS;
-              setShopError("");
+              setShopError(`Burned ${burnedHalf(LIGHT_PRICE)} coin.`);
               sound?.play("purchase");
             }
           }
@@ -808,6 +823,8 @@ export function Playfield({
       const next = have - LAMP_PRICE;
       purseRef.current = next;
       setPurse(next);
+      burnSpend(LAMP_PRICE);
+      setShopError(`Burned ${burnedHalf(LAMP_PRICE)} coins.`);
       lampOnRef.current = true;
       setLampOwned(true);
       setLampOn(true);
@@ -901,6 +918,7 @@ export function Playfield({
               </span>
             )}
             <span className="ash-count">{purse} coins</span>
+            <span className="ash-count">{ledger.burned} burned</span>
             <span className="ash-count">
               {lives} {lives === 1 ? "life" : "lives"}
             </span>
@@ -1006,7 +1024,7 @@ export function Playfield({
             A and D, or the left and right arrow keys, move. W, up, or space jumps. S drops through a cage.
             E pulls, lights a bell, or buys a lantern. A lantern lasts 10 seconds. Stand on a plank too long and it falls.
             It comes back after 4 seconds. Three lives to a board. A death burns half the coins you are carrying.
-            The shore is free. Every fog after it costs 5 Rare coins.
+            Half of every coin you spend is burned. The shore is free. Every fog after it costs 5 Rare coins.
           </p>
         </section>
       )}
@@ -1026,7 +1044,7 @@ export function Playfield({
                 ? "Reading Rare coins…"
                 : `You have ${formatRareCoins(spendable(rareBalance, account) ?? 0n)} Rare coins.`}
           </p>
-          <p className="ash-note">The red cape is locked. The white cape opens October 1. Coming soon.</p>
+          <p className="ash-note">The red cape is 10 Rare coins. Half of that spend is burned. The white cape opens October 1. Coming soon.</p>
           <div className="ash-levels">
             {outfitList().map((cloth) => {
               const locked = !clothReleased(cloth.id);
