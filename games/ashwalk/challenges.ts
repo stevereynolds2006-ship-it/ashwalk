@@ -921,9 +921,12 @@ export function previousFog(id: string): string | null {
 
 /** Try build. Set true to open every fog. */
 export const TRY_ALL = false;
+/** Lets the tunnel be played before December 1. */
+export const TRY_TUNNEL = true;
 
 export function fogReleased(id: string, now = new Date()) {
   if (TRY_ALL) return true;
+  if (id === "tunnel" && TRY_TUNNEL) return true;
   if (id === "moon") return now >= new Date(2026, 9, 1);
   if (id === "mirror") return now >= new Date(2026, 10, 1);
   if (id === "tunnel") return now >= new Date(2026, 11, 1);
