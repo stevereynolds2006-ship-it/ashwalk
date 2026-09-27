@@ -4,7 +4,7 @@ import { RF } from "@rarefriends/friendsdk/game";
 import { createFriendReader, type GenerationSprites } from "@rarefriends/friendsdk/sprites";
 import { createFriendSoundKit, type FriendSoundKit } from "@rarefriends/friendsdk/sounds";
 import type { PeerInfo } from "@/lib/multiplayer";
-import { LEVELS, fogHeld, fogReleased, fogUnlocked, getLevel, previousFog } from "./challenges";
+import { LEVELS, TRY_ALL, fogHeld, fogReleased, fogUnlocked, getLevel, previousFog } from "./challenges";
 import { windAccel, chapterAt } from "./level";
 import { Online, type NetApi } from "./online";
 import type { Ghost } from "./net";
@@ -183,6 +183,7 @@ export function Playfield({
   clothRef.current = ledger.equipped;
 
   function fogOpen(id: string) {
+    if (TRY_ALL) return !fogHeld(id);
     if (id === "shore") return true;
     if (fogHeld(id) || !fogReleased(id)) return false;
     if (!clearedRef.current.has("shore") || !roadRef.current) return false;
@@ -306,7 +307,7 @@ export function Playfield({
       );
       return;
     }
-    if (id !== "shore") {
+    if (!TRY_ALL && id !== "shore") {
       if (!clearedRef.current.has("shore")) {
         setStakeMsg("Beat the shore first.");
         return;
@@ -1041,7 +1042,7 @@ export function Playfield({
                 ? "Reading Rare coins…"
                 : `You have ${formatRareCoins(spendable(rareBalance, account) ?? 0n)} Rare coins.`}
           </p>
-          <p>The shore is free. Beat it, then 10 Rare coins opens the road. After that, beat a fog to open the next one.</p>
+          <p>Every fog is open to try.</p>
           <p>Every month a new map opens, and a new cape is there to own. The moon and the white cape open October 1. The mirror opens November 1. Coming soon.</p>
           {stakeMsg && (
             <p className="ash-error" role="alert">
@@ -1155,14 +1156,12 @@ export function Playfield({
           )}
           <p className="ash-note">
             {!account
-              ? "Connect a wallet to read your Rare coins. Beat the shore, then 10 Rare coins continues the road."
+              ? "Connect a wallet to read your Rare coins. Every fog is open to try."
               : rareBalance == null
                 ? "Reading Rare coins…"
-                : `You have ${formatRareCoins(spendable(rareBalance, account) ?? 0n)} Rare coins. Beat the shore, then 10 Rare coins continues the road.`}
+                : `You have ${formatRareCoins(spendable(rareBalance, account) ?? 0n)} Rare coins. Every fog is open to try.`}
           </p>
-          <p className="ash-note">
-            The shore is free. After you beat it, 10 Rare coins opens the next fog. Then each fog opens when you beat the one before it. The moon opens October 1. The mirror opens November 1.
-          </p>
+          <p className="ash-note">Every fog is open to try, including the moon and the mirror.</p>
           <LevelList
             current={pickId}
             cleared={cleared}
@@ -1365,7 +1364,7 @@ export function Playfield({
             {session && company === 0 && peers.length > 0 ? " Everyone is through." : ""} The lantern rite is
             simulated. One lantern costs 1 RF and returns less, on average, than it takes.
           </p>
-          {clearLevel.id === "shore" && !ledger.road && (
+          {clearLevel.id === "shore" && !TRY_ALL && !ledger.road && (
             <p className="ash-note">Pay 10 Rare coins to continue. After that, each fog opens when you beat the one before it.</p>
           )}
           <div className="ash-actions">
@@ -1385,14 +1384,14 @@ export function Playfield({
             {!session && (() => {
               const next = LEVELS[LEVELS.findIndex((level) => level.id === clearLevel.id) + 1];
               if (!next) return null;
-              if (!fogReleased(next.id)) {
+              if (!TRY_ALL && !fogReleased(next.id)) {
                 return (
                   <button type="button" className="ash-btn" disabled>
                     {next.title} · coming soon
                   </button>
                 );
               }
-              if (!ledger.road) {
+              if (!TRY_ALL && !ledger.road) {
                 return (
                   <button
                     type="button"
@@ -1405,7 +1404,7 @@ export function Playfield({
                   </button>
                 );
               }
-              if (!fogUnlocked(next.id, new Set(cleared))) {
+              if (!TRY_ALL && !fogUnlocked(next.id, new Set(cleared))) {
                 const prev = previousFog(next.id);
                 return (
                   <button type="button" className="ash-btn" disabled>
@@ -1471,11 +1470,11 @@ function LevelList({
     <div className="ash-levels">
       {LEVELS.map((level) => {
         const opens = level.id === "moon" ? "October 1" : level.id === "mirror" ? "November 1" : null;
-        const soon = opens != null && !fogReleased(level.id);
+        const soon = !TRY_ALL && opens != null && !fogReleased(level.id);
         const prev = previousFog(level.id);
         const paid = allOpen;
         const beaten = prev == null || cleared.includes(prev);
-        const open = level.id === "shore" || (!soon && paid && beaten);
+        const open = TRY_ALL || level.id === "shore" || (!soon && paid && beaten);
         const note = soon
           ? `Coming soon. Opens ${opens}.`
           : open
