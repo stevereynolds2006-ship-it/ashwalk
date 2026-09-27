@@ -10,12 +10,14 @@ export type Cloth = {
 
 export const CLOTHES: readonly Cloth[] = [
   { id: "cape", name: "Red cape", cost: 0, rare: false, note: "A long red cape behind you." },
-  { id: "white", name: "White cape", cost: 0, rare: false, note: "Next month's cape. Free to try." },
+  { id: "white", name: "White cape", cost: 10, rare: false, note: "Next month's cape." },
 ];
 
 const WEEKLY: readonly Cloth[] = [];
 
-export function clothReleased(_id: string, _now = new Date()) {
+export function clothReleased(id: string, now = new Date()) {
+  if (id === "white") return now >= new Date(2026, 9, 1);
+  if (id === "cape") return false;
   return true;
 }
 
