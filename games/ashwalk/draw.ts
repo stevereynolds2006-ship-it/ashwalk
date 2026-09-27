@@ -240,7 +240,6 @@ function drawTerrain(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) 
       ctx.fillRect(rect.x, rect.y, rect.w, 2);
     }
   }
-  if (sim.level.tunnel) drawTunnel(ctx, sim.level.tunnel);
 }
 
 function drawGrass(ctx: CanvasRenderingContext2D, rect: RectLike, tall: number) {
@@ -270,18 +269,6 @@ function drawPlank(ctx: CanvasRenderingContext2D, rect: RectLike, rotten: boolea
   ctx.fillStyle = bright ? "rgba(255,255,255,0.72)" : "rgba(255,255,255,0.18)";
   ctx.fillRect(-rect.w / 2, 0, rect.w, bright ? 2 : 1);
   ctx.restore();
-}
-
-function drawTunnel(ctx: CanvasRenderingContext2D, tunnel: { x: number; w: number; floor: number }) {
-  const top = tunnel.floor - 92;
-  ctx.fillStyle = "#050506";
-  ctx.fillRect(tunnel.x, top, tunnel.w, 40);
-  ctx.fillStyle = "rgba(0,0,0,0.55)";
-  ctx.fillRect(tunnel.x, top + 40, tunnel.w, tunnel.floor - (top + 40));
-  ctx.fillStyle = "rgba(244,241,234,0.35)";
-  ctx.fillRect(tunnel.x, tunnel.floor - 54, tunnel.w, 2);
-  ctx.fillRect(tunnel.x, top, 8, tunnel.floor - top);
-  ctx.fillRect(tunnel.x + tunnel.w - 8, top, 8, tunnel.floor - top);
 }
 
 type RectLike = { x: number; y: number; w: number; h: number };
@@ -830,6 +817,52 @@ function drawSpider(
   ctx.fillStyle = "#f4f1ea";
   ctx.fillRect(5.1, -1.6, 1.2, 1.2);
   ctx.fillRect(6.8, -1.6, 1.2, 1.2);
+  ctx.restore();
+}
+
+function drawGator(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  dir: number,
+  t: number,
+  reduced: boolean,
+) {
+  const swim = reduced ? 0 : Math.sin(t * 2.4) * 2;
+  const snap = !reduced && Math.sin(t * 1.6 + x * 0.01) > 0.72;
+  ctx.save();
+  ctx.translate(x, y + swim);
+  ctx.scale(dir < 0 ? -1.35 : 1.35, 1.35);
+  const body = () => {
+    ctx.beginPath();
+    ctx.ellipse(-8, 3, 24, 8, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(8, 0);
+    ctx.lineTo(36, snap ? -7 : -1);
+    ctx.lineTo(36, snap ? 5 : 4);
+    ctx.lineTo(8, 6);
+    ctx.closePath();
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(-28, 3);
+    ctx.quadraticCurveTo(-46, 10, -58, -4);
+    ctx.quadraticCurveTo(-44, 8, -28, 8);
+    ctx.fill();
+  };
+  ctx.fillStyle = "#f4f1ea";
+  ctx.save();
+  ctx.scale(1.08, 1.18);
+  body();
+  ctx.restore();
+  ctx.fillStyle = "#070708";
+  body();
+  if (snap) {
+    ctx.fillStyle = "#f4f1ea";
+    for (let i = 0; i < 4; i++) ctx.fillRect(16 + i * 4, 1, 1.2, 3);
+  }
+  ctx.fillStyle = "#f4f1ea";
+  ctx.fillRect(6, -3, 2.4, 2.4);
   ctx.restore();
 }
 
@@ -1418,6 +1451,7 @@ export function renderFrame(
   for (const bird of birdSpots(sim, reduced)) {
     if (bird.kind === "rat") drawRat(ctx, bird.x, bird.y, bird.dir, sim.t, reduced);
     else if (bird.kind === "turtle") drawTurtle(ctx, bird.x, bird.y, bird.dir, sim.t);
+    else if (bird.kind === "gator") drawGator(ctx, bird.x, bird.y, bird.dir, sim.t, reduced);
     else drawCrow(ctx, bird.x, bird.y, sim.t * 14, bird.dir);
   }
 
