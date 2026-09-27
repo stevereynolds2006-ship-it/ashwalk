@@ -322,6 +322,9 @@ function drawOutfit(
   bottom: number,
   facing: 1 | -1,
   layer: "back" | "front",
+  t = 0,
+  vx = 0,
+  vy = 0,
 ) {
   ctx.save();
   ctx.translate(center, bottom);
@@ -372,12 +375,19 @@ function drawOutfit(
     ];
     const tone: Record<string, string> = { r: "#e10600", d: "#8d0906", k: "#240406" };
     const size = 2;
+    const along = vx * facing;
+    const run = Math.max(-1, Math.min(1, along / 180));
+    const rise = Math.max(-1, Math.min(1, -vy / 520));
     rows.forEach((row, y) => {
       for (let x = 0; x < row.length; x++) {
         const color = tone[row[x] ?? ""];
         if (!color) continue;
+        const back = row.length - x;
+        const ripple = Math.sin(t * 8 + back * 0.45 + y * 0.35) * (1.5 + Math.abs(run) * 2.4);
+        const trail = back * Math.max(0, run) * 0.9;
+        const flip = back * Math.max(0, -run) * 0.75;
         ctx.fillStyle = color;
-        ctx.fillRect(-4 - (row.length - x) * size, -50 + y * size, size, size);
+        ctx.fillRect(-4 - back * size - trail + flip, -50 + y * size + ripple + rise * back * 0.4, size, size);
       }
     });
   }
@@ -559,14 +569,14 @@ function drawOutfit(
 function drawFriend(
   ctx: CanvasRenderingContext2D,
   sprites: GenerationSprites | null,
-  pose: { x: number; y: number; facing: 1 | -1; walking: boolean; anim: number; hurt: number },
+  pose: { x: number; y: number; facing: 1 | -1; walking: boolean; anim: number; hurt: number; vx?: number; vy?: number },
   t: number,
   reduced: boolean,
   attract: boolean,
   cloth: string | null = null,
 ) {
   const body = attract
-    ? { x: 2472, y: 368 - PH, facing: -1 as const, walking: false, anim: 0, hurt: 0 }
+    ? { x: 2472, y: 368 - PH, facing: -1 as const, walking: false, anim: 0, hurt: 0, vx: 0, vy: 0 }
     : pose;
   const scale = 3;
   const bottom = body.y + PH;
@@ -581,7 +591,7 @@ function drawFriend(
   const rows = spriteFrame(sprites, facing, body.walking, frame, facing).frame.rows;
   const left = Math.round(center - (16 * scale) / 2);
   const top = Math.round(bottom - 16 * scale);
-  if (cloth) drawOutfit(ctx, cloth, center, bottom, body.facing, "back");
+  if (cloth) drawOutfit(ctx, cloth, center, bottom, body.facing, "back", t, body.vx ?? 0, body.vy ?? 0);
   ctx.save();
   if (body.hurt > 0 && Math.floor(t * 24) % 2 === 0) ctx.globalAlpha = 0.35;
   const pixels: [number, number][] = [];
@@ -597,7 +607,7 @@ function drawFriend(
     ctx.fillRect(left + px * scale, top + py * scale, scale, scale);
   }
   ctx.restore();
-  if (cloth) drawOutfit(ctx, cloth, center, bottom, body.facing, "front");
+  if (cloth) drawOutfit(ctx, cloth, center, bottom, body.facing, "front", t, body.vx ?? 0, body.vy ?? 0);
 }
 
 const COIN = [
@@ -1167,6 +1177,8 @@ export function renderFrame(
       walking: sim.walking,
       anim: sim.anim,
       hurt: sim.hurt,
+      vx: sim.vx,
+      vy: sim.vy,
     },
     sim.t,
     reduced,
