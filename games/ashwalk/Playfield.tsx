@@ -999,7 +999,7 @@ export function Playfield({
                 ? "Reading Rare coins…"
                 : `You have ${formatRareCoins(spendable(rareBalance, account) ?? 0n)} Rare coins.`}
           </p>
-          <p>Every fog is open to try.</p>
+          <p>The shore is open. The other fogs are locked.</p>
           <p>Every month a new map opens, and a new cape is there to own. The moon and the white cape open October 1. Coming soon.</p>
           {stakeMsg && (
             <p className="ash-error" role="alert">
@@ -1113,12 +1113,12 @@ export function Playfield({
           )}
           <p className="ash-note">
             {!account
-              ? "Connect a wallet to read your Rare coins. Every fog is open to try."
+              ? "Connect a wallet to read your Rare coins. The shore is the only fog open."
               : rareBalance == null
                 ? "Reading Rare coins…"
-                : `You have ${formatRareCoins(spendable(rareBalance, account) ?? 0n)} Rare coins. Every fog is open to try.`}
+                : `You have ${formatRareCoins(spendable(rareBalance, account) ?? 0n)} Rare coins. The shore is the only fog open.`}
           </p>
-          <p className="ash-note">Every fog is open to try. None of them charge to start.</p>
+          <p className="ash-note">The shore is open. The other fogs are locked. The moon opens October 1.</p>
           <LevelList
             current={pickId}
             cleared={cleared}
@@ -1411,9 +1411,8 @@ function LevelList({
   return (
     <div className="ash-levels">
       {LEVELS.map((level) => {
-        const held = fogHeld(level.id);
-        const soon = !held && !fogReleased(level.id);
-        const open = !soon && !held;
+        const soon = level.id === "moon" && !fogReleased(level.id);
+        const open = level.id === "shore";
         return (
           <button
             key={level.id}
@@ -1423,7 +1422,7 @@ function LevelList({
             disabled={!open}
             onClick={() => onPick(level.id)}
           >
-            <span>{soon ? `${level.title} · coming soon` : held ? `${level.title} · locked` : level.title}</span>
+            <span>{soon ? `${level.title} · coming soon` : open ? level.title : `${level.title} · locked`}</span>
             <small>{soon ? "Coming soon. Opens October 1." : open ? level.rule : "Locked."}</small>
           </button>
         );

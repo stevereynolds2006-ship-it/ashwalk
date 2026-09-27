@@ -812,17 +812,16 @@ export function previousFog(id: string): string | null {
   return LEVELS[index - 1]!.id;
 }
 
-/** Try build: every fog is open, including the moon. */
-export function fogReleased(_id: string, _now = new Date()) {
-  return true;
+export function fogReleased(id: string, now = new Date()) {
+  if (id !== "moon") return true;
+  return now >= new Date(2026, 9, 1);
 }
 
-/** The mirror can be tried. Set this back to id === "mirror" to shut it. */
 export function fogHeld(_id: string) {
   return false;
 }
-export function demoLocked(_id: string) {
-  return false;
+export function demoLocked(id: string) {
+  return id !== "shore";
 }
 
 export function fogUnlocked(id: string, cleared: ReadonlySet<string>) {
