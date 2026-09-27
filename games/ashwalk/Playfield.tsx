@@ -174,6 +174,7 @@ export function Playfield({
   clothRef.current = ledger.equipped;
 
   function fogOpen(id: string) {
+    if (id === "shore" || id === "mirror") return fogReleased(id);
     if (demoLocked(id) || fogHeld(id) || !fogReleased(id)) return false;
     return allOpenRef.current || fogUnlocked(id, clearedRef.current);
   }
@@ -1213,7 +1214,15 @@ export function Playfield({
                 <button
                   type="button"
                   className="ash-btn"
-                  disabled={fogHeld(pickId) || demoLocked(pickId) || !fogReleased(pickId) || (!ledger.allFogs && !fogUnlocked(pickId, new Set(cleared)))}
+                  disabled={
+                    fogHeld(pickId) ||
+                    demoLocked(pickId) ||
+                    !fogReleased(pickId) ||
+                    (pickId !== "shore" &&
+                      pickId !== "mirror" &&
+                      !ledger.allFogs &&
+                      !fogUnlocked(pickId, new Set(cleared)))
+                  }
                   onClick={openFog}
                 >
                   Open this fog
