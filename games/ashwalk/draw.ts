@@ -2769,6 +2769,7 @@ export function renderFrame(
     ctx.restore();
     ctx.save();
     ctx.scale(scale, scale);
+    drawShip(ctx, sim.palX - camera.x, sim.palY - camera.y, 1);
     drawBoost(ctx, sim.x + PW / 2 - camera.x, sim.y + 16 - camera.y, sim.t, rush, true);
     ctx.restore();
   }

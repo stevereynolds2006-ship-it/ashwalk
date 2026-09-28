@@ -778,8 +778,12 @@ const MOON: Level = {
     { kind: "ship", x0: 40, x1: 1680, y: 980, amp: 10, speed: 90, start: 200 },
     { kind: "ship", x0: 20, x1: 1680, y: 460, amp: 8, speed: 110, start: 400 },
     { kind: "alien", x0: 70, x1: 320, y: 836, amp: 0, speed: 36, start: 80 },
-    { kind: "ship", x0: 40, x1: 1680, y: -160, amp: 12, speed: 100, start: 300 },
+    { kind: "alien", x0: 90, x1: 280, y: 146, amp: 0, speed: 34, start: 40 },
     { kind: "alien", x0: 1060, x1: 1400, y: 506, amp: 0, speed: 40, start: 200 },
+    { kind: "alien", x0: 720, x1: 1180, y: -14, amp: 0, speed: 38, start: 160 },
+    { kind: "alien", x0: 190, x1: 360, y: -394, amp: 0, speed: 32, start: 20 },
+    { kind: "ship", x0: 40, x1: 1680, y: -160, amp: 12, speed: 100, start: 300 },
+    { kind: "alien", x0: 960, x1: 1240, y: -684, amp: 0, speed: 30, start: 100 },
   ],
   spiders: [],
   chapters: [
