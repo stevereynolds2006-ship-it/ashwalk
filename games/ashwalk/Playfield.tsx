@@ -727,7 +727,9 @@ export function Playfield({
           phaseNow !== "levels" &&
           phaseNow !== "lobby" &&
           shoreGlowRef.current <= 0
-          ? 0.86
+          ? sim.level.id === "choir"
+            ? 0.58
+            : 0.86
           : 0,
         clothRef.current,
       );

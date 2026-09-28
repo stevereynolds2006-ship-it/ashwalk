@@ -1372,7 +1372,7 @@ function drawJungle(ctx: CanvasRenderingContext2D, t: number, reduced: boolean) 
 function drawCave(ctx: CanvasRenderingContext2D, camera: Camera, t: number, reduced: boolean, lit: boolean) {
   const world = 5200;
   const roof = (x: number) => 20 + x * 0.28;
-  ctx.fillStyle = "#050506";
+  ctx.fillStyle = lit ? "#4a4c50" : "#050506";
   ctx.beginPath();
   ctx.moveTo(-120, -400);
   ctx.lineTo(world + 160, -400);
@@ -1453,6 +1453,28 @@ function drawCave(ctx: CanvasRenderingContext2D, camera: Camera, t: number, redu
   ctx.translate(camera.x * 0.4, camera.y * 0.1);
   drawCaveBats(ctx, t, reduced, roof);
   ctx.restore();
+
+  if (!reduced) {
+    ctx.lineWidth = 1;
+    for (let i = 0; i < 36; i++) {
+      const x = (i * 149) % world;
+      const top = roof(x) + 28 + ((i * 11) % 24);
+      const cycle = ((t * 0.55 + i * 0.13) % 1 + 1) % 1;
+      const drop = top + cycle * 180;
+      ctx.strokeStyle = lit ? "rgba(236,238,242,0.75)" : "rgba(190,192,196,0.28)";
+      ctx.beginPath();
+      ctx.moveTo(x, top);
+      ctx.lineTo(x, top + 22);
+      ctx.stroke();
+      ctx.fillStyle = lit ? "rgba(244,246,248,0.9)" : "rgba(210,212,216,0.4)";
+      ctx.fillRect(x - 1, drop, 2, 4);
+    }
+  }
+
+  if (lit) {
+    ctx.fillStyle = "rgba(232,234,238,0.22)";
+    ctx.fillRect(-120, -400, world + 280, 2600);
+  }
 }
 
 function drawCaveBats(
@@ -1462,8 +1484,8 @@ function drawCaveBats(
   roof: (x: number) => number,
 ) {
   ctx.fillStyle = "#070708";
-  for (let i = 0; i < 16; i++) {
-    const x = 160 + i * 300;
+  for (let i = 0; i < 32; i++) {
+    const x = 80 + i * 160;
     const hang = roof(x) + 8;
     ctx.fillRect(x, hang, 2, 12);
     ctx.beginPath();
@@ -1474,8 +1496,8 @@ function drawCaveBats(
     ctx.closePath();
     ctx.fill();
   }
-  for (let i = 0; i < 10; i++) {
-    const base = 220 + i * 480;
+  for (let i = 0; i < 22; i++) {
+    const base = 80 + i * 230;
     const x = base + (reduced ? 0 : Math.sin(t * 0.35 + i) * 70 + ((t * 22 + i * 30) % 160) - 80);
     const y = roof(base) + 70 + (i % 3) * 24 + (reduced ? 0 : Math.sin(t * 2 + i) * 10);
     const flap = reduced ? 0.4 : Math.sin(t * 9 + i) * 0.8;
@@ -1924,7 +1946,7 @@ export function renderFrame(
       cssW * 0.72,
     );
     vig.addColorStop(0, "rgba(0,0,0,0)");
-    vig.addColorStop(1, sim.level.id === "choir" ? "rgba(0,0,0,0.28)" : "rgba(0,0,0,0.72)");
+    vig.addColorStop(1, sim.level.id === "choir" ? "rgba(0,0,0,0.16)" : "rgba(0,0,0,0.72)");
     ctx.fillStyle = vig;
     ctx.fillRect(0, 0, cssW, cssH);
   }
@@ -2688,7 +2710,7 @@ export function frameCamera(
       y -= 36 * huntPull;
     }
   }
-  const yMin = sim.level.id === "moon" ? -1400 : -40;
+  const yMin = sim.level.id === "moon" ? -1400 : sim.level.id === "choir" ? -420 : -40;
   x = Math.max(0, Math.min(Math.max(0, sim.level.worldW - viewW), x));
   y = Math.max(yMin, Math.min(worldH - viewH, y));
   return { x, y, w: viewW, h: viewH };
