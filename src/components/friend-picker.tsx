@@ -8,6 +8,7 @@ import {
 import { readOwnedFriends, type OwnedFriend } from "@rarefriends/friendsdk/owned";
 import { readGenerationEligibility } from "@rarefriends/friendsdk/identity";
 import { formatRareCoins, spendable } from "../../games/ashwalk/wardrobe";
+import { withOwnedHistory } from "./friend-history";
 
 export function FriendPicker({
   friendId,
@@ -58,7 +59,7 @@ export function FriendPicker({
     let cancel = false;
     setBusy(true);
     setError("");
-    const client = createFriendPublicClient();
+    const client = withOwnedHistory(createFriendPublicClient());
     void readOwnedFriends(client, account)
       .then((result) => {
         if (cancel) return;
