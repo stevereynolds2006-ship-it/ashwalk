@@ -975,9 +975,13 @@ function drawDrapedCape(
   const tone: Record<string, string> =
     cloth === "white"
       ? { k: "#1a1a1c", n: "#f4f4f4", d: "#8e8e94", b: "#ffffff" }
-      : cloth === "camo"
-        ? { k: "#14120e", n: "#6a4e28", d: "#2c2618", b: "#c4a56a" }
-        : { k: "#240406", n: "#e10600", d: "#7a0906", b: "#ff5a42" };
+      : cloth === "pink"
+        ? { k: "#3a0418", n: "#ff3d9a", d: "#c21868", b: "#ff8ec6" }
+        : cloth === "camo"
+          ? { k: "#14120e", n: "#6a4e28", d: "#2c2618", b: "#c4a56a" }
+          : { k: "#240406", n: "#e10600", d: "#7a0906", b: "#ff5a42" };
+  const stripes = ["#d01218", "#f7f7f7", "#1a3fbf"];
+  const stripeShade = ["#8e0c12", "#c8c8ce", "#0d226e"];
   CAPE_DRAPE.forEach((row, y) => {
     for (let x = 0; x < row.length; x++) {
       const mark = row[x] ?? ".";
@@ -988,6 +992,10 @@ function drawDrapedCape(
       const trail = back * (0.35 + Math.max(0, run) * 0.85);
       let color = tone[mark] ?? tone.n;
       if (cloth === "rainbow") color = mark === "k" ? "#141416" : bands[Math.min(bands.length - 1, Math.floor((y / CAPE_DRAPE.length) * bands.length))]!;
+      if (cloth === "stripes") {
+        const band = Math.floor((x + y) / 5) % 3;
+        color = mark === "k" ? "#12060a" : mark === "d" ? stripeShade[band]! : stripes[band]!;
+      }
       ctx.fillStyle = color!;
       ctx.fillRect((x - tipX) * size - trail - gust * (back / 34) + 8, -36 + y * size + ripple, size, size);
     }
@@ -1031,10 +1039,10 @@ function drawOutfit(
     ctx.stroke();
   }
 
-  if (layer === "back" && (cloth === "cape" || cloth === "white" || cloth === "rainbow" || cloth === "camo")) {
+  if (layer === "back" && (cloth === "cape" || cloth === "white" || cloth === "rainbow" || cloth === "camo" || cloth === "stripes" || cloth === "pink")) {
     drawDrapedCape(ctx, cloth, t, vx, facing);
   }
-  if (layer === "front" && (cloth === "cape" || cloth === "white" || cloth === "rainbow" || cloth === "camo")) {
+  if (layer === "front" && (cloth === "cape" || cloth === "white" || cloth === "rainbow" || cloth === "camo" || cloth === "stripes" || cloth === "pink")) {
     ctx.save();
     ctx.beginPath();
     ctx.rect(-16, -42, 14, 32);

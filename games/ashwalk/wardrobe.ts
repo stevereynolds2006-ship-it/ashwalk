@@ -13,25 +13,32 @@ export const CLOTHES: readonly Cloth[] = [
   { id: "white", name: "White cape", cost: 20, rare: false, note: "Coming soon." },
   { id: "rainbow", name: "Rainbow cape", cost: 25, rare: false, note: "Coming soon." },
   { id: "camo", name: "Camo cape", cost: 30, rare: false, note: "Coming soon." },
+  { id: "stripes", name: "Striped cape", cost: 35, rare: false, note: "Red, white, and blue." },
+  { id: "pink", name: "Pink cape", cost: 40, rare: false, note: "A bright pink cape." },
 ];
 
-const WEEKLY: readonly Cloth[] = [];
+/** Locked capes open one per week, starting October 1. */
+const CAPE_WEEKS: readonly { id: string; at: Date; label: string }[] = [
+  { id: "white", at: new Date(2026, 9, 1), label: "October 1" },
+  { id: "rainbow", at: new Date(2026, 9, 8), label: "October 8" },
+  { id: "camo", at: new Date(2026, 9, 15), label: "October 15" },
+  { id: "stripes", at: new Date(2026, 9, 22), label: "October 22" },
+  { id: "pink", at: new Date(2026, 9, 29), label: "October 29" },
+];
 
 export function clothOpens(id: string): string | null {
-  if (id === "white") return "October 1";
-  if (id === "rainbow") return "November 1";
-  if (id === "camo") return "December 1";
-  return null;
+  return CAPE_WEEKS.find((week) => week.id === id)?.label ?? null;
 }
 
 export function clothReleased(id: string, now = new Date()) {
-  if (id === "white") return now >= new Date(2026, 9, 1);
-  if (id === "rainbow") return now >= new Date(2026, 10, 1);
-  if (id === "camo") return now >= new Date(2026, 11, 1);
-  return true;
+  const week = CAPE_WEEKS.find((item) => item.id === id);
+  if (!week) return true;
+  return now >= week.at;
 }
 
 export const ALL_FOGS_COST = 20;
+
+const WEEKLY: readonly Cloth[] = [];
 
 export type WeekKey = { year: number; week: number };
 

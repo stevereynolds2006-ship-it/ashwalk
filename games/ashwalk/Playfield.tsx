@@ -1232,7 +1232,7 @@ export function Playfield({
               : "Connect a wallet to buy boards with Rare coins."}
           </p>
           <p>The shore is free. You start it with 2 coins. Coins you pick up only turn things on inside the stage. Rare coins pay to open the next fog and to buy a cape. Beat a fog, then the next one is 10 Rare coins. Coming soon fogs cost 5 more each month. You cannot buy the next one until the one before it is beaten.</p>
-          <p>Every month a new map opens, and a new cape is there to own. The red cape is 15 Rare coins. Each later cape costs 5 more.</p>
+          <p>Every month a new map opens. A new cape opens each week, starting October 1. The red cape is 15 Rare coins. Each later cape costs 5 more.</p>
           {stakeMsg && (
             <p className="ash-error" role="alert">
               {stakeMsg}
@@ -1291,7 +1291,7 @@ export function Playfield({
               ? `You have ${formatRareCoins(spendable(rareBalance ?? walletCoins, payingAccount) ?? 0n)} Rare coins. Only the red cape is open.`
               : "Connect a wallet to buy a cape with Rare coins."}
           </p>
-          <p className="ash-note">The red cape is 15 Rare coins. The white cape opens October 1 at 20, the rainbow cape November 1 at 25, and the camo cape December 1 at 30.</p>
+          <p className="ash-note">The red cape is 15 Rare coins and open now. Then one cape a week: white October 1 at 20, rainbow October 8 at 25, camo October 15 at 30, stripes October 22 at 35, and pink October 29 at 40.</p>
           <div className="ash-levels">
             {outfitList().map((cloth) => {
               const locked = !clothReleased(cloth.id);
