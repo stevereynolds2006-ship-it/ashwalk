@@ -4,7 +4,7 @@ import { RF } from "@rarefriends/friendsdk/game";
 import { createFriendReader, type GenerationSprites } from "@rarefriends/friendsdk/sprites";
 import { createFriendSoundKit, type FriendSoundKit } from "@rarefriends/friendsdk/sounds";
 import type { PeerInfo } from "@/lib/multiplayer";
-import { LEVELS, TRY_ALL, fogHeld, fogReleased, fogTry, fogUnlocked, getLevel, previousFog } from "./challenges";
+import { LEVELS, TRY_ALL, fogHeld, fogPrice, fogReleased, fogTry, fogUnlocked, getLevel, previousFog } from "./challenges";
 import { windAccel, chapterAt } from "./level";
 import { Online, type NetApi } from "./online";
 import type { Ghost } from "./net";
@@ -227,18 +227,19 @@ export function Playfield({
     const who = accountRef.current;
     const balance = rareRef.current;
     if (!who || balance == null) {
-      setStakeMsg("Reading Rare coins. This fog costs 10 Rare coins.");
+      setStakeMsg(`Reading Rare coins. This fog costs ${fogPrice(id)} Rare coins.`);
       return false;
     }
     if (openedRef.current.has(id)) return true;
-    if (!buyFog(who, balance, id)) {
-      setStakeMsg("You need 10 Rare coins to open this fog.");
+    const price = fogPrice(id);
+    if (!buyFog(who, balance, id, price)) {
+      setStakeMsg(`You need ${price} Rare coins to open this fog.`);
       return false;
     }
     openedRef.current.add(id);
     refreshLedger(who);
     onWardrobe?.();
-    setShopError(`Burned ${burnedHalf(ROAD_COST)} Rare coins.`);
+    setShopError(`Burned ${burnedHalf(price)} Rare coins.`);
     return true;
   }
 
@@ -262,7 +263,7 @@ export function Playfield({
         onWardrobe?.();
         return;
       }
-      setStakeMsg("Reading Rare coins. The red cape is 10 Rare coins.");
+      setStakeMsg("Reading Rare coins. The red cape is 15 Rare coins.");
       return;
     }
     if (!buyCloth(who, balance, id)) {
@@ -1127,8 +1128,8 @@ export function Playfield({
                 : `You have ${formatRareCoins(spendable(shown, who) ?? 0n)} Rare coins. Those pay to continue and to buy a cape.`;
             })()}
           </p>
-          <p>The shore is free. You start it with 2 coins. Coins you pick up only turn things on inside the stage. Rare coins pay to open the next fog and to buy a cape. Beat a fog, then the next one is 10 Rare coins. You cannot buy it until the one before it is beaten.</p>
-          <p>Every month a new map opens, and a new cape is there to own. Only the red cape is open to buy.</p>
+          <p>The shore is free. You start it with 2 coins. Coins you pick up only turn things on inside the stage. Rare coins pay to open the next fog and to buy a cape. Beat a fog, then the next one is 10 Rare coins. Coming soon fogs cost 5 more each month. You cannot buy the next one until the one before it is beaten.</p>
+          <p>Every month a new map opens, and a new cape is there to own. The red cape is 15 Rare coins. Each later cape costs 5 more.</p>
           {stakeMsg && (
             <p className="ash-error" role="alert">
               {stakeMsg}
@@ -1191,7 +1192,7 @@ export function Playfield({
                 : `You have ${formatRareCoins(spendable(shown, who) ?? 0n)} Rare coins. Only the red cape is open.`;
             })()}
           </p>
-          <p className="ash-note">Only the red cape is open. 10 Rare coins. The white cape opens October 1, the rainbow cape November 1, and the camo cape December 1.</p>
+          <p className="ash-note">The red cape is 15 Rare coins. The white cape opens October 1 at 20, the rainbow cape November 1 at 25, and the camo cape December 1 at 30.</p>
           <div className="ash-levels">
             {outfitList().map((cloth) => {
               const locked = !clothReleased(cloth.id);
@@ -1211,7 +1212,7 @@ export function Playfield({
                   <span>{soon ? `${cloth.name} · coming soon` : locked ? `${cloth.name} · locked` : cloth.name}</span>
                   <small>
                     {soon
-                      ? `Coming soon. Opens ${when}.`
+                      ? `Coming soon. Opens ${when}. ${cloth.cost} Rare coins.`
                       : locked
                         ? "Locked."
                         : owned
@@ -1252,7 +1253,7 @@ export function Playfield({
             })()}
           </p>
           <p className="ash-note">
-            The shore is free. Beat a fog before you can buy the next one. Each fog after the shore is 10 Rare coins. The moon opens October 1, the mirror November 1, and the tunnel December 1.
+            The shore is free. Beat a fog before you can buy the next one. Each open fog is 10 Rare coins. The moon opens October 1 at 15, the mirror November 1 at 20, and the tunnel December 1 at 25.
           </p>
           <LevelList
             current={pickId}
@@ -1500,7 +1501,7 @@ export function Playfield({
               if (!TRY_ALL && (ticket || !ledger.opened.includes(next.id))) {
                 return (
                   <button type="button" className="ash-btn" onClick={() => startLevel(next.id)}>
-                    Play {next.title} · {ROAD_COST} Rare coins
+                    Play {next.title} · {(next.id === "roof" || next.id === "antler" ? ROAD_COST : fogPrice(next.id))} Rare coins
                   </button>
                 );
               }
@@ -1574,20 +1575,22 @@ function LevelList({
         const opens =
           level.id === "moon" ? "October 1" : level.id === "mirror" ? "November 1" : level.id === "tunnel" ? "December 1" : null;
         const soon = !TRY_ALL && opens != null && !fogReleased(level.id);
+        const price = fogPrice(level.id);
         const prev = previousFog(level.id);
         const beaten = prev == null || cleared.includes(prev);
         const ticket = level.id === "roof" || level.id === "antler";
         const bought = !ticket && (allOpen || opened.includes(level.id));
         const open = TRY_ALL || level.id === "shore" || fogTry(level.id) || (!ticket && !soon && bought && beaten);
         const canBuy = !open && !soon && beaten && (ticket || !bought);
+        const ask = ticket ? ROAD_COST : price;
         const note = soon
-          ? `Coming soon. Opens ${opens}.`
+          ? `Coming soon. Opens ${opens}. ${price} Rare coins.`
           : open
             ? level.rule
             : canBuy
               ? ticket
                 ? "10 Rare coins every time you play."
-                : "10 Rare coins to open."
+                : `${ask} Rare coins to open.`
               : prev
                 ? `Beat ${getLevel(prev).title} before you can buy this.`
                 : "Locked.";
@@ -1601,7 +1604,7 @@ function LevelList({
             onClick={() => onPick(level.id)}
           >
             <span>
-              {soon ? `${level.title} · coming soon` : canBuy ? `${level.title} · 10 Rare coins` : open ? level.title : `${level.title} · locked`}
+              {soon ? `${level.title} · coming soon` : canBuy ? `${level.title} · ${ask} Rare coins` : open ? level.title : `${level.title} · locked`}
             </span>
             <small>{note}</small>
           </button>

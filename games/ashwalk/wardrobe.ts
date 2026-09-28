@@ -9,10 +9,10 @@ export type Cloth = {
 };
 
 export const CLOTHES: readonly Cloth[] = [
-  { id: "cape", name: "Red cape", cost: 10, rare: false, note: "A long red cape behind you." },
-  { id: "white", name: "White cape", cost: 10, rare: false, note: "Coming soon." },
-  { id: "rainbow", name: "Rainbow cape", cost: 10, rare: false, note: "Coming soon." },
-  { id: "camo", name: "Camo cape", cost: 10, rare: false, note: "Coming soon." },
+  { id: "cape", name: "Red cape", cost: 15, rare: false, note: "A long red cape behind you." },
+  { id: "white", name: "White cape", cost: 20, rare: false, note: "Coming soon." },
+  { id: "rainbow", name: "Rainbow cape", cost: 25, rare: false, note: "Coming soon." },
+  { id: "camo", name: "Camo cape", cost: 30, rare: false, note: "Coming soon." },
 ];
 
 const WEEKLY: readonly Cloth[] = [];
@@ -226,10 +226,10 @@ export function equipCloth(account: string, id: string | null) {
 
 export const ROAD_COST = 10;
 
-export function buyFog(account: string, balance: bigint, id: string) {
+export function buyFog(account: string, balance: bigint, id: string, cost = ROAD_COST) {
   const ledger = readLedger(account);
   if (ledger.opened.includes(id)) return true;
-  if (!pay(account, balance, ROAD_COST)) return false;
+  if (!pay(account, balance, cost)) return false;
   const next = readLedger(account);
   next.opened = [...next.opened, id];
   writeLedger(account, next);
