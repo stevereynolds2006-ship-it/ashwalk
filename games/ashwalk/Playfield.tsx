@@ -23,6 +23,7 @@ import {
   formatRareCoins,
   outfitList,
   buyFog,
+  CAPES_TRY,
   readLedger,
   spendWhole,
   spendable,
@@ -311,6 +312,17 @@ export function Playfield({
     if (!clothReleased(id)) {
       const when = clothOpens(id);
       setStakeMsg(when ? `${cloth?.name ?? "That cape"} opens ${when}. Coming soon.` : "That cape is locked.");
+      return;
+    }
+    if (CAPES_TRY) {
+      const who = accountRef.current && isAddress(accountRef.current) ? accountRef.current : "guest";
+      if (!buyCloth(who, 0n, id)) {
+        setStakeMsg("That cape stayed shut.");
+        return;
+      }
+      setStakeMsg(`${cloth?.name ?? "Cape"} is on.`);
+      refreshLedger(who);
+      onWardrobe?.();
       return;
     }
     if (cloth && cloth.cost > 0 && !(await ensureWallet())) return;
@@ -1288,10 +1300,10 @@ export function Playfield({
           )}
           <p className="ash-note">
             {payingAccount && (rareBalance ?? walletCoins) != null
-              ? `You have ${formatRareCoins(spendable(rareBalance ?? walletCoins, payingAccount) ?? 0n)} Rare coins. Every cape is 15 and unlocked.`
+              ? `You have ${formatRareCoins(spendable(rareBalance ?? walletCoins, payingAccount) ?? 0n)} Rare coins. Capes are open to try, no wallet needed.`
               : "Connect a wallet to buy a cape with Rare coins."}
           </p>
-          <p className="ash-note">Every cape is unlocked and costs 15 Rare coins. The weekly order is still there for later: white October 1, rainbow October 8, camo October 15, stripes October 22, pink October 29, black November 5, gold November 12, and ember November 19.</p>
+          <p className="ash-note">Every cape is unlocked to try. No wallet yet. Each one will be 15 Rare coins when the tryout ends.</p>
           <div className="ash-levels">
             {outfitList().map((cloth) => {
               const locked = !clothReleased(cloth.id);
@@ -1318,7 +1330,9 @@ export function Playfield({
                           ? wearing
                             ? "Wearing. Press to take it off."
                             : `${cloth.note} Press to wear.`
-                          : `${cloth.note} ${cloth.cost} Rare coins.`}
+                          : CAPES_TRY
+                            ? `${cloth.note} Open to try.`
+                            : `${cloth.note} ${cloth.cost} Rare coins.`}
                   </small>
                 </button>
               );
