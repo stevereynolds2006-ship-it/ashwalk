@@ -1067,7 +1067,7 @@ export function Playfield({
                 : `You have ${formatRareCoins(spendable(rareBalance, account) ?? 0n)} Rare coins.`}
           </p>
           <p>The shore is free. Beat it, then 10 Rare coins opens the road. After that, beat a fog to open the next one.</p>
-          <p>Every month a new map opens, and a new cape is there to own. The white cape and the rainbow cape are free to try. The camo cape opens December 1. The moon opens October 1. The mirror opens November 1. The choir and the tunnel are open to try.</p>
+          <p>Every month a new map opens, and a new cape is there to own. Every fog is open to try. The white, rainbow, and camo capes are free to try.</p>
           {stakeMsg && (
             <p className="ash-error" role="alert">
               {stakeMsg}
@@ -1128,11 +1128,11 @@ export function Playfield({
                 ? "Reading Rare coins…"
                 : `You have ${formatRareCoins(spendable(rareBalance, account) ?? 0n)} Rare coins.`}
           </p>
-          <p className="ash-note">The white cape and the rainbow cape are free to try. No wallet. The red cape is 10 Rare coins. The camo cape opens December 1. Coming soon.</p>
+          <p className="ash-note">The white, rainbow, and camo capes are free to try. No wallet. The red cape is 10 Rare coins.</p>
           <div className="ash-levels">
             {outfitList().map((cloth) => {
               const locked = !clothReleased(cloth.id);
-              const soon = cloth.id === "camo" && locked;
+              const soon = false;
               const owned = ledger.owned.includes(cloth.id);
               const wearing = ledger.equipped === cloth.id;
               return (
@@ -1180,13 +1180,13 @@ export function Playfield({
           )}
           <p className="ash-note">
             {!account
-              ? "Connect a wallet to read your Rare coins. The shore, the choir, and the tunnel are open."
+              ? "Connect a wallet to read your Rare coins. Every fog is open to try."
               : rareBalance == null
                 ? "Reading Rare coins…"
-                : `You have ${formatRareCoins(spendable(rareBalance, account) ?? 0n)} Rare coins. The shore, the choir, and the tunnel are open.`}
+                : `You have ${formatRareCoins(spendable(rareBalance, account) ?? 0n)} Rare coins. Every fog is open to try.`}
           </p>
           <p className="ash-note">
-            The shore is free. After you beat it, 10 Rare coins opens the next fog. Then each fog opens when you beat the one before it. The moon opens October 1. The mirror opens November 1. The choir and the tunnel are open to try.
+            The shore is free. After you beat it, 10 Rare coins opens the next fog. Then each fog opens when you beat the one before it. Every fog is open to try right now.
           </p>
           <LevelList
             current={pickId}

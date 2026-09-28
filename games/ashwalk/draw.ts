@@ -1624,7 +1624,10 @@ function drawCaveBats(
   reduced: boolean,
   roof: (x: number) => number,
 ) {
+  ctx.save();
   ctx.fillStyle = "#070708";
+  ctx.shadowColor = "#f4f1ea";
+  ctx.shadowBlur = 8;
   for (let i = 0; i < 32; i++) {
     const x = 80 + i * 160;
     const hang = roof(x) + 8;
@@ -1658,6 +1661,7 @@ function drawCaveBats(
     ctx.fill();
     ctx.restore();
   }
+  ctx.restore();
 }
 
 function drawMirrorFog(ctx: CanvasRenderingContext2D, camera: Camera, sim: Sim, reduced: boolean) {
@@ -1955,7 +1959,15 @@ export function renderFrame(
   }
 
   for (const pose of spiderPoses(sim, reduced)) {
-    drawSpider(ctx, pose.x, pose.y, pose.dir, pose.ceil, pose.warn, sim.t, reduced, pose.kind);
+    if (sim.level.id === "tunnel") {
+      ctx.save();
+      ctx.shadowColor = "#f7f4ee";
+      ctx.shadowBlur = 14;
+      drawSpider(ctx, pose.x, pose.y, pose.dir, pose.ceil, pose.warn, sim.t, reduced, pose.kind);
+      ctx.restore();
+    } else {
+      drawSpider(ctx, pose.x, pose.y, pose.dir, pose.ceil, pose.warn, sim.t, reduced, pose.kind);
+    }
   }
 
   for (const moth of sim.level.moths) {
@@ -2851,7 +2863,7 @@ export function frameCamera(
       y -= 36 * huntPull;
     }
   }
-  const yMin = sim.level.id === "moon" ? -1400 : sim.level.id === "choir" ? -420 : -40;
+  const yMin = sim.level.id === "moon" ? -1400 : sim.level.id === "choir" ? -820 : -40;
   x = Math.max(0, Math.min(Math.max(0, sim.level.worldW - viewW), x));
   y = Math.max(yMin, Math.min(worldH - viewH, y));
   return { x, y, w: viewW, h: viewH };

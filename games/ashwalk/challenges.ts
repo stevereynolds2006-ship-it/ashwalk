@@ -184,9 +184,12 @@ const CHOIR: Level = {
     { id: "n2", kind: "oneway", x: 1340, y: 312, w: 110, h: 12 },
     { id: "n3", kind: "oneway", x: 1520, y: 248, w: 110, h: 12 },
     { id: "north", kind: "solid", terrain: true, x: 1680, y: 200, w: 360, h: 96 },
-    { id: "up1", kind: "oneway", x: 2060, y: 130, w: 130, h: 12 },
-    { id: "up2", kind: "oneway", x: 2240, y: 50, w: 120, h: 12 },
-    { id: "crown", kind: "solid", terrain: true, x: 2400, y: -30, w: 280, h: 90 },
+    { id: "up1", kind: "oneway", x: 2060, y: 120, w: 130, h: 12 },
+    { id: "up2", kind: "oneway", x: 2240, y: 40, w: 120, h: 12 },
+    { id: "up3", kind: "oneway", x: 2060, y: -40, w: 120, h: 12 },
+    { id: "up4", kind: "oneway", x: 2240, y: -120, w: 120, h: 12 },
+    { id: "up5", kind: "oneway", x: 2060, y: -200, w: 120, h: 12 },
+    { id: "crown", kind: "solid", terrain: true, x: 2220, y: -290, w: 280, h: 80 },
     {
       id: "es1",
       kind: "sway",
@@ -227,8 +230,11 @@ const CHOIR: Level = {
     { id: "mDeep", x: 180, y: 730 },
     { id: "mDeep2", x: 280, y: 740 },
     { id: "mUp", x: 2120, y: 70 },
-    { id: "mCrown", x: 2500, y: -80 },
-    { id: "mCrown2", x: 2600, y: -90 },
+    { id: "mUp2", x: 2300, y: -10 },
+    { id: "mUp3", x: 2120, y: -90 },
+    { id: "mUp4", x: 2300, y: -160 },
+    { id: "mCrown", x: 2320, y: -340 },
+    { id: "mCrown2", x: 2440, y: -350 },
   ],
   checkpoints: [
     { id: "hub", x: 1280, surface: 468 },
@@ -237,7 +243,7 @@ const CHOIR: Level = {
     { id: "east", x: 2300, surface: 292 },
     { id: "north", x: 1840, surface: 200 },
     { id: "deep", x: 160, surface: 790 },
-    { id: "crown", x: 2480, surface: -30 },
+    { id: "crown", x: 2320, surface: -290 },
   ],
   rope: null,
   shrines: [{ id: "shrine-hub", x: 1420, y: 340, w: 80, h: 130 }],
@@ -908,7 +914,7 @@ export function previousFog(id: string): string | null {
 }
 
 /** Try build. Set true to open every fog. */
-export const TRY_ALL = false;
+export const TRY_ALL = true;
 /** Lets the tunnel be played before December 1. */
 export const TRY_TUNNEL = true;
 /** Lets the choir be played before the road is open. */
