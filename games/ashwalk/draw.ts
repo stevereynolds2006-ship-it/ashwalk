@@ -200,8 +200,45 @@ function drawDeadwood(ctx: CanvasRenderingContext2D, tree: Tree, alpha: number) 
   ctx.restore();
 }
 
+function drawGearTooth(ctx: CanvasRenderingContext2D, sim: Sim, rect: { id: string; x: number; y: number; w: number; h: number }) {
+  const spin = sim.level.platforms.find((item) => item.id === rect.id)?.gear;
+  if (!spin) {
+    drawPlank(ctx, rect, false, true);
+    return;
+  }
+  const ang = sim.t * spin.speed + spin.phase;
+  const hx = spin.cx + Math.cos(ang) * spin.r;
+  const hy = spin.cy + Math.sin(ang) * spin.r;
+  ctx.strokeStyle = "#e8e6e1";
+  ctx.lineWidth = 8;
+  ctx.lineCap = "butt";
+  ctx.beginPath();
+  ctx.moveTo(spin.cx, spin.cy);
+  ctx.lineTo(hx, hy);
+  ctx.stroke();
+  drawPlank(ctx, rect, false, true);
+}
+
 function drawTerrain(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) {
   const bodies = rectsAt(sim, reduced);
+  const hubs = new Set<string>();
+  for (const plat of sim.level.platforms) {
+    const spin = plat.gear;
+    if (!spin) continue;
+    const key = `${spin.cx}:${spin.cy}`;
+    if (hubs.has(key)) continue;
+    hubs.add(key);
+    ctx.save();
+    ctx.translate(spin.cx, spin.cy);
+    ctx.rotate(sim.t * (reduced ? spin.speed * 0.35 : spin.speed));
+    ctx.fillStyle = "#141418";
+    drawCog(ctx, spin.r * 0.72, spin.teeth);
+    ctx.beginPath();
+    ctx.arc(0, 0, 16, 0, Math.PI * 2);
+    ctx.fillStyle = "#f4f1ea";
+    ctx.fill();
+    ctx.restore();
+  }
   ctx.fillStyle = "#070708";
   for (const rect of bodies) {
     const plat = sim.level.platforms.find((item) => item.id === rect.id);
@@ -227,7 +264,7 @@ function drawTerrain(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) 
     if (rect.terrain) continue;
     if (rect.id.startsWith("ceil")) continue;
     if (rect.kind === "gate") drawGate(ctx, rect);
-    else if (sim.level.platforms.find((item) => item.id === rect.id)?.gear) drawPlank(ctx, rect, false, true);
+    else if (sim.level.platforms.find((item) => item.id === rect.id)?.gear) drawGearTooth(ctx, sim, rect);
     else if (rect.kind === "sway" || rect.kind === "rope") {
       drawCage(ctx, rect, sim.rope < 1 && rect.id === "cageC");
     } else drawPlank(ctx, rect, rect.kind === "crumble" || (sim.crumbles[rect.id]?.timer ?? 0) > 0.9, sim.level.id === "choir");
@@ -2694,21 +2731,6 @@ function drawGearHall(ctx: CanvasRenderingContext2D, camera: Camera, sim: Sim, r
     ctx.arc(0, 0, wheel.r * 0.16, 0, Math.PI * 2);
     ctx.fillStyle = "#2c2c30";
     ctx.fill();
-    ctx.restore();
-  }
-
-  const seen = new Set<string>();
-  for (const plat of sim.level.platforms) {
-    const spin = plat.gear;
-    if (!spin) continue;
-    const key = `${spin.cx}:${spin.cy}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    ctx.save();
-    ctx.translate(spin.cx, spin.cy);
-    ctx.rotate(sim.t * (reduced ? spin.speed * 0.35 : spin.speed));
-    ctx.fillStyle = "#1a1a1e";
-    drawCog(ctx, spin.r, spin.teeth);
     ctx.restore();
   }
 }
