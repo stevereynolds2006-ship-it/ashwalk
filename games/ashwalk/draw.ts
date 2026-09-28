@@ -306,21 +306,26 @@ function drawCagedFriend(
 ) {
   const free = sim.rope >= 1;
   const floor = 468;
-  const cageX = 1644;
+  const startX = 1644;
+  const landX = 2410;
   const cageW = 84;
   const cageH = 100;
-  const hangTop = floor - 270;
-  const drop = sim.rope * (floor - cageH - hangTop);
+  const hangTop = 150;
+  const landTop = 368 - cageH;
+  const cageX = startX + (landX - startX) * sim.rope;
+  const dropTop = hangTop + (landTop - hangTop) * sim.rope;
   const sway = free || reduced ? 0 : Math.sin(sim.t * 1.3) * 6;
-  const top = hangTop + drop;
+  const top = dropTop;
   const cheer = free && !reduced ? Math.abs(Math.sin(sim.t * 7)) * 10 : 0;
   const x = cageX + 22 + sway;
   const y = top + cageH - PH - cheer;
+  const hookX = cageX + cageW / 2 + sway;
   ctx.strokeStyle = "#c8c6c0";
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(cageX + cageW / 2, floor - 310);
-  ctx.lineTo(cageX + cageW / 2 + sway, top);
+  ctx.moveTo(1752, 110);
+  ctx.lineTo(hookX, 110);
+  ctx.lineTo(hookX, top);
   ctx.stroke();
   drawFriend(ctx, sprites, { x, y, facing: 1, walking: false, anim: 0, hurt: 0 }, sim.t, reduced, false, null);
   ctx.save();
@@ -383,7 +388,7 @@ function drawCagedFriend(
   ctx.lineWidth = 2;
   ctx.beginPath();
   ctx.moveTo(axleX, axleY - r);
-  ctx.lineTo(1686, floor - 310);
+  ctx.lineTo(axleX, 110);
   ctx.stroke();
 }
 
