@@ -751,8 +751,6 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
     }
   }
 
-  if (level.id === "shore") stepPal(sim, dt);
-
   sim.nearRope = false;
   if (level.rope) {
     sim.nearRope = sim.rope < 1 && zoneHit(sim.x, sim.y, level.rope);

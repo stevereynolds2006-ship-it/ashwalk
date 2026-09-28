@@ -307,40 +307,36 @@ function drawCagedFriend(
   const free = sim.rope >= 1;
   const floor = 468;
   const cageX = 1652;
-  const lift = sim.rope * 130;
-  const x = free ? sim.palX : 1670;
-  const y = free ? sim.palY : floor - PH;
-  const walking = free && Math.abs(sim.palX - (sim.x - sim.facing * 44)) > 10;
+  const hang = floor - PH - 168;
+  const drop = sim.rope * 168;
+  const cheer = free && !reduced ? Math.abs(Math.sin(sim.t * 7)) * 12 : 0;
+  const sway = free || reduced ? 0 : Math.sin(sim.t * 1.4) * 7;
+  const x = cageX + 18 + sway;
+  const y = hang + drop - cheer;
   drawFriend(
     ctx,
     sprites,
-    {
-      x,
-      y,
-      facing: free ? sim.palFace : 1,
-      walking,
-      anim: walking ? Math.floor(sim.t / 0.09) % 8 : 0,
-      hurt: 0,
-    },
+    { x, y, facing: 1, walking: false, anim: 0, hurt: 0 },
     sim.t,
     reduced,
     false,
     null,
   );
-  if (!free) {
-    ctx.save();
-    ctx.translate(0, -lift);
-    ctx.strokeStyle = "#c8c6c0";
-    ctx.lineWidth = 2;
+  ctx.strokeStyle = "#c8c6c0";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(cageX + 40, floor - 250);
+  ctx.lineTo(x + 8, y + 8);
+  ctx.stroke();
+  if (free) {
+    ctx.strokeStyle = "#070708";
+    ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.moveTo(cageX + 40, floor - 92);
-    ctx.lineTo(cageX + 40, floor - 210);
+    ctx.moveTo(x + 4, y + 16);
+    ctx.lineTo(x - 12, y - 2);
+    ctx.moveTo(x + 18, y + 16);
+    ctx.lineTo(x + 34, y - 2);
     ctx.stroke();
-    ctx.fillStyle = "#070708";
-    ctx.fillRect(cageX, floor - 96, 80, 8);
-    ctx.fillRect(cageX, floor - 8, 80, 8);
-    for (let i = 0; i < 4; i++) ctx.fillRect(cageX + 8 + i * 20, floor - 96, 4, 96);
-    ctx.restore();
   }
 
   const axleX = 1724;
@@ -373,8 +369,7 @@ function drawCagedFriend(
   ctx.strokeStyle = "#c8c6c0";
   ctx.beginPath();
   ctx.moveTo(axleX, axleY - 8);
-  ctx.lineTo(cageX + 40, floor - 210);
-  ctx.lineTo(cageX + 40, floor - 96 - lift);
+  ctx.lineTo(cageX + 40, floor - 250);
   ctx.stroke();
 }
 

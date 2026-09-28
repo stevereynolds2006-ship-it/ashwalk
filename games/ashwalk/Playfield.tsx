@@ -695,10 +695,12 @@ export function Playfield({
       const sized = viewSize(cssW, cssH);
       const caught = Boolean(sim.level.stalker && sim.caged && sim.cage >= 1);
       const boulderHot = Boolean(sim.level.boulder && sim.wake > 0 && !sim.caged);
+      const inLatchPit = sim.level.id === "latch" && sim.y > 680 && sim.x > 1900 && sim.x < 2520;
       if ((sim.level.stalker || sim.level.hunter) && sim.wake > 0 && !caught) huntZoomRef.current = 1;
       else if (boulderHot) huntZoomRef.current = 1;
+      else if (inLatchPit) huntZoomRef.current = 1;
       else huntZoomRef.current = Math.max(0, huntZoomRef.current - dt * 0.35);
-      const pull = sim.level.hunter ? 0.5 : sim.level.boulder ? 0.28 : 0.75;
+      const pull = inLatchPit ? 0.62 : sim.level.hunter ? 0.5 : sim.level.boulder ? 0.28 : 0.75;
       const zoom = 1 + pull * huntZoomRef.current;
       const follow = phaseNow === "play" || phaseNow === "pause" || phaseNow === "lives" || phaseNow === "rite" || phaseNow === "clear";
       const camera = frameCamera(
@@ -1649,7 +1651,7 @@ function promptFor(sim: Sim, phase: Phase) {
   if (sim.nearBeacon) return "E · light the bell";
   if (sim.plateAsleep && sim.level.id === "latch" && sim.rope < 1) return "Pull the pulley. Then the plate.";
   if (sim.plateAsleep) return "Light every bell. The plate is asleep.";
-  if (sim.nearRope) return sim.level.id === "latch" ? "E · wind the pulley" : "Hold E · turn the crank";
+  if (sim.nearRope) return sim.level.id === "latch" ? "E · wind the pulley" : "Hold E · crank them down";
   if (sim.nearShrine) return "E · light a lantern";
   if (sim.nearLamp) return "E · buy light · 1 coin you picked up";
   if (sim.nearCombo != null) return comboSet(sim) ? "The lock is open" : "E · turn this wheel";

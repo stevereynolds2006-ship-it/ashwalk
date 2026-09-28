@@ -145,7 +145,7 @@ export const SHORE: Level = {
   id: "shore",
   title: "The shore",
   kicker: "Something hung in the fog.",
-  rule: "The shore is nearly black. A lantern costs 1 coin and lasts 10 seconds. Turn the crank until the cord lifts the cage. The friend follows you. The door stays shut until they are free.",
+  rule: "The shore is nearly black. A lantern costs 1 coin and lasts 10 seconds. A friend hangs on the cord. Turn the crank and lower them down. They stay and cheer. The door stays shut until they are down.",
   together: "The rope, the coins, and the bells are shared. Either of you can pull.",
   clearKicker: "The white",
   clearTitle: "It kept your outline",
