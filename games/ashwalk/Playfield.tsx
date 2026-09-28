@@ -23,7 +23,6 @@ import {
   formatRareCoins,
   outfitList,
   buyFog,
-  CAPES_TRY,
   readLedger,
   spendWhole,
   spendable,
@@ -314,7 +313,7 @@ export function Playfield({
       setStakeMsg(when ? `${cloth?.name ?? "That cape"} opens ${when}. Coming soon.` : "That cape is locked.");
       return;
     }
-    if (cloth && cloth.cost > 0 && !CAPES_TRY && !(await ensureWallet())) return;
+    if (cloth && cloth.cost > 0 && !(await ensureWallet())) return;
     const who = accountRef.current;
     const balance = rareRef.current;
     if (!who || !isAddress(who) || balance == null) {
@@ -1233,7 +1232,7 @@ export function Playfield({
               : "Connect a wallet to buy boards with Rare coins."}
           </p>
           <p>The shore is free. You start it with 2 coins. Coins you pick up only turn things on inside the stage. Rare coins pay to open the next fog and to buy a cape. Beat a fog, then the next one is 10 Rare coins. Coming soon fogs cost 5 more each month. You cannot buy the next one until the one before it is beaten.</p>
-          <p>Every month a new map opens. A new cape opens each week, starting October 1. The red cape is 15 Rare coins. Each later cape costs 5 more.</p>
+          <p>Every month a new map opens. Every cape is 15 Rare coins, and they are all open to try.</p>
           {stakeMsg && (
             <p className="ash-error" role="alert">
               {stakeMsg}
@@ -1289,10 +1288,10 @@ export function Playfield({
           )}
           <p className="ash-note">
             {payingAccount && (rareBalance ?? walletCoins) != null
-              ? `You have ${formatRareCoins(spendable(rareBalance ?? walletCoins, payingAccount) ?? 0n)} Rare coins. Every cape is open to try.`
+              ? `You have ${formatRareCoins(spendable(rareBalance ?? walletCoins, payingAccount) ?? 0n)} Rare coins. Every cape is 15 and unlocked.`
               : "Connect a wallet to buy a cape with Rare coins."}
           </p>
-          <p className="ash-note">Every cape is open to try. The weekly order stays: white October 1, rainbow October 8, camo October 15, stripes October 22, pink October 29, black November 5, gold November 12, and ember November 19. Each one costs 5 more than the last, starting at 20.</p>
+          <p className="ash-note">Every cape is unlocked and costs 15 Rare coins. The weekly order is still there for later: white October 1, rainbow October 8, camo October 15, stripes October 22, pink October 29, black November 5, gold November 12, and ember November 19.</p>
           <div className="ash-levels">
             {outfitList().map((cloth) => {
               const locked = !clothReleased(cloth.id);
@@ -1319,11 +1318,7 @@ export function Playfield({
                           ? wearing
                             ? "Wearing. Press to take it off."
                             : `${cloth.note} Press to wear.`
-                          : CAPES_TRY
-                            ? `${cloth.note} Open to try.`
-                            : cloth.cost > 0
-                              ? `${cloth.note} ${cloth.cost} Rare coins.`
-                              : `${cloth.note} Free to try.`}
+                          : `${cloth.note} ${cloth.cost} Rare coins.`}
                   </small>
                 </button>
               );

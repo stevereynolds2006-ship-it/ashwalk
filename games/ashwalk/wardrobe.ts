@@ -10,14 +10,14 @@ export type Cloth = {
 
 export const CLOTHES: readonly Cloth[] = [
   { id: "cape", name: "Red cape", cost: 15, rare: false, note: "A long red cape behind you." },
-  { id: "white", name: "White cape", cost: 20, rare: false, note: "Coming soon." },
-  { id: "rainbow", name: "Rainbow cape", cost: 25, rare: false, note: "Coming soon." },
-  { id: "camo", name: "Camo cape", cost: 30, rare: false, note: "Coming soon." },
-  { id: "stripes", name: "Striped cape", cost: 35, rare: false, note: "Red, white, and blue." },
-  { id: "pink", name: "Pink cape", cost: 40, rare: false, note: "A bright pink cape." },
-  { id: "black", name: "Black cape", cost: 45, rare: false, note: "A dark cape." },
-  { id: "gold", name: "Gold cape", cost: 50, rare: false, note: "Gold with a blue band." },
-  { id: "ember", name: "Ember cape", cost: 55, rare: false, note: "Torn orange streaks." },
+  { id: "white", name: "White cape", cost: 15, rare: false, note: "A white cape." },
+  { id: "rainbow", name: "Rainbow cape", cost: 15, rare: false, note: "A rainbow cape." },
+  { id: "camo", name: "Camo cape", cost: 15, rare: false, note: "A camo cape." },
+  { id: "stripes", name: "Striped cape", cost: 15, rare: false, note: "Red, white, and blue." },
+  { id: "pink", name: "Pink cape", cost: 15, rare: false, note: "A bright pink cape." },
+  { id: "black", name: "Black cape", cost: 15, rare: false, note: "A dark cape." },
+  { id: "gold", name: "Gold cape", cost: 15, rare: false, note: "Gold with a blue band." },
+  { id: "ember", name: "Ember cape", cost: 15, rare: false, note: "Torn orange streaks." },
 ];
 
 /** Locked capes open one per week, starting October 1. */
@@ -231,7 +231,7 @@ export function buyCloth(account: string, balance: bigint, id: string, now = new
     writeLedger(account, ledger);
     return true;
   }
-  if (cloth.cost > 0 && !CAPES_TRY && !pay(account, balance, cloth.cost)) return false;
+  if (cloth.cost > 0 && !pay(account, balance, cloth.cost)) return false;
   const next = readLedger(account);
   next.owned = [...next.owned, id];
   next.equipped = id;
