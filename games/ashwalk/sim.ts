@@ -828,8 +828,8 @@ function stepBoulder(sim: Sim, dt: number, events: StepEvents) {
     return;
   }
   const dx = prey - sim.stalkX;
-  const dy = sim.y + PH / 2 - (spec.surface - 54);
-  if (sim.invuln <= 0 && sim.dead <= 0 && dx * dx + dy * dy < 64 * 64) kill(sim, events);
+  const dy = sim.y + PH / 2 - (spec.surface - 80);
+  if (sim.invuln <= 0 && sim.dead <= 0 && dx * dx + dy * dy < 92 * 92) kill(sim, events);
 }
 
 function stepHunter(sim: Sim, dt: number, events: StepEvents) {
