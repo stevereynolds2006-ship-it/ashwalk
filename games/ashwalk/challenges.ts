@@ -776,11 +776,11 @@ const MOON: Level = {
   wind: null,
   birds: [
     { kind: "ship", x0: 40, x1: 1680, y: 980, amp: 10, speed: 90, start: 200 },
-    { kind: "alien", x0: 80, x1: 1500, y: 740, amp: 28, speed: 70, start: 600 },
+    { kind: "alien", x0: 80, x1: 420, y: 1176, amp: 0, speed: 42, start: 120 },
     { kind: "ship", x0: 20, x1: 1680, y: 460, amp: 8, speed: 110, start: 400 },
-    { kind: "alien", x0: 60, x1: 1600, y: 160, amp: 26, speed: 64, start: 900 },
+    { kind: "alien", x0: 70, x1: 320, y: 836, amp: 0, speed: 36, start: 80 },
     { kind: "ship", x0: 40, x1: 1680, y: -160, amp: 12, speed: 100, start: 300 },
-    { kind: "alien", x0: 80, x1: 1500, y: -440, amp: 30, speed: 58, start: 700 },
+    { kind: "alien", x0: 1060, x1: 1400, y: 506, amp: 0, speed: 40, start: 200 },
   ],
   spiders: [],
   chapters: [

@@ -2251,20 +2251,21 @@ function drawMoonFog(ctx: CanvasRenderingContext2D, camera: Camera, t: number, r
     ctx.fillRect(sx, sy, big ? 2 : 1, big ? 2 : 1);
   }
   ctx.globalAlpha = 1;
-  const sx = camera.w * 0.62;
-  const sy = camera.h * 0.22;
-  const glow = 70 + light * 160;
-  const star = ctx.createRadialGradient(sx, sy, 4, sx, sy, glow);
-  star.addColorStop(0, `rgba(255,255,255,${0.35 + light * 0.6})`);
-  star.addColorStop(0.25, `rgba(255,255,255,${0.08 + light * 0.28})`);
+  const sx = camera.w * 0.72;
+  const sy = camera.h * 0.18;
+  const radius = 48 + light * 70;
+  const glow = radius * 2.4;
+  const star = ctx.createRadialGradient(sx, sy, radius * 0.4, sx, sy, glow);
+  star.addColorStop(0, `rgba(255,255,255,${0.45 + light * 0.55})`);
+  star.addColorStop(0.45, `rgba(255,255,255,${0.12 + light * 0.4})`);
   star.addColorStop(1, "rgba(255,255,255,0)");
   ctx.fillStyle = star;
   ctx.beginPath();
   ctx.arc(sx, sy, glow, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = `rgba(255,255,255,${0.45 + light * 0.55})`;
+  ctx.fillStyle = `rgba(255,255,255,${0.35 + light * 0.65})`;
   ctx.beginPath();
-  ctx.arc(sx, sy, 6 + light * 4, 0, Math.PI * 2);
+  ctx.arc(sx, sy, radius, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
 
