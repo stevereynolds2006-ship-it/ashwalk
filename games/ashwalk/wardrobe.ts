@@ -32,8 +32,8 @@ const CAPE_WEEKS: readonly { id: string; at: Date; label: string }[] = [
   { id: "ember", at: new Date(2026, 10, 19), label: "November 19" },
 ];
 
-/** Open every cape so it can be tried. The weekly dates stay underneath. */
-export const CAPES_TRY = true;
+/** Weekly dates are live. Set true only for a cape tryout. */
+export const CAPES_TRY = false;
 
 export function clothOpens(id: string): string | null {
   if (CAPES_TRY) return null;
