@@ -459,6 +459,7 @@ function respawn(sim: Sim) {
   sim.invuln = 0.7;
   sim.cut = false;
   sim.drop = 0;
+  sim.cage = sim.level.id === "latch" ? 0 : sim.cage;
   sim.lastRects = null;
   const stalk = sim.level.stalker;
   if (stalk && !sim.caged && sim.beacons.size >= sim.level.beacons.length && sim.level.beacons.length > 0) {
@@ -784,7 +785,11 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
   const lock = level.combo;
   if (lock && !comboSet(sim)) {
     const px = sim.x + PW / 2;
-    const onIt = px >= lock.x && px <= lock.x + lock.span && sim.y + PH > lock.y - 28 && sim.y < lock.y + 8;
+    const lifted = level.id === "latch" && sim.cage > 0.05;
+    const onIt =
+      px >= lock.x &&
+      px <= lock.x + lock.span &&
+      (lifted || (sim.y + PH > lock.y - 28 && sim.y < lock.y + 8));
     if (onIt) {
       const slot = lock.span / lock.code.length;
       const index = Math.min(lock.code.length - 1, Math.max(0, Math.floor((px - lock.x) / slot)));
@@ -818,6 +823,21 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
   stepStalker(sim, dt, events);
   stepHunter(sim, dt, events);
   stepBoulder(sim, dt, events);
+
+  if (level.id === "latch" && !sim.won) {
+    const px = sim.x + PW / 2;
+    const nearExit = px > 5010 && px < 5150 && sim.y + PH > 400 && sim.y < 530;
+    if (!comboSet(sim) && (sim.cage > 0 || nearExit)) {
+      sim.cage = Math.min(1, sim.cage + dt * 1.5);
+      sim.vy = 0;
+      sim.y = 468 - PH - 156 * sim.cage;
+      sim.x = Math.min(5132, Math.max(4992, sim.x));
+    } else if (sim.cage > 0) {
+      sim.cage = Math.max(0, sim.cage - dt * 1.8);
+      sim.vy = 0;
+      sim.y = 468 - PH - 156 * sim.cage;
+    }
+  }
 
   if (events.beacon === "lock") events.beacon = null;
   sim.doorLocked =

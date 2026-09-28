@@ -1654,7 +1654,10 @@ function promptFor(sim: Sim, phase: Phase) {
   if (sim.nearRope) return sim.level.id === "shore" ? "Hold E · crank them down" : "Hold E · wind the pulley";
   if (sim.nearShrine) return "E · light a lantern";
   if (sim.nearLamp) return "E · buy light · 1 coin you picked up";
-  if (sim.nearCombo != null) return comboSet(sim) ? "The lock is open" : "E · turn this wheel";
+  if (sim.nearCombo != null) {
+    if (sim.level.id === "latch" && sim.cage > 0.4) return comboSet(sim) ? "The cage is opening" : "E · enter the number";
+    return comboSet(sim) ? "The lock is open" : "E · turn this wheel";
+  }
   if (sim.holding) return "Holding the gate";
   if (sim.gateSeconds > 0) return `Gate ${sim.gateSeconds.toFixed(1)}`;
   if (sim.nearGoal && sim.doorLocked) {

@@ -312,15 +312,15 @@ function drawCagedFriend(
   const cageH = 100;
   const hangTop = 150;
   const landTop = 368 - cageH;
-  const back = sim.feast < 2.05 ? 0 : Math.min(1, (sim.feast - 2.05) / 1.5);
+  const back = sim.feast < 4.9 ? 0 : Math.min(1, (sim.feast - 4.9) / 1.5);
   const ride = sim.rope * (1 - back);
   const cageX = startX + (landX - startX) * ride;
   const dropTop = hangTop + (landTop - hangTop) * ride;
   const home = ride < 0.04;
   const sway = (!free || home) && !reduced ? Math.sin(sim.t * 1.3) * 6 : 0;
   const top = dropTop;
-  const cheer = free && sim.feast < 0.35 && !reduced ? Math.abs(Math.sin(sim.t * 7)) * 10 : 0;
-  const melt = free ? Math.min(1, Math.max(0, (sim.feast - 0.35) / 0.85)) : 0;
+  const cheer = free && sim.feast < 3 && !reduced ? Math.abs(Math.sin(sim.t * 7)) * 10 : 0;
+  const melt = free ? Math.min(1, Math.max(0, (sim.feast - 3) / 0.85)) : 0;
   const x = cageX + 22 + sway;
   const y = top + cageH - PH - cheer;
   const hookX = cageX + cageW / 2 + sway;
@@ -352,7 +352,7 @@ function drawCagedFriend(
   ctx.fillRect(cageX, top + cageH - 7, cageW, 7);
   for (let i = 0; i < 5; i++) ctx.fillRect(cageX + 6 + i * 18, top, 4, cageH);
   ctx.restore();
-  if (free && sim.feast < 0.35) {
+  if (free && sim.feast < 3) {
     ctx.strokeStyle = "#f4f1ea";
     ctx.lineWidth = 2;
     ctx.beginPath();
@@ -362,8 +362,8 @@ function drawCagedFriend(
     ctx.lineTo(x + 28, y);
     ctx.stroke();
   }
-  if (free && back === 0 && sim.feast > 0.3 && sim.feast < 1.9) {
-    drawAcidDump(ctx, landX + cageW / 2, landTop, sim.t, Math.min(1, (sim.feast - 0.3) / 0.4));
+  if (free && back === 0 && sim.feast > 3 && sim.feast < 4.7) {
+    drawAcidDump(ctx, landX + cageW / 2, landTop, sim.t, Math.min(1, (sim.feast - 3) / 0.35));
   }
 
   const axleX = 1752;
@@ -399,17 +399,17 @@ function drawCagedFriend(
 
 function drawAcidDump(ctx: CanvasRenderingContext2D, x: number, cageTop: number, t: number, open: number) {
   ctx.save();
-  ctx.translate(x, cageTop - 78);
+  ctx.translate(x, cageTop - 6);
   ctx.fillStyle = "#14160e";
-  ctx.fillRect(-22, -14, 44, 14);
+  ctx.fillRect(-22, -10, 44, 12);
   ctx.strokeStyle = "#d7e86a";
   ctx.lineWidth = 2;
-  ctx.strokeRect(-22, -14, 44, 14);
-  const len = 86 * open;
+  ctx.strokeRect(-22, -10, 44, 12);
+  const len = 78 * open;
   ctx.strokeStyle = "rgba(198, 226, 74, 0.92)";
   ctx.lineWidth = 7;
   ctx.beginPath();
-  ctx.moveTo(0, 0);
+  ctx.moveTo(0, 2);
   ctx.lineTo(Math.sin(t * 9) * 2, len);
   ctx.stroke();
   ctx.fillStyle = "#d2ee55";
@@ -717,32 +717,61 @@ function drawLatchLock(ctx: CanvasRenderingContext2D, sim: Sim) {
   const lock = sim.level.combo;
   if (!lock) return;
   const gates = sim.level.platforms.filter((plat) => plat.kind === "gate");
-  ctx.fillStyle = "rgba(243,240,232,0.9)";
-  ctx.font = "22px sans-serif";
+  const lift = sim.level.id === "latch" ? sim.cage * 156 : 0;
   ctx.textAlign = "center";
   lock.code.forEach((digit, index) => {
     const gate = gates[index];
     if (!gate) return;
-    ctx.fillText(String(digit), gate.x + gate.w / 2, 210);
+    const gx = gate.x + gate.w / 2;
+    ctx.save();
+    ctx.shadowColor = "#f7f4ee";
+    ctx.shadowBlur = 18;
+    ctx.fillStyle = "#f7f4ee";
+    ctx.fillRect(gx - 18, 168, 36, 40);
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = "#111114";
+    ctx.font = "bold 30px sans-serif";
+    ctx.fillText(String(digit), gx, 198);
+    ctx.restore();
   });
-  const y = lock.y;
-  ctx.fillStyle = "#121214";
-  ctx.fillRect(lock.x + lock.span / 2 - 16, y - 78, 32, 22);
+  const y = lock.y - lift;
+  ctx.fillStyle = "#f4f1ea";
+  ctx.fillRect(lock.x + lock.span / 2 - 18, y - 86, 36, 24);
   ctx.beginPath();
-  ctx.arc(lock.x + lock.span / 2, y - 78, 14, Math.PI, 0);
+  ctx.arc(lock.x + lock.span / 2, y - 86, 16, Math.PI, 0);
   ctx.lineWidth = 3;
-  ctx.strokeStyle = "#121214";
+  ctx.strokeStyle = "#f4f1ea";
   ctx.stroke();
   const slot = lock.span / lock.code.length;
   lock.code.forEach((_, index) => {
     const x = lock.x + slot * index;
     const hot = sim.nearCombo === index;
-    ctx.fillStyle = hot ? "#f4f1ea" : "#1a1a1c";
-    ctx.fillRect(x + 8, y - 54, slot - 16, 46);
-    ctx.fillStyle = hot ? "#121214" : "#f4f1ea";
-    ctx.font = "28px sans-serif";
+    ctx.fillStyle = hot ? "#f7f4ee" : "#f4f1ea";
+    ctx.fillRect(x + 6, y - 58, slot - 12, 50);
+    ctx.fillStyle = "#111114";
+    ctx.font = "bold 32px sans-serif";
     ctx.fillText(String(sim.combo[index] ?? 0), x + slot / 2, y - 22);
   });
+}
+
+function drawExitSnare(ctx: CanvasRenderingContext2D, sim: Sim) {
+  if (sim.cage <= 0) return;
+  const x = 4984;
+  const w = 180;
+  const lift = sim.cage * 156;
+  const floor = 468 - lift;
+  const top = floor - 108;
+  ctx.strokeStyle = "#f4f1ea";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(x + w / 2, 28);
+  ctx.lineTo(x + w / 2, top);
+  ctx.stroke();
+  drawSheave(ctx, x + w / 2, 28, 12, sim.t * sim.cage * 3);
+  ctx.fillStyle = "#070708";
+  ctx.fillRect(x, top, w, 7);
+  ctx.fillRect(x, floor - 7, w, 7);
+  for (let i = 0; i < 6; i++) ctx.fillRect(x + 8 + i * 32, top, 4, floor - top);
 }
 
 function drawPlate(ctx: CanvasRenderingContext2D, plate: RectLike, hot: boolean) {
@@ -2353,6 +2382,7 @@ export function renderFrame(
     attract,
     cloth,
   );
+  if (sim.level.id === "latch") drawExitSnare(ctx, sim);
 
   for (let i = motes.length - 1; i >= 0; i--) {
     const mote = motes[i]!;

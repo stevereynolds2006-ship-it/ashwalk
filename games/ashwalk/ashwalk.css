@@ -378,9 +378,9 @@
 }
 
 .ash-touch button[aria-label="Jump"] {
-  min-width: 108px;
-  min-height: 80px;
-  font-size: 20px;
+  min-width: 128px;
+  min-height: 96px;
+  font-size: 22px;
 }
 
 @media (pointer: coarse), (max-width: 800px) {
