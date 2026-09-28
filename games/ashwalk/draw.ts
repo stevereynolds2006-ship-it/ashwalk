@@ -1655,6 +1655,41 @@ function drawShip(ctx: CanvasRenderingContext2D, x: number, y: number, dir: numb
   ctx.restore();
 }
 
+function drawBoost(ctx: CanvasRenderingContext2D, x: number, y: number, t: number, rush: number) {
+  ctx.save();
+  ctx.translate(x, y);
+  const flame = 28 + rush * 220 + Math.sin(t * 40) * 8;
+  ctx.globalAlpha = 0.35 + rush * 0.5;
+  ctx.fillStyle = "#f7f4ee";
+  for (let i = 0; i < 7; i++) {
+    const yy = -10 + i * 4;
+    ctx.fillRect(-flame - i * 6, yy, flame * (0.4 + rush), 1.2);
+  }
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = "#070708";
+  ctx.beginPath();
+  ctx.moveTo(34, 0);
+  ctx.lineTo(10, -12);
+  ctx.lineTo(-22, -12);
+  ctx.lineTo(-22, 12);
+  ctx.lineTo(10, 12);
+  ctx.closePath();
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(-16, -12);
+  ctx.lineTo(-30, -22);
+  ctx.lineTo(-8, -12);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(-16, 12);
+  ctx.lineTo(-30, 22);
+  ctx.lineTo(-8, 12);
+  ctx.fill();
+  ctx.fillStyle = "#f4f1ea";
+  ctx.fillRect(6, -3, 8, 6);
+  ctx.restore();
+}
+
 function drawRocket(
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -2656,6 +2691,10 @@ export function renderFrame(
   if (sim.level.id === "gale" && sim.suck <= 0) {
     if (sim.cage > 0) drawGlider(ctx, sim.x + PW / 2, sim.y - 6, sim.t);
     else drawGlider(ctx, 4210, 400, sim.t);
+  }
+  if (sim.level.id === "moon" && sim.suck <= 0) {
+    if (sim.cage > 0) drawBoost(ctx, sim.x + PW / 2, sim.y + 14, sim.t, sim.cage * sim.cage);
+    else drawBoost(ctx, 1560, -684, sim.t, 0);
   }
   if (sim.level.id === "latch") drawExitSnare(ctx, sim);
 
