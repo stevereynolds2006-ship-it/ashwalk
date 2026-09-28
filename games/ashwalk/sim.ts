@@ -135,6 +135,8 @@ export type Sim = {
   feast: number;
   /** 0 to 1 while the exit pulls you in. The clear waits until this finishes. */
   suck: number;
+  /** Moon lanterns the player has lit. They stay lit. */
+  altars: Set<string>;
 };
 
 export function createSim(level: Level = SHORE): Sim {
@@ -212,6 +214,7 @@ export function createSim(level: Level = SHORE): Sim {
     palFace: 1,
     feast: 0,
     suck: 0,
+    altars: new Set(),
   };
 }
 
@@ -707,8 +710,8 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
     if (bird.x > spec.x1) bird.dir = -1;
     if (bird.x < spec.x0) bird.dir = 1;
     const birdY = spec.y + Math.sin(sim.t * 2.1) * (reduced ? 0 : spec.amp);
-    const hitW = spec.kind === "gator" ? 86 : spec.kind === "rocket" ? 48 : spec.kind === "turtle" ? 34 : spec.kind === "rat" ? 28 : 22;
-    const hitH = spec.kind === "gator" ? 30 : spec.kind === "rocket" ? 18 : spec.kind === "turtle" ? 26 : spec.kind === "rat" ? 20 : 14;
+    const hitW = spec.kind === "gator" ? 86 : spec.kind === "ship" ? 52 : spec.kind === "alien" ? 26 : spec.kind === "rocket" ? 48 : spec.kind === "turtle" ? 34 : spec.kind === "rat" ? 28 : 22;
+    const hitH = spec.kind === "gator" ? 30 : spec.kind === "ship" ? 22 : spec.kind === "alien" ? 40 : spec.kind === "rocket" ? 18 : spec.kind === "turtle" ? 26 : spec.kind === "rat" ? 20 : 14;
     if (
       sim.invuln <= 0 &&
       sim.x < bird.x + hitW &&
@@ -820,7 +823,14 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
     for (const lamp of level.lamps ?? []) {
       if (!zoneHit(sim.x, sim.y, lamp)) continue;
       sim.nearLamp = true;
-      if (input.interactPressed) events.lamp = true;
+      if (input.interactPressed) {
+        if (level.id === "moon") {
+          if (!sim.altars.has(lamp.id)) {
+            sim.altars.add(lamp.id);
+            events.beacon = lamp.id;
+          }
+        } else events.lamp = true;
+      }
       break;
     }
   }

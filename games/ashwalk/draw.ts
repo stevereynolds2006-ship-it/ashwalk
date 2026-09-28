@@ -1545,6 +1545,99 @@ function drawGator(
   ctx.restore();
 }
 
+const ALIEN = [
+  "...##............##...",
+  ".....#..........#.....",
+  ".....##.######.##.....",
+  "......##########......",
+  ".....############.....",
+  "....##############....",
+  "...################...",
+  "...####.######.####...",
+  "...###...####...###...",
+  "...####..####..####...",
+  "....##############....",
+  "....##############....",
+  ".....####....####.....",
+  "......##########......",
+  ".......########.......",
+  "........######........",
+  ".........####.........",
+  ".........####.........",
+  "......##########......",
+  ".....############.....",
+  ".....############.....",
+  "....##############....",
+  "....##.########.##....",
+  "...##..########..##...",
+  "...##..########..##...",
+  "..###..########..###..",
+  "..##...########...##..",
+  "..##....#######...##..",
+  "#####...#######..#####",
+  "###.##..##..###.##.###",
+  "#.#....###..###....#.#",
+  ".......##....##.......",
+  ".......##....##.......",
+  ".......##....##.......",
+  ".....####....####.....",
+  "....######..######....",
+];
+
+const SHIP = [
+  ".........#............#.........",
+  "..........#....##....#..........",
+  "..........##.######.##..........",
+  "...........##########...........",
+  "...........##########...........",
+  "..........############..........",
+  "..........############..........",
+  ".........##############.........",
+  "......#####..######..#####......",
+  "....####.##############.####....",
+  "..####.....##########.....####..",
+  "###..........................###",
+  "##.#........................#.##",
+  "###.....#..............#.....###",
+  "######....................######",
+  ".##.########################.##.",
+  "...#####.##############.#####...",
+  "......####################......",
+  ".......####....##....####.......",
+  "......##..####.##.####..##......",
+  "......###......##......###......",
+  ".....###.......##.......###.....",
+  "....#####.....####.....#####....",
+  ".....###......####......###.....",
+];
+
+function blitWhite(ctx: CanvasRenderingContext2D, rows: readonly string[], scale: number) {
+  const w = rows[0]!.length * scale;
+  const left = -w / 2;
+  ctx.fillStyle = "#f7f4ee";
+  rows.forEach((row, y) => {
+    for (let x = 0; x < row.length; x++) {
+      if (row[x] === "#") ctx.fillRect(left + x * scale, y * scale, scale, scale);
+    }
+  });
+}
+
+function drawAlien(ctx: CanvasRenderingContext2D, x: number, y: number, dir: number) {
+  ctx.save();
+  ctx.translate(x, y - 20);
+  ctx.scale(dir < 0 ? -1 : 1, 1);
+  blitWhite(ctx, ALIEN, 1.15);
+  ctx.restore();
+}
+
+function drawShip(ctx: CanvasRenderingContext2D, x: number, y: number, dir: number) {
+  ctx.save();
+  ctx.translate(x, y - 16);
+  ctx.scale(dir < 0 ? -1.2 : 1.2, 1.2);
+  blitWhite(ctx, SHIP, 1.15);
+  ctx.restore();
+}
+
 function drawRocket(
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -2146,49 +2239,57 @@ function drawMirrorFog(ctx: CanvasRenderingContext2D, camera: Camera, sim: Sim, 
 
 }
 
-function drawMoonFog(ctx: CanvasRenderingContext2D, camera: Camera, t: number, reduced: boolean) {
+function drawMoonFog(ctx: CanvasRenderingContext2D, camera: Camera, t: number, reduced: boolean, light: number) {
   ctx.save();
   ctx.translate(camera.x, camera.y);
   ctx.fillStyle = "#f4f6f8";
-  for (let i = 0; i < 240; i++) {
-    const sx = ((i * 137) % Math.max(1, Math.floor(camera.w))) + (i % 5);
-    const sy = ((i * 89) % Math.max(1, Math.floor(camera.h))) + (i % 3);
-    ctx.fillRect(sx, sy, i % 11 === 0 ? 2 : 1, i % 11 === 0 ? 2 : 1);
+  for (let i = 0; i < 70; i++) {
+    const sx = ((i * 311) % Math.max(1, Math.floor(camera.w * 1.4))) - camera.w * 0.2;
+    const sy = ((i * 197) % Math.max(1, Math.floor(camera.h * 1.3))) - camera.h * 0.1;
+    const big = i % 9 === 0;
+    ctx.globalAlpha = 0.35 + light * 0.65;
+    ctx.fillRect(sx, sy, big ? 2 : 1, big ? 2 : 1);
   }
+  ctx.globalAlpha = 1;
   const sx = camera.w * 0.62;
   const sy = camera.h * 0.22;
-  const star = ctx.createRadialGradient(sx, sy, 4, sx, sy, 180);
-  star.addColorStop(0, "rgba(255,255,255,0.95)");
-  star.addColorStop(0.2, "rgba(255,255,255,0.35)");
+  const glow = 70 + light * 160;
+  const star = ctx.createRadialGradient(sx, sy, 4, sx, sy, glow);
+  star.addColorStop(0, `rgba(255,255,255,${0.35 + light * 0.6})`);
+  star.addColorStop(0.25, `rgba(255,255,255,${0.08 + light * 0.28})`);
   star.addColorStop(1, "rgba(255,255,255,0)");
   ctx.fillStyle = star;
   ctx.beginPath();
-  ctx.arc(sx, sy, 180, 0, Math.PI * 2);
+  ctx.arc(sx, sy, glow, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = "#fff";
+  ctx.fillStyle = `rgba(255,255,255,${0.45 + light * 0.55})`;
   ctx.beginPath();
-  ctx.arc(sx, sy, 7, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = "rgba(255,255,255,0.35)";
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(sx - 90, sy);
-  ctx.lineTo(sx + 90, sy);
-  ctx.moveTo(sx, sy - 70);
-  ctx.lineTo(sx, sy + 70);
-  ctx.stroke();
-  ctx.fillStyle = "#d5d7dc";
-  ctx.beginPath();
-  ctx.arc(camera.w * 0.28, camera.h * 0.16, 16, 0.5, Math.PI + 0.4);
-  ctx.lineTo(camera.w * 0.28 + 6, camera.h * 0.16);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.arc(camera.w * 0.84, camera.h * 0.38, 8, 0.6, Math.PI + 0.2);
+  ctx.arc(sx, sy, 6 + light * 4, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
 
   ctx.save();
   ctx.translate(camera.x * 0.35, camera.y * 0.35);
+  const planets: [number, number, number, string][] = [
+    [220, 80, 22, "#c45a3a"],
+    [980, 260, 34, "#7f93b8"],
+    [540, 640, 16, "#d2b46a"],
+  ];
+  for (const [px, py, r, color] of planets) {
+    ctx.fillStyle = color;
+    ctx.globalAlpha = 0.35 + light * 0.55;
+    ctx.beginPath();
+    ctx.arc(px, py, r, 0, Math.PI * 2);
+    ctx.fill();
+    if (r > 20) {
+      ctx.strokeStyle = "rgba(244,241,234,0.55)";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.ellipse(px, py, r + 14, r * 0.28, -0.4, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+  }
+  ctx.globalAlpha = 1;
   ctx.fillStyle = "#14161a";
   for (let i = 0; i < 8; i++) {
     const y = -200 + i * 280;
@@ -2375,7 +2476,13 @@ export function renderFrame(
     for (const tree of SHORE_NEAR) drawDeadwood(ctx, tree, 0.88);
     ctx.restore();
   } else if (sim.level.id === "moon") {
-    drawMoonFog(ctx, camera, sim.t, reduced);
+    drawMoonFog(
+      ctx,
+      camera,
+      sim.t,
+      reduced,
+      sim.altars.size / Math.max(1, sim.level.lamps?.length ?? 1),
+    );
   } else if (sim.level.id === "mirror") {
     drawMirrorFog(ctx, camera, sim, reduced);
   } else if (sim.level.id === "tunnel") {
@@ -2432,7 +2539,8 @@ export function renderFrame(
     drawShrine(ctx, zone.x + zone.w / 2 - 4, zone.y + zone.h - 8, sim.t);
   }
   for (const stand of sim.level.lamps ?? []) {
-    drawLantern(ctx, stand.x + stand.w / 2, stand.y + 18, sim.t);
+    const lit = sim.level.id !== "moon" || sim.altars.has(stand.id);
+    drawLantern(ctx, stand.x + stand.w / 2, stand.y + 18, sim.t, lit);
   }
   for (const bell of sim.level.beacons) {
     const x = bell.x + bell.w / 2;
@@ -2452,6 +2560,8 @@ export function renderFrame(
     else if (bird.kind === "turtle") drawTurtle(ctx, bird.x, bird.y, bird.dir, sim.t);
     else if (bird.kind === "gator") drawGator(ctx, bird.x, bird.y, bird.dir, sim.t, reduced);
     else if (bird.kind === "rocket") drawRocket(ctx, bird.x, bird.y, bird.dir, sim.t, reduced);
+    else if (bird.kind === "alien") drawAlien(ctx, bird.x, bird.y, bird.dir);
+    else if (bird.kind === "ship") drawShip(ctx, bird.x, bird.y, bird.dir);
     else drawCrow(ctx, bird.x, bird.y, sim.t * 14, bird.dir);
   }
 
@@ -2559,8 +2669,14 @@ export function renderFrame(
       cssW * 0.72,
     );
     vig.addColorStop(0, "rgba(0,0,0,0)");
-    vig.addColorStop(1, sim.level.id === "choir" ? "rgba(0,0,0,0.16)" : "rgba(0,0,0,0.72)");
+    vig.addColorStop(1, sim.level.id === "choir" ? "rgba(0,0,0,0.16)" : sim.level.id === "moon" ? `rgba(0,0,0,${0.62 * (1 - sim.altars.size / Math.max(1, sim.level.lamps?.length ?? 1))})` : "rgba(0,0,0,0.72)");
     ctx.fillStyle = vig;
+    ctx.fillRect(0, 0, cssW, cssH);
+  }
+
+  if (sim.level.id === "moon") {
+    const open = sim.altars.size / Math.max(1, sim.level.lamps?.length ?? 1);
+    ctx.fillStyle = `rgba(0,0,0,${0.48 * (1 - open)})`;
     ctx.fillRect(0, 0, cssW, cssH);
   }
 
@@ -2689,11 +2805,12 @@ function darkExceptBeam(
   ctx.restore();
 }
 
-function drawLantern(ctx: CanvasRenderingContext2D, x: number, y: number, t: number) {
+function drawLantern(ctx: CanvasRenderingContext2D, x: number, y: number, t: number, lit = true) {
   ctx.fillStyle = "#070708";
   ctx.fillRect(x - 1, y - 16, 2, 16);
   ctx.fillRect(x - 8, y, 16, 18);
   ctx.fillRect(x - 6, y + 18, 12, 3);
+  if (!lit) return;
   const pulse = 16 + Math.sin(t * 3) * 2;
   const glow = ctx.createRadialGradient(x, y + 8, 1, x, y + 8, pulse);
   glow.addColorStop(0, "rgba(255,255,255,0.95)");
