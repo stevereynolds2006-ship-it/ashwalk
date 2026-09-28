@@ -342,7 +342,7 @@ function drawCagedFriend(
   if (melt > 0.4) {
     ctx.save();
     ctx.globalAlpha = Math.min(1, (melt - 0.4) / 0.45);
-    drawCageBones(ctx, cageX + cageW / 2 + sway, top + 18);
+    drawCageBones(ctx, cageX + cageW / 2 + sway, top + 8);
     ctx.restore();
   }
   ctx.save();
@@ -367,42 +367,27 @@ function drawCagedFriend(
   }
 
   const axleX = 1752;
-  const axleY = floor - 40;
+  const axleY = floor - 46;
   const spin = sim.rope * Math.PI * 6;
-  const r = 22;
-  ctx.strokeStyle = "#e8e6e1";
-  ctx.lineWidth = 2;
+  const r = 26;
+  ctx.strokeStyle = "#c8c6c0";
+  ctx.lineWidth = 3;
   ctx.beginPath();
   ctx.moveTo(axleX, floor);
   ctx.lineTo(axleX, axleY);
   ctx.stroke();
-  ctx.lineWidth = 4;
+  drawSheave(ctx, axleX, axleY, r, spin);
+  const hx = axleX + Math.cos(spin) * (r + 8);
+  const hy = axleY + Math.sin(spin) * (r + 8);
+  ctx.strokeStyle = "#f4f1ea";
+  ctx.lineWidth = 3;
   ctx.beginPath();
-  ctx.arc(axleX, axleY, r, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.arc(axleX, axleY, r * 0.62, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.arc(axleX, axleY, r * 0.2, 0, Math.PI * 2);
-  ctx.stroke();
-  for (let i = 0; i < 6; i++) {
-    const a = spin + (i * Math.PI) / 3;
-    ctx.beginPath();
-    ctx.moveTo(axleX + Math.cos(a) * r * 0.2, axleY + Math.sin(a) * r * 0.2);
-    ctx.lineTo(axleX + Math.cos(a) * r * 0.62, axleY + Math.sin(a) * r * 0.62);
-    ctx.stroke();
-  }
-  const hx = axleX + Math.cos(spin) * r;
-  const hy = axleY + Math.sin(spin) * r;
-  ctx.beginPath();
-  ctx.moveTo(axleX, axleY);
+  ctx.moveTo(axleX + Math.cos(spin) * r * 0.2, axleY + Math.sin(spin) * r * 0.2);
   ctx.lineTo(hx, hy);
   ctx.stroke();
-  ctx.fillStyle = "#f4f1ea";
   ctx.beginPath();
-  ctx.arc(hx, hy, 3.5, 0, Math.PI * 2);
+  ctx.arc(hx, hy, 4, 0, Math.PI * 2);
+  ctx.fillStyle = "#f4f1ea";
   ctx.fill();
   ctx.strokeStyle = "#c8c6c0";
   ctx.lineWidth = 2;
@@ -437,33 +422,101 @@ function drawAcidDump(ctx: CanvasRenderingContext2D, x: number, cageTop: number,
   ctx.fillRect(x - 28, cageTop + 86, 56, 6 + open * 4);
 }
 
-function drawCageBones(ctx: CanvasRenderingContext2D, x: number, y: number) {
+function drawSheave(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, spin: number) {
   ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(spin);
+  ctx.beginPath();
+  ctx.arc(0, 0, r, 0, Math.PI * 2);
+  ctx.fillStyle = "#101114";
+  ctx.fill();
+  ctx.lineWidth = Math.max(4, r * 0.22);
   ctx.strokeStyle = "#f4f1ea";
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(0, 0, r * 0.72, 0, Math.PI * 2);
+  ctx.fillStyle = "#2c2c30";
+  ctx.fill();
+  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = "#c8c4bc";
+  ctx.stroke();
+  ctx.strokeStyle = "#f4f1ea";
+  ctx.lineWidth = Math.max(2, r * 0.07);
+  for (let i = 0; i < 8; i++) {
+    const a = (i * Math.PI) / 4;
+    ctx.beginPath();
+    ctx.moveTo(Math.cos(a) * r * 0.2, Math.sin(a) * r * 0.2);
+    ctx.lineTo(Math.cos(a) * r * 0.72, Math.sin(a) * r * 0.72);
+    ctx.stroke();
+  }
+  ctx.beginPath();
+  ctx.arc(0, 0, r * 0.16, 0, Math.PI * 2);
   ctx.fillStyle = "#f4f1ea";
-  ctx.lineWidth = 2;
+  ctx.fill();
   ctx.beginPath();
-  ctx.arc(x, y + 8, 7, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.fillRect(x - 2, y + 4, 1.5, 2);
-  ctx.fillRect(x + 2, y + 4, 1.5, 2);
-  ctx.beginPath();
-  ctx.moveTo(x, y + 15);
-  ctx.lineTo(x, y + 48);
-  ctx.moveTo(x, y + 22);
-  ctx.lineTo(x - 12, y + 36);
-  ctx.moveTo(x, y + 22);
-  ctx.lineTo(x + 12, y + 36);
-  ctx.moveTo(x - 8, y + 28);
-  ctx.lineTo(x + 8, y + 28);
-  ctx.moveTo(x - 6, y + 34);
-  ctx.lineTo(x + 6, y + 34);
-  ctx.moveTo(x, y + 48);
-  ctx.lineTo(x - 8, y + 68);
-  ctx.moveTo(x, y + 48);
-  ctx.lineTo(x + 8, y + 68);
-  ctx.stroke();
+  ctx.arc(0, 0, Math.max(1.5, r * 0.05), 0, Math.PI * 2);
+  ctx.fillStyle = "#111114";
+  ctx.fill();
   ctx.restore();
+}
+
+const BONES = [
+  ".........#########..........",
+  "......###############.......",
+  ".....#################......",
+  ".....##################.....",
+  "....####################....",
+  "....####################....",
+  "....####################....",
+  "....####################....",
+  "....###....#####.....###....",
+  ".....##....#####.....#......",
+  ".....##....######...###.....",
+  ".....########..########.....",
+  "......########.#######......",
+  ".........#########..........",
+  ".......##.########.#........",
+  ".......###.#.##.#.##........",
+  "........####.##.####........",
+  ".........##########.........",
+  ".....###..#######...###.....",
+  "....#.######.##.######.#....",
+  "....###.#.########.#.###....",
+  "....##..#..######..#..##....",
+  "...##..#.###.##.###.#..##...",
+  "..###..##############..###..",
+  "..###..####.####.####..###..",
+  ".###...##.########.##...###.",
+  ".###....###..##..###....###.",
+  "..#..........##..........##.",
+  "..#.....###..##..###.....##.",
+  ".###....############.....##.",
+  ".###....##..####..##....###.",
+  ".###...##############...###.",
+  "###.#..######..######..#####",
+  "###.....#..........#.....###",
+  "..#.....#..........#.....#..",
+  ".......###........###.......",
+  ".......#.#........#.#.......",
+  "......####........####......",
+  ".......##..........##.......",
+  ".......##..........##.......",
+  ".......##..........##.......",
+  "......####........####......",
+  "....#####..........#####....",
+  "...#######........#######...",
+];
+
+function drawCageBones(ctx: CanvasRenderingContext2D, x: number, y: number) {
+  const scale = 1.7;
+  const w = BONES[0]!.length * scale;
+  const left = x - w / 2;
+  ctx.fillStyle = "#f7f4ee";
+  BONES.forEach((row, py) => {
+    for (let px = 0; px < row.length; px++) {
+      if (row[px] === "#") ctx.fillRect(left + px * scale, y + py * scale, scale, scale);
+    }
+  });
 }
 
 function drawPulley(ctx: CanvasRenderingContext2D, sim: Sim) {
@@ -476,40 +529,20 @@ function drawPulley(ctx: CanvasRenderingContext2D, sim: Sim) {
   const crown = 36;
   const lidX = 2064;
   const spin = sim.rope * Math.PI * 8;
-  const wheel = (x: number, y: number, r: number) => {
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.arc(x, y, r, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.arc(x, y, r * 0.62, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(x, y, r * 0.22, 0, Math.PI * 2);
-    ctx.stroke();
-    for (let i = 0; i < 6; i++) {
-      const a = spin + (i * Math.PI) / 3;
-      ctx.beginPath();
-      ctx.moveTo(x + Math.cos(a) * r * 0.22, y + Math.sin(a) * r * 0.22);
-      ctx.lineTo(x + Math.cos(a) * r * 0.62, y + Math.sin(a) * r * 0.62);
-      ctx.stroke();
-    }
-  };
   ctx.save();
   ctx.strokeStyle = "#f4f1ea";
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(wall, crankY - 28);
+  ctx.moveTo(wall, crankY - 34);
   ctx.lineTo(wall, crown);
   ctx.lineTo(lidX, crown);
   ctx.lineTo(lidX, lidY);
   ctx.stroke();
-  wheel(wall, crown, 14);
-  wheel(lidX, crown, 14);
-  wheel(wall, crankY, 28);
-  const hx = wall + Math.cos(spin) * 28;
-  const hy = crankY + Math.sin(spin) * 28;
+  drawSheave(ctx, wall, crown, 16, spin);
+  drawSheave(ctx, lidX, crown, 16, -spin);
+  drawSheave(ctx, wall, crankY, 32, spin);
+  const hx = wall + Math.cos(spin) * 40;
+  const hy = crankY + Math.sin(spin) * 40;
   ctx.beginPath();
   ctx.moveTo(wall, crankY);
   ctx.lineTo(hx, hy);

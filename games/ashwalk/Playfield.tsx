@@ -35,7 +35,7 @@ type Session = { code: string; host: boolean };
 
 const LAMP_PRICE = 5;
 const LIGHT_PRICE = 1;
-const LIGHT_SECONDS = 10;
+const LIGHT_SECONDS = 13;
 const STAKE = 5;
 const LIFE_PRICE = 10;
 const LIVES = 3;
@@ -1109,7 +1109,7 @@ export function Playfield({
           </div>
           <p className="ash-note">
             A and D, or the left and right arrow keys, move. W, up, or space jumps. S drops through a cage.
-            E pulls, lights a bell, or buys a lantern. A lantern costs 1 coin you picked up and lasts 10 seconds. The flashlight costs 5 of those coins. Stand on a plank too long and it falls.
+            E pulls, lights a bell, or buys a lantern. A lantern costs 1 coin you picked up and lasts 13 seconds. The flashlight costs 5 of those coins. Stand on a plank too long and it falls.
             It comes back after 4 seconds. Three lives to a board. After that, one more life is 10 Rare coins.
             A death burns half the coins you are carrying. Half of every coin you spend is burned.
           </p>
