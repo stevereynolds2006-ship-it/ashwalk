@@ -15,6 +15,9 @@ export const CLOTHES: readonly Cloth[] = [
   { id: "camo", name: "Camo cape", cost: 30, rare: false, note: "Coming soon." },
   { id: "stripes", name: "Striped cape", cost: 35, rare: false, note: "Red, white, and blue." },
   { id: "pink", name: "Pink cape", cost: 40, rare: false, note: "A bright pink cape." },
+  { id: "black", name: "Black cape", cost: 45, rare: false, note: "A dark cape." },
+  { id: "gold", name: "Gold cape", cost: 50, rare: false, note: "Gold with a blue band." },
+  { id: "ember", name: "Ember cape", cost: 55, rare: false, note: "Torn orange streaks." },
 ];
 
 /** Locked capes open one per week, starting October 1. */
@@ -24,13 +27,21 @@ const CAPE_WEEKS: readonly { id: string; at: Date; label: string }[] = [
   { id: "camo", at: new Date(2026, 9, 15), label: "October 15" },
   { id: "stripes", at: new Date(2026, 9, 22), label: "October 22" },
   { id: "pink", at: new Date(2026, 9, 29), label: "October 29" },
+  { id: "black", at: new Date(2026, 10, 5), label: "November 5" },
+  { id: "gold", at: new Date(2026, 10, 12), label: "November 12" },
+  { id: "ember", at: new Date(2026, 10, 19), label: "November 19" },
 ];
 
+/** Open every cape so it can be tried. The weekly dates stay underneath. */
+export const CAPES_TRY = true;
+
 export function clothOpens(id: string): string | null {
+  if (CAPES_TRY) return null;
   return CAPE_WEEKS.find((week) => week.id === id)?.label ?? null;
 }
 
 export function clothReleased(id: string, now = new Date()) {
+  if (CAPES_TRY) return true;
   const week = CAPE_WEEKS.find((item) => item.id === id);
   if (!week) return true;
   return now >= week.at;
@@ -220,7 +231,7 @@ export function buyCloth(account: string, balance: bigint, id: string, now = new
     writeLedger(account, ledger);
     return true;
   }
-  if (cloth.cost > 0 && !pay(account, balance, cloth.cost)) return false;
+  if (cloth.cost > 0 && !CAPES_TRY && !pay(account, balance, cloth.cost)) return false;
   const next = readLedger(account);
   next.owned = [...next.owned, id];
   next.equipped = id;

@@ -23,6 +23,7 @@ import {
   formatRareCoins,
   outfitList,
   buyFog,
+  CAPES_TRY,
   readLedger,
   spendWhole,
   spendable,
@@ -313,7 +314,7 @@ export function Playfield({
       setStakeMsg(when ? `${cloth?.name ?? "That cape"} opens ${when}. Coming soon.` : "That cape is locked.");
       return;
     }
-    if (cloth && cloth.cost > 0 && !(await ensureWallet())) return;
+    if (cloth && cloth.cost > 0 && !CAPES_TRY && !(await ensureWallet())) return;
     const who = accountRef.current;
     const balance = rareRef.current;
     if (!who || !isAddress(who) || balance == null) {
@@ -1288,10 +1289,10 @@ export function Playfield({
           )}
           <p className="ash-note">
             {payingAccount && (rareBalance ?? walletCoins) != null
-              ? `You have ${formatRareCoins(spendable(rareBalance ?? walletCoins, payingAccount) ?? 0n)} Rare coins. Only the red cape is open.`
+              ? `You have ${formatRareCoins(spendable(rareBalance ?? walletCoins, payingAccount) ?? 0n)} Rare coins. Every cape is open to try.`
               : "Connect a wallet to buy a cape with Rare coins."}
           </p>
-          <p className="ash-note">The red cape is 15 Rare coins and open now. Then one cape a week: white October 1 at 20, rainbow October 8 at 25, camo October 15 at 30, stripes October 22 at 35, and pink October 29 at 40.</p>
+          <p className="ash-note">Every cape is open to try. The weekly order stays: white October 1, rainbow October 8, camo October 15, stripes October 22, pink October 29, black November 5, gold November 12, and ember November 19. Each one costs 5 more than the last, starting at 20.</p>
           <div className="ash-levels">
             {outfitList().map((cloth) => {
               const locked = !clothReleased(cloth.id);
@@ -1318,9 +1319,11 @@ export function Playfield({
                           ? wearing
                             ? "Wearing. Press to take it off."
                             : `${cloth.note} Press to wear.`
-                          : cloth.cost > 0
-                            ? `${cloth.note} ${cloth.cost} Rare coins.`
-                            : `${cloth.note} Free to try.`}
+                          : CAPES_TRY
+                            ? `${cloth.note} Open to try.`
+                            : cloth.cost > 0
+                              ? `${cloth.note} ${cloth.cost} Rare coins.`
+                              : `${cloth.note} Free to try.`}
                   </small>
                 </button>
               );
