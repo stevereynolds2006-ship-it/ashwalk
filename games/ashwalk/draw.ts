@@ -836,6 +836,37 @@ function drawChoirBalloon(ctx: CanvasRenderingContext2D, sim: Sim) {
   ctx.restore();
 }
 
+function drawGlider(ctx: CanvasRenderingContext2D, x: number, y: number, t: number) {
+  ctx.save();
+  ctx.translate(x, y);
+  const flap = Math.sin(t * 2.2) * 2;
+  ctx.beginPath();
+  ctx.moveTo(-78, 10 + flap);
+  ctx.quadraticCurveTo(-30, -2, 18, -2);
+  ctx.quadraticCurveTo(52, 0, 86, -18);
+  ctx.quadraticCurveTo(74, -6, 46, 8);
+  ctx.quadraticCurveTo(8, 14, -78, 16 + flap);
+  ctx.closePath();
+  ctx.fillStyle = "#5a6a32";
+  ctx.fill();
+  ctx.fillStyle = "#2a2418";
+  for (let i = -60; i < 70; i += 14) ctx.fillRect(i, 2 + (i % 3), 7, 6);
+  ctx.fillStyle = "#8a7040";
+  for (let i = -50; i < 60; i += 18) ctx.fillRect(i + 4, 6, 6, 4);
+  ctx.fillStyle = "#1c1c14";
+  ctx.fillRect(-8, 0, 10, 8);
+  ctx.strokeStyle = "#d0ccc4";
+  ctx.lineWidth = 1.6;
+  ctx.beginPath();
+  ctx.moveTo(-6, 6);
+  ctx.lineTo(2, 34);
+  ctx.lineTo(12, 6);
+  ctx.moveTo(-16, 32);
+  ctx.lineTo(20, 32);
+  ctx.stroke();
+  ctx.restore();
+}
+
 function drawExitSnare(ctx: CanvasRenderingContext2D, sim: Sim) {
   if (sim.cage <= 0) return;
   const x = 4984;
@@ -928,7 +959,7 @@ function drawDrapedCape(
   vx: number,
   facing: number,
 ) {
-  const size = 1.35;
+  const size = 0.88;
   const tipX = 31;
   const run = Math.max(-1, Math.min(1, (vx * facing) / 180));
   const bands = ["#ff2bd6", "#ff3b5c", "#ff6a00", "#ffb000", "#ffe14a", "#7dff3a", "#2ee6a0", "#2ee6ff", "#2f7bff", "#7a4dff"];
@@ -2494,6 +2525,10 @@ export function renderFrame(
     ctx.restore();
   }
   if (sim.level.id === "choir" && sim.suck <= 0) drawChoirBalloon(ctx, sim);
+  if (sim.level.id === "gale" && sim.suck <= 0) {
+    if (sim.cage > 0) drawGlider(ctx, sim.x + PW / 2, sim.y - 6, sim.t);
+    else drawGlider(ctx, 4210, 400, sim.t);
+  }
   if (sim.level.id === "latch") drawExitSnare(ctx, sim);
 
   for (let i = motes.length - 1; i >= 0; i--) {

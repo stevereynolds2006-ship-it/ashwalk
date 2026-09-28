@@ -464,6 +464,7 @@ function respawn(sim: Sim) {
   sim.drop = 0;
   sim.cage = 0;
   sim.suck = 0;
+  if (sim.level.id === "gale") sim.palY = 0;
   sim.lastRects = null;
   const stalk = sim.level.stalker;
   if (stalk && !sim.caged && sim.beacons.size >= sim.level.beacons.length && sim.level.beacons.length > 0) {
@@ -827,6 +828,23 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
   stepStalker(sim, dt, events);
   stepHunter(sim, dt, events);
   stepBoulder(sim, dt, events);
+
+  if (level.id === "gale" && !sim.won && sim.suck <= 0) {
+    const lip = sim.x > 4240 && sim.y > 360 && sim.y < 520;
+    if (sim.cage > 0 || lip) {
+      if (sim.cage <= 0) sim.palY = 0;
+      sim.cage = Math.min(1, sim.cage + dt / 8);
+      if (input.jumpHeld) sim.palY -= 78 * dt;
+      if (input.down) sim.palY += 78 * dt;
+      sim.palY = Math.max(-78, Math.min(78, sim.palY));
+      const u = sim.cage;
+      const steer = sim.palY * (1 - u * u);
+      sim.vx = 0;
+      sim.vy = 0;
+      sim.x = 4320 + u * 1200;
+      sim.y = 400 + u * 240 + Math.sin(u * Math.PI) * -30 + steer;
+    }
+  }
 
   if (level.id === "choir" && comboSet(sim) && sim.beacons.size >= level.beacons.length && !sim.won && sim.suck <= 0) {
     const onCrown = sim.x > 2200 && sim.x < 2520 && sim.y < -220;
