@@ -989,7 +989,7 @@ function drawDrapedCape(
       const gust = Math.sin(t * 1.7) * 3.2 + Math.sin(t * 4.3 + y * 0.15) * 1.4;
       const back = Math.max(0, tipX - x);
       const ripple = Math.sin(t * 6.2 + y * 0.28 + back * 0.2) * (0.7 + Math.abs(run) * 1.6);
-      const trail = back * (0.35 + Math.max(0, run) * 0.85);
+      const trail = back * (0.7 + Math.max(0, run) * 1.25);
       let color = tone[mark] ?? tone.n;
       if (cloth === "rainbow") color = mark === "k" ? "#141416" : bands[Math.min(bands.length - 1, Math.floor((y / CAPE_DRAPE.length) * bands.length))]!;
       if (cloth === "stripes") {
@@ -1009,7 +1009,7 @@ function drawDrapedCape(
         color = streak === 0 ? "#ff6a00" : streak === 1 ? "#ff3d00" : "#1a0a04";
       }
       ctx.fillStyle = color!;
-      ctx.fillRect((x - tipX) * size - trail - gust * (back / 34) + 8, -36 + y * size + ripple, size, size);
+      ctx.fillRect((x - tipX) * size - trail - gust * (back / 34) + 2, -44 + y * size + ripple, size, size);
     }
   });
 }
@@ -1058,7 +1058,7 @@ function drawOutfit(
   if (layer === "front" && draped) {
     ctx.save();
     ctx.beginPath();
-    ctx.rect(-16, -42, 14, 32);
+    ctx.rect(-14, -48, 24, 36);
     ctx.clip();
     drawDrapedCape(ctx, cloth, t, vx, facing);
     ctx.restore();
