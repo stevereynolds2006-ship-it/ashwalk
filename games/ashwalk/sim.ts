@@ -408,30 +408,37 @@ function gearPerch(sim: Sim, hintX: number) {
   return best;
 }
 
-function stepPal(sim: Sim, dt: number) {
-  if (sim.rope < 1 || sim.dead > 0) return;
-  const goalX = sim.x - sim.facing * 44;
-  const dx = goalX - sim.palX;
-  const step = Math.max(-170 * dt, Math.min(170 * dt, dx));
-  sim.palX += step;
-  if (Math.abs(dx) > 6) sim.palFace = dx > 0 ? 1 : -1;
-  if (sim.grounded && Math.abs(sim.palX - sim.x) < 110) {
-    sim.palY += Math.max(-480 * dt, Math.min(640 * dt, sim.y - sim.palY));
-    return;
-  }
-  let surface: number | null = null;
+function palSupported(sim: Sim, x: number, y: number) {
+  const feet = y + PH;
   for (const plat of rectsAt(sim, false)) {
     if (plat.kind === "gate") continue;
-    if (sim.palX + 10 < plat.x || sim.palX + PW - 10 > plat.x + plat.w) continue;
-    if (plat.y < sim.palY + 8) continue;
-    if (plat.y > sim.palY + PH + 180) continue;
-    if (surface == null || plat.y < surface) surface = plat.y;
+    if (x + 8 < plat.x || x + PW - 8 > plat.x + plat.w) continue;
+    if (Math.abs(plat.y - feet) < 22) return true;
   }
-  if (surface == null) sim.palY += 640 * dt;
-  else {
-    const feet = surface - PH;
-    sim.palY = feet < sim.palY ? feet : Math.min(feet, sim.palY + 640 * dt);
+  return false;
+}
+
+function stepPal(sim: Sim, dt: number) {
+  if (sim.rope < 1 || sim.dead > 0 || sim.won) return;
+  if (!sim.grounded) return;
+  const behind = sim.x - sim.facing * 38;
+  const apart = Math.abs(sim.x - sim.palX) > 72 || Math.abs(sim.y - sim.palY) > 28;
+  if (apart) {
+    sim.palX = palSupported(sim, behind, sim.y) ? behind : sim.x;
+    sim.palY = sim.y;
+    sim.palFace = sim.facing;
+    return;
   }
+  const dx = behind - sim.palX;
+  const step = Math.max(-150 * dt, Math.min(150 * dt, dx));
+  const next = sim.palX + step;
+  if (!palSupported(sim, next, sim.y)) {
+    sim.palFace = sim.facing;
+    return;
+  }
+  sim.palX = next;
+  sim.palY = sim.y;
+  if (Math.abs(dx) > 6) sim.palFace = dx > 0 ? 1 : -1;
 }
 
 function respawn(sim: Sim) {
