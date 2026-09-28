@@ -312,9 +312,12 @@ function drawCagedFriend(
   const cageH = 100;
   const hangTop = 150;
   const landTop = 368 - cageH;
-  const cageX = startX + (landX - startX) * sim.rope;
-  const dropTop = hangTop + (landTop - hangTop) * sim.rope;
-  const sway = free || reduced ? 0 : Math.sin(sim.t * 1.3) * 6;
+  const back = sim.feast < 2.2 ? 0 : Math.min(1, (sim.feast - 2.2) / 1.5);
+  const ride = sim.rope * (1 - back);
+  const cageX = startX + (landX - startX) * ride;
+  const dropTop = hangTop + (landTop - hangTop) * ride;
+  const home = ride < 0.04;
+  const sway = (!free || home) && !reduced ? Math.sin(sim.t * 1.3) * 6 : 0;
   const top = dropTop;
   const cheer = free && sim.feast < 0.7 && !reduced ? Math.abs(Math.sin(sim.t * 7)) * 10 : 0;
   const eaten = sim.feast > 1.15;
@@ -330,6 +333,8 @@ function drawCagedFriend(
   ctx.stroke();
   if (!eaten) {
     drawFriend(ctx, sprites, { x, y, facing: 1, walking: false, anim: 0, hurt: 0 }, sim.t, reduced, false, null);
+  } else if (back > 0) {
+    drawCageBones(ctx, cageX + cageW / 2 + sway, top + 18);
   }
   ctx.save();
   ctx.translate(sway, 0);
@@ -348,15 +353,15 @@ function drawCagedFriend(
     ctx.lineTo(x + 28, y);
     ctx.stroke();
   }
-  if (free && sim.feast > 0.25 && sim.feast < 2.6) {
+  if (free && sim.feast > 0.25 && sim.feast < 2.3) {
     const rise = Math.min(1, (sim.feast - 0.25) / 0.7);
     const sink = sim.feast > 1.35 ? Math.min(1, (sim.feast - 1.35) / 0.85) : 0;
     const spiderY = 520 - rise * 210 + sink * 240;
     ctx.save();
     ctx.beginPath();
-    ctx.rect(cageX - 30, 0, cageW + 80, 372);
+    ctx.rect(landX - 30, 0, cageW + 80, 372);
     ctx.clip();
-    drawSpider(ctx, cageX + cageW / 2, spiderY, -1, null, sim.feast < 1.4, sim.t, reduced);
+    drawSpider(ctx, landX + cageW / 2, spiderY, -1, null, sim.feast < 1.4, sim.t, reduced);
     ctx.restore();
   }
 
@@ -404,6 +409,35 @@ function drawCagedFriend(
   ctx.moveTo(axleX, axleY - r);
   ctx.lineTo(axleX, 110);
   ctx.stroke();
+}
+
+function drawCageBones(ctx: CanvasRenderingContext2D, x: number, y: number) {
+  ctx.save();
+  ctx.strokeStyle = "#f4f1ea";
+  ctx.fillStyle = "#f4f1ea";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(x, y + 8, 7, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.fillRect(x - 2, y + 4, 1.5, 2);
+  ctx.fillRect(x + 2, y + 4, 1.5, 2);
+  ctx.beginPath();
+  ctx.moveTo(x, y + 15);
+  ctx.lineTo(x, y + 48);
+  ctx.moveTo(x, y + 22);
+  ctx.lineTo(x - 12, y + 36);
+  ctx.moveTo(x, y + 22);
+  ctx.lineTo(x + 12, y + 36);
+  ctx.moveTo(x - 8, y + 28);
+  ctx.lineTo(x + 8, y + 28);
+  ctx.moveTo(x - 6, y + 34);
+  ctx.lineTo(x + 6, y + 34);
+  ctx.moveTo(x, y + 48);
+  ctx.lineTo(x - 8, y + 68);
+  ctx.moveTo(x, y + 48);
+  ctx.lineTo(x + 8, y + 68);
+  ctx.stroke();
+  ctx.restore();
 }
 
 function drawPulley(ctx: CanvasRenderingContext2D, sim: Sim) {
