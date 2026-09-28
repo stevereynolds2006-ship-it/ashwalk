@@ -37,7 +37,7 @@ type Session = { code: string; host: boolean };
 const LAMP_PRICE = 5;
 const LIGHT_PRICE = 1;
 const LIGHT_SECONDS = 13;
-const STAKE = 5;
+const SHORE_COINS = 2;
 const LIFE_PRICE = 10;
 const LIVES = 3;
 const ALPHABET = "abcdefghjkmnpqrstuvwxyz23456789";
@@ -120,6 +120,7 @@ export function Playfield({
   const [company, setCompany] = useState(0);
   const companyRef = useRef(0);
   const windRef = useRef("");
+  const [walletCoins, setWalletCoins] = useState<bigint | null>(rareBalance ?? null);
   const purseRef = useRef(0);
   const [purse, setPurse] = useState(0);
   const livesRef = useRef(LIVES);
@@ -180,8 +181,8 @@ export function Playfield({
     setPurse(0);
   }
 
-  accountRef.current = account;
-  rareRef.current = rareBalance;
+  accountRef.current = account ?? `friend-${friendId.toString()}`;
+  rareRef.current = rareBalance ?? walletCoins;
   clothRef.current = ledger.equipped;
 
   function fogOpen(id: string) {
@@ -204,7 +205,7 @@ export function Playfield({
     const who = accountRef.current;
     const balance = rareRef.current;
     if (!who || balance == null) {
-      setStakeMsg("Connect a wallet. Continuing costs 10 Rare coins.");
+      setStakeMsg("Reading Rare coins. Continuing costs 10 Rare coins.");
       return false;
     }
     if (!openRoad(who, balance)) {
@@ -238,7 +239,7 @@ export function Playfield({
         onWardrobe?.();
         return;
       }
-      setStakeMsg("Connect a wallet. The red cape is 10 Rare coins.");
+      setStakeMsg("Reading Rare coins. The red cape is 10 Rare coins.");
       return;
     }
     if (!buyCloth(who, balance, id)) {
@@ -254,7 +255,7 @@ export function Playfield({
     const who = accountRef.current;
     const balance = rareRef.current;
     if (!who || balance == null) {
-      setStakeMsg("Connect a wallet. A life is 10 Rare coins.");
+      setStakeMsg("Reading Rare coins. A life is 10 Rare coins.");
       return;
     }
     if (!spendWhole(who, balance, LIFE_PRICE)) {
@@ -356,8 +357,8 @@ export function Playfield({
     }
     livesRef.current = LIVES;
     setLives(LIVES);
-    purseRef.current = STAKE;
-    setPurse(STAKE);
+    purseRef.current = id === "shore" ? SHORE_COINS : 0;
+    setPurse(id === "shore" ? SHORE_COINS : 0);
     setStakeMsg("");
     if (fee === 0) setShopError("");
     const level = getLevel(id);
@@ -388,8 +389,8 @@ export function Playfield({
     } catch {
       /* private mode */
     }
-    refreshLedger(account);
-  }, [account]);
+    refreshLedger(account ?? `friend-${friendId.toString()}`);
+  }, [account, friendId]);
 
   useEffect(() => {
     const kit = createFriendSoundKit({ muted: false });
@@ -456,7 +457,9 @@ export function Playfield({
     setLampOn(false);
     setShopError("");
     void client.read().then((value) => {
-      if (!cancel) setSnap(value);
+      if (cancel) return;
+      setSnap(value);
+      setWalletCoins(value.rfBalance);
     });
     return () => {
       cancel = true;
@@ -561,7 +564,7 @@ export function Playfield({
             livesRef.current = left;
             setLives(left);
             const burnNote =
-              burned > 0 ? `Burned ${burned} coin${burned === 1 ? "" : "s"}.` : "No coins left to burn.";
+              burned > 0 ? `Burned ${burned} stage coin${burned === 1 ? "" : "s"}.` : "No stage coins left to burn.";
             if (left <= 0) {
               setStakeMsg(`${burnNote} Buy one more life for ${LIFE_PRICE} Rare coins.`);
               go("lives");
@@ -1025,7 +1028,12 @@ export function Playfield({
                 <span className="sr-only"> including you</span>
               </span>
             )}
-            <span className="ash-count">{purse} coins</span>
+            <span className="ash-count">{purse} in this stage</span>
+            <span className="ash-count">
+              {rareBalance == null && walletCoins == null
+                ? "Rare coins …"
+                : `${formatRareCoins(spendable(rareBalance ?? walletCoins, account ?? `friend-${friendId.toString()}`) ?? 0n)} Rare`}
+            </span>
             <span className="ash-count">{ledger.burned} burned</span>
             <span className="ash-count">
               {lives} {lives === 1 ? "life" : "lives"}
@@ -1094,13 +1102,15 @@ export function Playfield({
           <h1>Ashwalk</h1>
           <p>Your Friend is the small one. The fog is everything else.</p>
           <p>
-            {!account
-              ? "Connect a wallet. The coins you spend are the Rare coins in that wallet."
-              : rareBalance == null
+            {(() => {
+              const shown = rareBalance ?? walletCoins;
+              const who = account ?? `friend-${friendId.toString()}`;
+              return shown == null
                 ? "Reading Rare coins…"
-                : `You have ${formatRareCoins(spendable(rareBalance, account) ?? 0n)} Rare coins.`}
+                : `You have ${formatRareCoins(spendable(shown, who) ?? 0n)} Rare coins. Those pay to continue and to buy a cape.`;
+            })()}
           </p>
-          <p>The shore is free. Beat it, then 10 Rare coins opens the road. After that, beat a fog to open the next one.</p>
+          <p>The shore is free. You start it with 2 coins. Coins you pick up only turn things on inside the stage. Rare coins are what you spend to continue and to buy a cape. Beat the shore, then 10 Rare coins opens the road.</p>
           <p>Every month a new map opens, and a new cape is there to own. Only the red cape is open to buy.</p>
           {stakeMsg && (
             <p className="ash-error" role="alert">
@@ -1140,9 +1150,9 @@ export function Playfield({
           </div>
           <p className="ash-note">
             A and D, or the left and right arrow keys, move. W, up, or space jumps. S drops through a cage.
-            E pulls, lights a bell, or buys a lantern. A lantern costs 1 coin you picked up and lasts 13 seconds. The flashlight costs 5 of those coins. On the moon that buy is a saber, not a flashlight. Stand on a plank too long and it falls.
+            E pulls, lights a bell, or buys a lantern. A lantern costs 1 coin you picked up in the stage and lasts 13 seconds. The flashlight costs 5 of those coins. On the moon that buy is a saber, not a flashlight. Stand on a plank too long and it falls.
             It comes back after 4 seconds. Three lives to a board. After that, one more life is 10 Rare coins.
-            A death burns half the coins you are carrying. Half of every coin you spend is burned.
+            A death burns half the coins you picked up in the stage. Half of every Rare coin you spend is burned.
           </p>
         </section>
       )}
@@ -1156,11 +1166,13 @@ export function Playfield({
             </p>
           )}
           <p className="ash-note">
-            {!account
-              ? "Connect a wallet. The red cape is 10 Rare coins. The others are locked."
-              : rareBalance == null
+            {(() => {
+              const shown = rareBalance ?? walletCoins;
+              const who = account ?? `friend-${friendId.toString()}`;
+              return shown == null
                 ? "Reading Rare coins…"
-                : `You have ${formatRareCoins(spendable(rareBalance, account) ?? 0n)} Rare coins.`}
+                : `You have ${formatRareCoins(spendable(shown, who) ?? 0n)} Rare coins. Only the red cape is open.`;
+            })()}
           </p>
           <p className="ash-note">Only the red cape is open. 10 Rare coins. The white cape opens October 1, the rainbow cape November 1, and the camo cape December 1.</p>
           <div className="ash-levels">
@@ -1214,11 +1226,13 @@ export function Playfield({
             </p>
           )}
           <p className="ash-note">
-            {!account
-              ? "Connect a wallet to read your Rare coins."
-              : rareBalance == null
+            {(() => {
+              const shown = rareBalance ?? walletCoins;
+              const who = account ?? `friend-${friendId.toString()}`;
+              return shown == null
                 ? "Reading Rare coins…"
-                : `You have ${formatRareCoins(spendable(rareBalance, account) ?? 0n)} Rare coins.`}
+                : `You have ${formatRareCoins(spendable(shown, who) ?? 0n)} Rare coins.`;
+            })()}
           </p>
           <p className="ash-note">
             The shore is free. After you beat it, 10 Rare coins opens the next fog. Then each fog opens when you beat the one before it. The moon opens October 1, the mirror November 1, and the tunnel December 1.
