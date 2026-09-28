@@ -205,6 +205,24 @@ export function Playfield({
     clothRef.current = next.equipped;
   }
 
+  function payTicket(id: string) {
+    const who = accountRef.current;
+    const balance = rareRef.current;
+    const name = getLevel(id).title;
+    if (!who || balance == null) {
+      setStakeMsg(`Reading Rare coins. ${name} is 10 Rare coins.`);
+      return false;
+    }
+    if (!spendWhole(who, balance, ROAD_COST)) {
+      setStakeMsg(`${name} is 10 Rare coins.`);
+      return false;
+    }
+    refreshLedger(who);
+    onWardrobe?.();
+    setShopError(`Burned ${burnedHalf(ROAD_COST)} Rare coins.`);
+    return true;
+  }
+
   function payFog(id: string) {
     const who = accountRef.current;
     const balance = rareRef.current;
@@ -335,7 +353,8 @@ export function Playfield({
         setStakeMsg(`Beat ${getLevel(prev).title} before you can open this fog.`);
         return;
       }
-      if (!openedRef.current.has(id) && !payFog(id)) return;
+      if ((id === "roof" || id === "antler") && !payTicket(id)) return;
+      if (id !== "roof" && id !== "antler" && !openedRef.current.has(id) && !payFog(id)) return;
     }
     const fee = 0;
     if (fee > 0) {
@@ -1477,16 +1496,11 @@ export function Playfield({
                   </button>
                 );
               }
-              if (!TRY_ALL && !ledger.opened.includes(next.id)) {
+              const ticket = next.id === "roof" || next.id === "antler";
+              if (!TRY_ALL && (ticket || !ledger.opened.includes(next.id))) {
                 return (
-                  <button
-                    type="button"
-                    className="ash-btn"
-                    onClick={() => {
-                      if (payFog(next.id)) startLevel(next.id);
-                    }}
-                  >
-                    Open {next.title} · {ROAD_COST} Rare coins
+                  <button type="button" className="ash-btn" onClick={() => startLevel(next.id)}>
+                    Play {next.title} · {ROAD_COST} Rare coins
                   </button>
                 );
               }
@@ -1562,15 +1576,18 @@ function LevelList({
         const soon = !TRY_ALL && opens != null && !fogReleased(level.id);
         const prev = previousFog(level.id);
         const beaten = prev == null || cleared.includes(prev);
-        const bought = allOpen || opened.includes(level.id);
-        const open = TRY_ALL || level.id === "shore" || fogTry(level.id) || (!soon && bought && beaten);
-        const canBuy = !open && !soon && beaten && !bought;
+        const ticket = level.id === "roof" || level.id === "antler";
+        const bought = !ticket && (allOpen || opened.includes(level.id));
+        const open = TRY_ALL || level.id === "shore" || fogTry(level.id) || (!ticket && !soon && bought && beaten);
+        const canBuy = !open && !soon && beaten && (ticket || !bought);
         const note = soon
           ? `Coming soon. Opens ${opens}.`
           : open
             ? level.rule
             : canBuy
-              ? "10 Rare coins to open."
+              ? ticket
+                ? "10 Rare coins every time you play."
+                : "10 Rare coins to open."
               : prev
                 ? `Beat ${getLevel(prev).title} before you can buy this.`
                 : "Locked.";
