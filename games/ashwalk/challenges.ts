@@ -712,7 +712,7 @@ const MOON: Level = {
   id: "moon",
   title: "The moon",
   kicker: "This month's fog.",
-  rule: "This month's map. Climb higher. Light the lanterns and the moon, and the rocks, get brighter. Aliens and ships cross the climb. Three bells wake the plate. Then the rocket. Five seconds to the hole.",
+  rule: "This month's map. Climb higher. Light the lanterns and the moon, and the rocks, get brighter. Aliens and ships cross the climb. Three bells wake the plate. Then the rocket. Eight seconds to the hole.",
   together: "The bells are shared. Whoever stays on the plate keeps the gate up.",
   clearKicker: "The moon",
   clearTitle: "You climbed out",

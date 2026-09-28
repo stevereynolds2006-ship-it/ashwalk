@@ -1655,38 +1655,46 @@ function drawShip(ctx: CanvasRenderingContext2D, x: number, y: number, dir: numb
   ctx.restore();
 }
 
-function drawBoost(ctx: CanvasRenderingContext2D, x: number, y: number, t: number, rush: number) {
+function drawBoost(ctx: CanvasRenderingContext2D, x: number, y: number, t: number, rush: number, ridden = false) {
   ctx.save();
   ctx.translate(x, y);
-  const flame = 28 + rush * 220 + Math.sin(t * 40) * 8;
-  ctx.globalAlpha = 0.35 + rush * 0.5;
+  const flame = 48 + rush * 340 + Math.sin(t * 40) * 12;
+  ctx.globalAlpha = 0.45 + rush * 0.5;
   ctx.fillStyle = "#f7f4ee";
-  for (let i = 0; i < 7; i++) {
-    const yy = -10 + i * 4;
-    ctx.fillRect(-flame - i * 6, yy, flame * (0.4 + rush), 1.2);
-  }
+  ctx.beginPath();
+  ctx.moveTo(-48, -8);
+  ctx.lineTo(-48 - flame, 0);
+  ctx.lineTo(-48, 8);
+  ctx.fill();
   ctx.globalAlpha = 1;
   ctx.fillStyle = "#070708";
   ctx.beginPath();
-  ctx.moveTo(34, 0);
-  ctx.lineTo(10, -12);
-  ctx.lineTo(-22, -12);
-  ctx.lineTo(-22, 12);
-  ctx.lineTo(10, 12);
+  ctx.moveTo(86, 0);
+  ctx.lineTo(30, -30);
+  ctx.lineTo(-52, -30);
+  ctx.lineTo(-52, 30);
+  ctx.lineTo(30, 30);
   ctx.closePath();
   ctx.fill();
   ctx.beginPath();
-  ctx.moveTo(-16, -12);
-  ctx.lineTo(-30, -22);
-  ctx.lineTo(-8, -12);
+  ctx.moveTo(-36, -30);
+  ctx.lineTo(-70, -52);
+  ctx.lineTo(-16, -30);
   ctx.fill();
   ctx.beginPath();
-  ctx.moveTo(-16, 12);
-  ctx.lineTo(-30, 22);
-  ctx.lineTo(-8, 12);
+  ctx.moveTo(-36, 30);
+  ctx.lineTo(-70, 52);
+  ctx.lineTo(-16, 30);
   ctx.fill();
-  ctx.fillStyle = "#f4f1ea";
-  ctx.fillRect(6, -3, 8, 6);
+  ctx.fillStyle = "#d7d4cc";
+  ctx.fillRect(16, -14, 26, 28);
+  if (ridden) {
+    ctx.fillStyle = "#f4f1ea";
+    ctx.fillRect(19, -11, 20, 20);
+    ctx.fillStyle = "#070708";
+    ctx.fillRect(23, -5, 4.5, 4.5);
+    ctx.fillRect(31, -5, 4.5, 4.5);
+  }
   ctx.restore();
 }
 
@@ -2692,10 +2700,7 @@ export function renderFrame(
     if (sim.cage > 0) drawGlider(ctx, sim.x + PW / 2, sim.y - 6, sim.t);
     else drawGlider(ctx, 4210, 400, sim.t);
   }
-  if (sim.level.id === "moon" && sim.suck <= 0) {
-    if (sim.cage > 0) drawBoost(ctx, sim.x + PW / 2, sim.y + 14, sim.t, sim.cage * sim.cage);
-    else drawBoost(ctx, 1560, -684, sim.t, 0);
-  }
+  if (sim.level.id === "moon" && sim.suck <= 0 && sim.cage <= 0) drawBoost(ctx, 1560, -684, sim.t, 0);
   if (sim.level.id === "latch") drawExitSnare(ctx, sim);
 
   for (let i = motes.length - 1; i >= 0; i--) {
@@ -2735,6 +2740,24 @@ export function renderFrame(
     const open = sim.altars.size / Math.max(1, sim.level.lamps?.length ?? 1);
     ctx.fillStyle = `rgba(0,0,0,${0.48 * (1 - open)})`;
     ctx.fillRect(0, 0, cssW, cssH);
+  }
+
+  if (sim.level.id === "moon" && sim.cage > 0 && sim.suck <= 0) {
+    const rush = sim.cage * sim.cage;
+    ctx.save();
+    ctx.fillStyle = `rgba(255,255,255,${0.2 + rush * 0.75})`;
+    ctx.fillRect(0, 0, cssW, cssH);
+    ctx.fillStyle = "#ffffff";
+    for (let i = 0; i < 56; i++) {
+      const y = (i * 47 + sim.t * (500 + rush * 2800)) % cssH;
+      ctx.globalAlpha = 0.35 + rush * 0.65;
+      ctx.fillRect(0, y, cssW, rush > 0.4 ? 3 : 1);
+    }
+    ctx.restore();
+    ctx.save();
+    ctx.scale(scale, scale);
+    drawBoost(ctx, sim.x + PW / 2 - camera.x, sim.y + 16 - camera.y, sim.t, rush, true);
+    ctx.restore();
   }
 
   if (gloom > 0) {

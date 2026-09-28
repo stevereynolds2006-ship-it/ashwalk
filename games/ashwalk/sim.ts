@@ -842,7 +842,7 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
   if (level.id === "moon" && !sim.won && sim.suck <= 0) {
     const pad = sim.x > 1480 && sim.y < -600 && sim.y > -780;
     if (sim.cage > 0 || pad) {
-      sim.cage = Math.min(1, sim.cage + dt / 5);
+      sim.cage = Math.min(1, sim.cage + dt / 8);
       const rush = sim.cage * sim.cage;
       sim.vx = 0;
       sim.vy = 0;

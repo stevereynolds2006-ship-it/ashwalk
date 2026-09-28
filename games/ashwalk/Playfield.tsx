@@ -1649,7 +1649,7 @@ function musicScene(phase: Phase, sim: Sim): MusicScene {
 function promptFor(sim: Sim, phase: Phase) {
   if (phase !== "play" || sim.won || sim.dead > 0) return "";
   if (sim.level.id === "gale" && sim.cage > 0) return "Jump rises. Down drops. 8 seconds to the hole.";
-  if (sim.level.id === "moon" && sim.cage > 0) return "Light speed. Five seconds.";
+  if (sim.level.id === "moon" && sim.cage > 0) return "Light speed. Eight seconds.";
   if (sim.nearBeacon) return "E · light the bell";
   if (sim.plateAsleep && sim.level.id === "latch" && sim.rope < 1) return "Pull the pulley. Then the plate.";
   if (sim.plateAsleep) return "Light every bell. The plate is asleep.";
