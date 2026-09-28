@@ -1410,28 +1410,78 @@ function drawCave(ctx: CanvasRenderingContext2D, camera: Camera, t: number, redu
   for (let x = 80; x < world; x += 70) {
     const h = 28 + ((x * 13) % 70);
     ctx.beginPath();
-    ctx.moveTo(x, 640);
-    ctx.lineTo(x + 8, 640 - h);
-    ctx.lineTo(x + 18, 640);
+    ctx.moveTo(x, 700);
+    ctx.lineTo(x + 8, 700 - h);
+    ctx.lineTo(x + 18, 700);
     ctx.fill();
   }
   drawHangFrame(ctx, 1680, 80, reduced ? 0 : t * 0.5, false);
-  ctx.strokeStyle = "#070708";
-  ctx.lineWidth = 4;
-  ctx.beginPath();
-  ctx.moveTo(3260, 80);
-  ctx.lineTo(3260, 520);
-  ctx.moveTo(3348, 80);
-  ctx.lineTo(3348, 520);
-  ctx.stroke();
-  ctx.lineWidth = 3;
-  for (let y = 100; y < 520; y += 28) {
+  ctx.restore();
+
+  ctx.fillStyle = "#0c1014";
+  ctx.fillRect(-40, 512, world + 80, 280);
+  if (!reduced) {
+    for (let i = 0; i < 8; i++) {
+      const y = 524 + i * 16;
+      ctx.strokeStyle = `rgba(210,214,218,${0.08 + (i % 3) * 0.03})`;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      for (let x = -40; x <= world; x += 28) {
+        const wave = Math.sin(t * 1.3 + x * 0.02 + i) * 3;
+        if (x === -40) ctx.moveTo(x, y + wave);
+        else ctx.lineTo(x, y + wave);
+      }
+      ctx.stroke();
+    }
+  } else {
+    ctx.strokeStyle = "rgba(210,214,218,0.12)";
     ctx.beginPath();
-    ctx.moveTo(3260, y);
-    ctx.lineTo(3348, y);
+    ctx.moveTo(-40, 524);
+    ctx.lineTo(world, 524);
     ctx.stroke();
   }
+
+  ctx.save();
+  ctx.translate(camera.x * 0.45, camera.y * 0.12);
+  drawCaveBats(ctx, t, reduced);
   ctx.restore();
+}
+
+function drawCaveBats(ctx: CanvasRenderingContext2D, t: number, reduced: boolean) {
+  ctx.fillStyle = "#070708";
+  for (let i = 0; i < 14; i++) {
+    const x = 180 + i * 420;
+    const hang = 70 + ((i * 37) % 50);
+    ctx.fillRect(x, hang, 2, 10);
+    ctx.beginPath();
+    ctx.moveTo(x + 1, hang + 10);
+    ctx.lineTo(x - 7, hang + 16);
+    ctx.lineTo(x + 1, hang + 13);
+    ctx.lineTo(x + 9, hang + 16);
+    ctx.closePath();
+    ctx.fill();
+  }
+  for (let i = 0; i < 12; i++) {
+    const base = 240 + i * 520;
+    const x = base + (reduced ? 0 : Math.sin(t * 0.35 + i) * 70 + ((t * 22 + i * 30) % 160) - 80);
+    const y = 160 + (i % 4) * 34 + (reduced ? 0 : Math.sin(t * 2 + i) * 12);
+    const flap = reduced ? 0.4 : Math.sin(t * 9 + i) * 0.8;
+    const face = i % 2 === 0 ? 1 : -1;
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(face, 1);
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.quadraticCurveTo(-10, -12 - flap * 10, -22, -1);
+    ctx.quadraticCurveTo(-8, 3, 0, 1);
+    ctx.quadraticCurveTo(8, 3, 22, -1);
+    ctx.quadraticCurveTo(10, -12 - flap * 10, 0, 0);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(0, 1.5, 2.4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
 }
 
 function drawMirrorFog(ctx: CanvasRenderingContext2D, camera: Camera, sim: Sim, reduced: boolean) {
