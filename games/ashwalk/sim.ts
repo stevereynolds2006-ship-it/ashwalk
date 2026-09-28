@@ -140,6 +140,10 @@ export type Sim = {
   altars: Set<string>;
   /** Seconds left on each moon lantern. */
   altarLeft: Record<string, number>;
+  /** Moon saber is in the hand. */
+  saber: boolean;
+  /** Bird indexes the saber has cut. */
+  slain: Set<number>;
 };
 
 export function createSim(level: Level = SHORE): Sim {
@@ -219,6 +223,8 @@ export function createSim(level: Level = SHORE): Sim {
     suck: 0,
     altars: new Set(),
     altarLeft: {},
+    saber: false,
+    slain: new Set(),
   };
 }
 
@@ -265,6 +271,22 @@ export function comboSet(sim: Sim) {
   const code = sim.level.combo?.code;
   if (!code) return true;
   return code.every((digit, index) => sim.combo[index] === digit);
+}
+
+function saberHits(sim: Sim, x: number, y: number) {
+  const swing = Math.sin(sim.t * 7) * 0.18;
+  const ang = sim.facing === 1 ? -0.4 + swing : Math.PI + 0.4 - swing;
+  const x0 = sim.x + PW / 2 + sim.facing * 4;
+  const y0 = sim.y + 16;
+  const x1 = x0 + Math.cos(ang) * 58;
+  const y1 = y0 + Math.sin(ang) * 58;
+  const dx = x1 - x0;
+  const dy = y1 - y0;
+  const len2 = dx * dx + dy * dy || 1;
+  const t = Math.max(0, Math.min(1, ((x - x0) * dx + (y - y0) * dy) / len2));
+  const ox = x - (x0 + dx * t);
+  const oy = y - (y0 + dy * t);
+  return ox * ox + oy * oy < 32 * 32;
 }
 
 function emptyEvents(): StepEvents {
@@ -711,10 +733,15 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
   for (let i = 0; i < level.birds.length; i++) {
     const spec = level.birds[i]!;
     const bird = sim.birds[i]!;
+    if (sim.slain.has(i)) continue;
     bird.x += bird.dir * spec.speed * dt;
     if (bird.x > spec.x1) bird.dir = -1;
     if (bird.x < spec.x0) bird.dir = 1;
     const birdY = spec.y + Math.sin(sim.t * 2.1) * (reduced ? 0 : spec.amp);
+    if (spec.kind === "alien" && sim.saber && saberHits(sim, bird.x + 8, birdY + 16)) {
+      sim.slain.add(i);
+      continue;
+    }
     const hitW = spec.kind === "gator" ? 86 : spec.kind === "ship" ? 52 : spec.kind === "alien" ? 26 : spec.kind === "rocket" ? 48 : spec.kind === "turtle" ? 34 : spec.kind === "rat" ? 28 : 22;
     const hitH = spec.kind === "gator" ? 30 : spec.kind === "ship" ? 22 : spec.kind === "alien" ? 40 : spec.kind === "rocket" ? 18 : spec.kind === "turtle" ? 26 : spec.kind === "rat" ? 20 : 14;
     if (
@@ -1122,6 +1149,7 @@ export function birdSpots(sim: Sim, reduced: boolean) {
       y: spec.y + Math.sin(sim.t * 2.1) * (reduced ? 0 : spec.amp),
       dir: bird.dir,
       kind: spec.kind ?? "crow",
+      index,
     };
   });
 }

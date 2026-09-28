@@ -1631,6 +1631,27 @@ function blitWhite(ctx: CanvasRenderingContext2D, rows: readonly string[], scale
   });
 }
 
+function drawSaber(ctx: CanvasRenderingContext2D, sim: Sim) {
+  const swing = Math.sin(sim.t * 7) * 0.18;
+  const ang = sim.facing === 1 ? -0.4 + swing : Math.PI + 0.4 - swing;
+  const x0 = sim.x + PW / 2 + sim.facing * 4;
+  const y0 = sim.y + 16;
+  ctx.save();
+  ctx.translate(x0, y0);
+  ctx.rotate(ang);
+  ctx.fillStyle = "#2a2a2c";
+  ctx.fillRect(-2, -3, 10, 6);
+  ctx.fillStyle = "#8d8d92";
+  ctx.fillRect(6, -2.5, 8, 5);
+  ctx.shadowColor = "#ffffff";
+  ctx.shadowBlur = 8;
+  ctx.fillStyle = "#f7f7f7";
+  ctx.fillRect(14, -2, 46, 4);
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(16, -1, 42, 2);
+  ctx.restore();
+}
+
 function drawAlien(ctx: CanvasRenderingContext2D, x: number, y: number, dir: number, t: number) {
   ctx.save();
   ctx.translate(x, y - 20);
@@ -2626,6 +2647,7 @@ export function renderFrame(
     if (!perch.gone) drawCrow(ctx, perch.x, perch.y, sim.t * 9, 1);
   }
   for (const bird of birdSpots(sim, reduced)) {
+    if (bird.kind === "alien" && sim.slain.has(bird.index)) continue;
     if (bird.kind === "rat") drawRat(ctx, bird.x, bird.y, bird.dir, sim.t, reduced);
     else if (bird.kind === "turtle") drawTurtle(ctx, bird.x, bird.y, bird.dir, sim.t);
     else if (bird.kind === "gator") drawGator(ctx, bird.x, bird.y, bird.dir, sim.t, reduced);
@@ -2670,7 +2692,7 @@ export function renderFrame(
     }
   }
 
-  if (lamp && !attract && gloom <= 0) drawLamp(ctx, sim);
+  if (lamp && !attract && gloom <= 0 && sim.level.id !== "moon") drawLamp(ctx, sim);
 
   if (sim.suck > 0) {
     const cx = sim.x + PW / 2;
@@ -2701,6 +2723,7 @@ export function renderFrame(
     attract,
     cloth,
   );
+  if (lamp && sim.level.id === "moon" && sim.suck <= 0 && sim.cage <= 0 && !attract) drawSaber(ctx, sim);
   if (sim.suck > 0) {
     ctx.restore();
   }

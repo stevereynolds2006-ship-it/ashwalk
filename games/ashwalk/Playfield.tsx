@@ -523,6 +523,7 @@ export function Playfield({
           };
           jumpPressed = false;
           interactPressed = false;
+          sim.saber = sim.level.id === "moon" && lampOnRef.current;
           const events = step(sim, actions, 1 / 60, reducedRef.current);
           if (events.mothId) mothId = events.mothId;
           if (events.beacon) beaconId = events.beacon;
@@ -911,13 +912,21 @@ export function Playfield({
     try {
       const have = purseRef.current;
       if (have < LAMP_PRICE) {
-        setShopError(`The flashlight wants ${LAMP_PRICE} coins you picked up.`);
+        setShopError(
+          simRef.current.level.id === "moon"
+            ? `The saber wants ${LAMP_PRICE} coins you picked up.`
+            : `The flashlight wants ${LAMP_PRICE} coins you picked up.`,
+        );
         return;
       }
       const next = have - LAMP_PRICE;
       purseRef.current = next;
       setPurse(next);
-      setShopError(`Spent ${LAMP_PRICE} coins you picked up.`);
+      setShopError(
+        simRef.current.level.id === "moon"
+          ? `Spent ${LAMP_PRICE} coins. The saber is in your hand.`
+          : `Spent ${LAMP_PRICE} coins you picked up.`,
+      );
       lampOnRef.current = true;
       setLampOwned(true);
       setLampOn(true);
@@ -1021,7 +1030,17 @@ export function Playfield({
               aria-pressed={lampOwned ? lampOn : undefined}
               onClick={() => toggleLamp()}
             >
-              {lampOwned ? (lampOn ? "Light on" : "Light off") : `Buy light · ${LAMP_PRICE} picked up`}
+              {simRef.current.level.id === "moon"
+                ? lampOwned
+                  ? lampOn
+                    ? "Saber on"
+                    : "Saber off"
+                  : `Buy saber · ${LAMP_PRICE} picked up`
+                : lampOwned
+                  ? lampOn
+                    ? "Light on"
+                    : "Light off"
+                  : `Buy light · ${LAMP_PRICE} picked up`}
             </button>
             <button
               type="button"
@@ -1341,8 +1360,10 @@ export function Playfield({
           <h2>The fog waits</h2>
           {session && <p className="ash-note">{simRef.current.level.together}</p>}
           <p className="ash-note">
-            {snap ? `${formatRf(snap.rfBalance)} RF simulated.` : "Balance still loading."} A flashlight costs{" "}
-            {LAMP_PRICE} coins you have picked up. It does not enter the lantern rite.
+            {snap ? `${formatRf(snap.rfBalance)} RF simulated.` : "Balance still loading."}{" "}
+            {simRef.current.level.id === "moon"
+              ? `A lightsaber costs ${LAMP_PRICE} coins you have picked up. It cuts the aliens.`
+              : `A flashlight costs ${LAMP_PRICE} coins you have picked up. It does not enter the lantern rite.`}
           </p>
           {shopError && (
             <p className="ash-error" role="alert">
@@ -1354,7 +1375,17 @@ export function Playfield({
               Resume
             </button>
             <button type="button" className="ash-btn-ghost" onClick={() => toggleLamp()}>
-              {lampOwned ? (lampOn ? "Flashlight on" : "Flashlight off") : `Buy a flashlight · ${LAMP_PRICE} picked up`}
+              {simRef.current.level.id === "moon"
+                ? lampOwned
+                  ? lampOn
+                    ? "Saber on"
+                    : "Saber off"
+                  : `Buy a saber · ${LAMP_PRICE} picked up`
+                : lampOwned
+                  ? lampOn
+                    ? "Flashlight on"
+                    : "Flashlight off"
+                  : `Buy a flashlight · ${LAMP_PRICE} picked up`}
             </button>
             <button type="button" className="ash-btn-ghost" onClick={() => go("rite")}>
               Lantern rite
