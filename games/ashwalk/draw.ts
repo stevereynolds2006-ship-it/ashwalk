@@ -612,6 +612,27 @@ function drawOutfit(
     });
   }
 
+  if (layer === "back" && cloth === "camo") {
+    const size = 2.2;
+    const along = vx * facing;
+    const run = Math.max(-1, Math.min(1, along / 180));
+    const rise = Math.max(-1, Math.min(1, -vy / 520));
+    const bands = ["#6b8f3a", "#c2a15a", "#3d3428", "#2f4a22", "#8a6a3a", "#1c1c18", "#4e6b32", "#d2c08a"];
+    for (let y = 0; y < 16; y++) {
+      const belly = 1 - Math.abs(y - 6) / 9;
+      const span = 10 + Math.round(36 * Math.max(0, belly));
+      const drop = y > 9 ? (y - 9) * 3 : 0;
+      for (let back = 0; back < span + drop; back++) {
+        const ripple = Math.sin(t * 8 + back * 0.3 + y * 0.4) * (1.5 + Math.abs(run) * 2);
+        const trail = back * Math.max(0, run) * 0.85;
+        const flip = back * Math.max(0, -run) * 0.7;
+        const band = (back + y * 3) % bands.length;
+        ctx.fillStyle = bands[band]!;
+        ctx.fillRect(-4 - back * size - trail + flip, -52 + y * size + ripple + rise * back * 0.3, size, size);
+      }
+    }
+  }
+
   if (layer === "back" && cloth === "coat") {
     ctx.beginPath();
     ctx.moveTo(-14, -40);
@@ -972,6 +993,52 @@ function drawCoin(ctx: CanvasRenderingContext2D, x: number, y: number, t: number
   ctx.restore();
 }
 
+function drawScorpion(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  dir: number,
+  t: number,
+  reduced: boolean,
+) {
+  const step = reduced ? 0 : Math.sin(t * 14) * 2;
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale((dir < 0 ? -1 : 1) * 1.7, 1.7);
+  ctx.fillStyle = "#141416";
+  ctx.strokeStyle = "#eceae4";
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.ellipse(0, 2, 7, 4, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(1, -1);
+  ctx.quadraticCurveTo(-6, -12 + step, 1, -16);
+  ctx.quadraticCurveTo(8, -12, 5, -2);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(1, -16);
+  ctx.lineTo(5, -19);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(-6, 1);
+  ctx.quadraticCurveTo(-12, -4, -14, 2);
+  ctx.moveTo(6, 1);
+  ctx.quadraticCurveTo(12, -4, 14, 2);
+  ctx.stroke();
+  for (let i = 0; i < 3; i++) {
+    const lift = reduced ? 0 : Math.sin(t * 16 + i) * 1.5;
+    ctx.beginPath();
+    ctx.moveTo(-2, 3);
+    ctx.lineTo(-8, 6 + lift + i);
+    ctx.moveTo(2, 3);
+    ctx.lineTo(8, 6 - lift + i);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
 function drawSpider(
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -981,7 +1048,12 @@ function drawSpider(
   warn: boolean,
   t: number,
   reduced: boolean,
+  kind: "spider" | "scorpion" = "spider",
 ) {
+  if (kind === "scorpion") {
+    drawScorpion(ctx, x, y, dir, t, reduced);
+    return;
+  }
   if (ceil != null) {
     ctx.strokeStyle = "rgba(243,240,232,0.72)";
     ctx.lineWidth = 1;
@@ -1428,7 +1500,7 @@ function drawJungle(ctx: CanvasRenderingContext2D, t: number, reduced: boolean) 
 }
 
 function drawCave(ctx: CanvasRenderingContext2D, camera: Camera, t: number, reduced: boolean, lit: boolean) {
-  const world = 5200;
+  const world = 6600;
   const roof = (x: number) => 20 + x * 0.28;
   ctx.fillStyle = lit ? "#4a4c50" : "#050506";
   ctx.beginPath();
@@ -1511,6 +1583,17 @@ function drawCave(ctx: CanvasRenderingContext2D, camera: Camera, t: number, redu
   ctx.translate(camera.x * 0.4, camera.y * 0.1);
   drawCaveBats(ctx, t, reduced, roof);
   ctx.restore();
+
+  const shades = [
+    { x: -80, w: 1800, c: lit ? "rgba(186,188,192,0.2)" : "rgba(28,28,32,0.2)" },
+    { x: 1720, w: 1700, c: lit ? "rgba(86,130,64,0.32)" : "rgba(16,36,14,0.38)" },
+    { x: 3420, w: 1700, c: lit ? "rgba(150,96,52,0.3)" : "rgba(42,22,12,0.4)" },
+    { x: 5120, w: 1600, c: lit ? "rgba(72,92,168,0.32)" : "rgba(8,12,36,0.48)" },
+  ];
+  for (const shade of shades) {
+    ctx.fillStyle = shade.c;
+    ctx.fillRect(shade.x, -240, shade.w, 2800);
+  }
 
   if (!reduced) {
     ctx.lineWidth = 1;
@@ -1872,7 +1955,7 @@ export function renderFrame(
   }
 
   for (const pose of spiderPoses(sim, reduced)) {
-    drawSpider(ctx, pose.x, pose.y, pose.dir, pose.ceil, pose.warn, sim.t, reduced);
+    drawSpider(ctx, pose.x, pose.y, pose.dir, pose.ceil, pose.warn, sim.t, reduced, pose.kind);
   }
 
   for (const moth of sim.level.moths) {
@@ -2748,7 +2831,7 @@ export function frameCamera(
   reduced: boolean,
   huntPull = 0,
 ): Camera {
-  const worldH = sim.level.id === "tunnel" ? 2400 : 1680;
+  const worldH = sim.level.id === "tunnel" ? 2800 : 1680;
   let x: number;
   let y: number;
   if (!started) {

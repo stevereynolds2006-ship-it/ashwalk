@@ -103,6 +103,7 @@ export type Spider = {
   reach: number;
   period: number;
   phase: number;
+  kind?: "spider" | "scorpion";
 };
 
 export type Level = {

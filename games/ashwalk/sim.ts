@@ -951,6 +951,7 @@ export function birdSpots(sim: Sim, reduced: boolean) {
 export type SpiderPose = {
   id: string;
   mode: Spider["mode"];
+  kind: "spider" | "scorpion";
   x: number;
   y: number;
   dir: 1 | -1;
@@ -973,6 +974,7 @@ function poseSpider(spec: Spider, t: number, reduced: boolean): SpiderPose {
     return {
       id: spec.id,
       mode: "crawl",
+      kind: spec.kind ?? "spider",
       x: going ? spec.x0 + dist : spec.x1 - (dist - span),
       y: spec.y,
       dir: going ? 1 : -1,
@@ -1000,6 +1002,7 @@ function poseSpider(spec: Spider, t: number, reduced: boolean): SpiderPose {
   return {
     id: spec.id,
     mode: "hang",
+    kind: spec.kind ?? "spider",
     x: (spec.x0 + spec.x1) / 2 + sway,
     y: spec.y + drop,
     dir: sway >= 0 ? 1 : -1,
