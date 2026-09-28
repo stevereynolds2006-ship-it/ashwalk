@@ -145,7 +145,7 @@ export const SHORE: Level = {
   id: "shore",
   title: "The shore",
   kicker: "Something hung in the fog.",
-  rule: "The shore is nearly black. A lantern costs 1 coin and lasts 10 seconds. A friend hangs on the cord. Turn the crank and lower them down. They stay and cheer. The door stays shut until they are down.",
+  rule: "The shore is nearly black. A lantern costs 1 coin and lasts 10 seconds. A friend is in a hanging cage. Turn the crank and lower the cage. They stay and cheer. The door stays shut until they are down.",
   together: "The rope, the coins, and the bells are shared. Either of you can pull.",
   clearKicker: "The white",
   clearTitle: "It kept your outline",
@@ -236,7 +236,7 @@ export const SHORE: Level = {
     { id: "midlong", x: 5820, surface: 468 },
     { id: "hall", x: 6680, surface: 480 },
   ],
-  rope: { id: "rope", x: 1692, y: 358, w: 64, h: 110 },
+  rope: { id: "rope", x: 1708, y: 348, w: 80, h: 120 },
   shrines: [
     { id: "shrine-cliff", x: 2688, y: 250, w: 86, h: 130 },
     { id: "shrine-end", x: 7650, y: 350, w: 90, h: 140 },
