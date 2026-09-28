@@ -316,7 +316,8 @@ function drawCagedFriend(
   const dropTop = hangTop + (landTop - hangTop) * sim.rope;
   const sway = free || reduced ? 0 : Math.sin(sim.t * 1.3) * 6;
   const top = dropTop;
-  const cheer = free && !reduced ? Math.abs(Math.sin(sim.t * 7)) * 10 : 0;
+  const cheer = free && sim.feast < 0.7 && !reduced ? Math.abs(Math.sin(sim.t * 7)) * 10 : 0;
+  const eaten = sim.feast > 1.15;
   const x = cageX + 22 + sway;
   const y = top + cageH - PH - cheer;
   const hookX = cageX + cageW / 2 + sway;
@@ -327,7 +328,9 @@ function drawCagedFriend(
   ctx.lineTo(hookX, 110);
   ctx.lineTo(hookX, top);
   ctx.stroke();
-  drawFriend(ctx, sprites, { x, y, facing: 1, walking: false, anim: 0, hurt: 0 }, sim.t, reduced, false, null);
+  if (!eaten) {
+    drawFriend(ctx, sprites, { x, y, facing: 1, walking: false, anim: 0, hurt: 0 }, sim.t, reduced, false, null);
+  }
   ctx.save();
   ctx.translate(sway, 0);
   ctx.fillStyle = "#070708";
@@ -335,7 +338,7 @@ function drawCagedFriend(
   ctx.fillRect(cageX, top + cageH - 7, cageW, 7);
   for (let i = 0; i < 5; i++) ctx.fillRect(cageX + 6 + i * 18, top, 4, cageH);
   ctx.restore();
-  if (free) {
+  if (free && sim.feast < 0.7) {
     ctx.strokeStyle = "#f4f1ea";
     ctx.lineWidth = 2;
     ctx.beginPath();
@@ -344,6 +347,17 @@ function drawCagedFriend(
     ctx.moveTo(x + 16, y + 14);
     ctx.lineTo(x + 28, y);
     ctx.stroke();
+  }
+  if (free && sim.feast > 0.25 && sim.feast < 2.6) {
+    const rise = Math.min(1, (sim.feast - 0.25) / 0.7);
+    const sink = sim.feast > 1.35 ? Math.min(1, (sim.feast - 1.35) / 0.85) : 0;
+    const spiderY = 520 - rise * 210 + sink * 240;
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(cageX - 30, 0, cageW + 80, 372);
+    ctx.clip();
+    drawSpider(ctx, cageX + cageW / 2, spiderY, -1, null, sim.feast < 1.4, sim.t, reduced);
+    ctx.restore();
   }
 
   const axleX = 1752;

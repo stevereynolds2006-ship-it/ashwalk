@@ -131,6 +131,8 @@ export type Sim = {
   palX: number;
   palY: number;
   palFace: 1 | -1;
+  /** Seconds after the shore cage lands. A spider comes up. */
+  feast: number;
 };
 
 export function createSim(level: Level = SHORE): Sim {
@@ -206,6 +208,7 @@ export function createSim(level: Level = SHORE): Sim {
     palX: 1670,
     palY: 468 - PH,
     palFace: 1,
+    feast: 0,
   };
 }
 
@@ -756,6 +759,7 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
         sim.rope = Math.min(1, sim.rope + dt / 1.7);
         if (before < 1 && sim.rope === 1) events.rope = true;
       }
+      if (level.id === "shore" && sim.rope >= 1) sim.feast += dt;
     } else if (input.interactPressed && sim.nearRope && !sim.pulling) {
       sim.pulling = true;
       events.pull = true;
