@@ -728,6 +728,47 @@ function drawOutfit(
   ctx.restore();
 }
 
+function drawBoulder(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) {
+  const spec = sim.level.boulder;
+  if (!spec) return;
+  const r = 54;
+  const fall = sim.caged ? sim.cage : 0;
+  const y = spec.surface - r + fall;
+  ctx.save();
+  ctx.translate(sim.stalkX, y);
+  ctx.rotate(reduced ? 0 : sim.stalkX / r);
+  ctx.fillStyle = "#101012";
+  ctx.beginPath();
+  ctx.arc(0, 0, r, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = "#4a4a4c";
+  ctx.lineWidth = 4;
+  ctx.stroke();
+  ctx.strokeStyle = "#2c2c2e";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(-28, -8);
+  ctx.lineTo(-4, 6);
+  ctx.lineTo(-16, 24);
+  ctx.moveTo(10, -20);
+  ctx.lineTo(22, 2);
+  ctx.lineTo(8, 18);
+  ctx.stroke();
+  ctx.fillStyle = "rgba(236,236,232,0.18)";
+  ctx.beginPath();
+  ctx.arc(-16, -18, 10, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+  if (sim.wake >= 1 && !sim.caged && !reduced) {
+    ctx.globalAlpha = 0.25;
+    ctx.fillStyle = "#c8c8c4";
+    ctx.beginPath();
+    ctx.ellipse(sim.stalkX - r, spec.surface - 6, 18, 5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+}
+
 function drawTwin(
   ctx: CanvasRenderingContext2D,
   sprites: GenerationSprites | null,
@@ -1724,6 +1765,7 @@ export function renderFrame(
 
   if (sim.level.stalker) drawHunt(ctx, sim, reduced);
   if (sim.level.hunter) drawTwin(ctx, sprites, sim, reduced);
+  if (sim.level.boulder) drawBoulder(ctx, sim, reduced);
 
   const goal = sim.level.goal;
   const doorX = goal.x + goal.w / 2 - 9;

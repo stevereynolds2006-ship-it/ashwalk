@@ -617,6 +617,12 @@ export function Playfield({
       if (sim.level.id === "mirror") {
         nextKicker =
           sim.wake >= 1 ? "Run. The door is behind you." : sim.wake > 0 ? "He is waking." : "Walk to him. Then you run.";
+      } else if (sim.level.boulder) {
+        nextKicker = sim.caged
+          ? "It fell. The door is ahead."
+          : sim.wake >= 1
+            ? "The boulder is behind you. Do not stop."
+            : "Run. The rock is waiting.";
       } else if (sim.level.beacons.length > 0) {
         nextKicker = `${sim.beacons.size} of ${sim.level.beacons.length} bells`;
       } else if (sim.level.wind?.mode === "tide" && phaseNow === "play") {
@@ -675,9 +681,11 @@ export function Playfield({
       const cssH = canvas.clientHeight;
       const sized = viewSize(cssW, cssH);
       const caught = Boolean(sim.level.stalker && sim.caged && sim.cage >= 1);
+      const boulderHot = Boolean(sim.level.boulder && sim.wake > 0 && !sim.caged);
       if ((sim.level.stalker || sim.level.hunter) && sim.wake > 0 && !caught) huntZoomRef.current = 1;
+      else if (boulderHot) huntZoomRef.current = 1;
       else huntZoomRef.current = Math.max(0, huntZoomRef.current - dt * 0.35);
-      const pull = sim.level.hunter ? 0.5 : 0.75;
+      const pull = sim.level.hunter ? 0.5 : sim.level.boulder ? 0.28 : 0.75;
       const zoom = 1 + pull * huntZoomRef.current;
       const follow = phaseNow === "play" || phaseNow === "pause" || phaseNow === "lives" || phaseNow === "rite" || phaseNow === "clear";
       const camera = frameCamera(
@@ -1598,7 +1606,7 @@ function musicScene(phase: Phase, sim: Sim): MusicScene {
   if (phase === "rite") return "rite";
   if (phase === "clear") return "clear";
   if (phase === "title" || phase === "levels" || phase === "lobby" || phase === "clothes") return "title";
-  if (sim.level.id === "tunnel") return "latch";
+  if (sim.level.id === "tunnel") return "gale";
   if (sim.level.id === "mirror") return "mirror";
   if (sim.level.id === "moon") return "moon";
   if (sim.level.id === "antler") return "hunt";

@@ -188,7 +188,7 @@ export function createSim(level: Level = SHORE): Sim {
     remotes: [],
     linked: false,
     wake: 0,
-    stalkX: level.hunter?.x ?? level.stalker?.x ?? 0,
+    stalkX: level.boulder?.x ?? level.hunter?.x ?? level.stalker?.x ?? 0,
     stalkDir: 1,
     caged: false,
     cage: 0,
@@ -424,6 +424,18 @@ function respawn(sim: Sim) {
     sim.wake = 1;
     sim.stalkX = spot.x + PW / 2 + 420;
     sim.stalkDir = -1;
+  }
+  const rock = sim.level.boulder;
+  if (rock) {
+    sim.caged = false;
+    sim.cage = 0;
+    if (spot.x + PW / 2 >= rock.wakeX) {
+      sim.wake = 1;
+      sim.stalkX = spot.x - 300;
+    } else {
+      sim.wake = 0;
+      sim.stalkX = rock.x;
+    }
   }
   if (!sim.linked) {
     for (const id of Object.keys(sim.crumbles)) {
@@ -724,6 +736,7 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
 
   stepStalker(sim, dt, events);
   stepHunter(sim, dt, events);
+  stepBoulder(sim, dt, events);
 
   if (events.beacon === "lock") events.beacon = null;
   sim.doorLocked =
@@ -792,6 +805,31 @@ function stepStalker(sim: Sim, dt: number, events: StepEvents) {
     return;
   }
   if (onPlate) sim.nearTrap = true;
+}
+
+function stepBoulder(sim: Sim, dt: number, events: StepEvents) {
+  const spec = sim.level.boulder;
+  if (!spec || sim.won) return;
+  if (sim.caged) {
+    sim.cage = Math.min(480, sim.cage + 540 * dt);
+    return;
+  }
+  const prey = sim.x + PW / 2;
+  if (sim.wake <= 0) {
+    sim.stalkX = spec.x;
+    if (prey >= spec.wakeX) sim.wake = 1;
+    return;
+  }
+  sim.stalkX += spec.speed * dt;
+  sim.stalkDir = 1;
+  if (sim.stalkX >= spec.pitX) {
+    sim.caged = true;
+    sim.cage = 0;
+    return;
+  }
+  const dx = prey - sim.stalkX;
+  const dy = sim.y + PH / 2 - (spec.surface - 54);
+  if (sim.invuln <= 0 && sim.dead <= 0 && dx * dx + dy * dy < 64 * 64) kill(sim, events);
 }
 
 function stepHunter(sim: Sim, dt: number, events: StepEvents) {

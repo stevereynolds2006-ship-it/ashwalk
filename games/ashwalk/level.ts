@@ -82,6 +82,15 @@ export type Hunter = {
   wakeX: number;
 };
 
+/** Rolls once you pass wakeX. Falls and stops after pitX. */
+export type Boulder = {
+  x: number;
+  surface: number;
+  wakeX: number;
+  pitX: number;
+  speed: number;
+};
+
 export type Spider = {
   id: string;
   mode: "hang" | "crawl";
@@ -126,6 +135,7 @@ export type Level = {
   light: { x: number; y: number };
   stalker?: Stalker;
   hunter?: Hunter;
+  boulder?: Boulder;
   /** Exit lock. The code is the marks on the gates. */
   combo?: { code: readonly number[]; x: number; span: number; y: number };
 };
