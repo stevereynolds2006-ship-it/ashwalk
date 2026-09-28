@@ -1646,8 +1646,9 @@ function musicScene(phase: Phase, sim: Sim): MusicScene {
 function promptFor(sim: Sim, phase: Phase) {
   if (phase !== "play" || sim.won || sim.dead > 0) return "";
   if (sim.nearBeacon) return "E · light the bell";
+  if (sim.plateAsleep && sim.level.id === "latch" && sim.rope < 1) return "Pull the pulley. Then the plate.";
   if (sim.plateAsleep) return "Light every bell. The plate is asleep.";
-  if (sim.nearRope) return "E · pull the rope";
+  if (sim.nearRope) return sim.level.id === "latch" ? "E · wind the pulley" : "E · pull the rope";
   if (sim.nearShrine) return "E · light a lantern";
   if (sim.nearLamp) return "E · buy light · 1 coin you picked up";
   if (sim.nearCombo != null) return comboSet(sim) ? "The lock is open" : "E · turn this wheel";

@@ -60,7 +60,7 @@ const LATCH: Level = {
     { id: "end", x: 3100, surface: 468 },
     { id: "finale", x: 4600, surface: 468 },
   ],
-  rope: null,
+  rope: { id: "pulley", x: 2140, y: 880, w: 90, h: 100 },
   shrines: [{ id: "shrine-end", x: 5100, y: 340, w: 86, h: 130 }],
   beacons: [
     { id: "bPit", x: 2060, y: 870, w: 70, h: 110 },
@@ -121,7 +121,7 @@ const LATCH: Level = {
       phase: 0.2,
     },
   ],
-  chapters: [{ x: 0, id: "latch", title: "The latch", kicker: "The lid falls. Light both bells to climb out." }],
+  chapters: [{ x: 0, id: "latch", title: "The latch", kicker: "The lid waits. Pull the pulley to raise it." }],
   light: { x: 1680, y: 140 },
 };
 
@@ -381,7 +381,6 @@ const GEAR: Level = {
     { id: "gb2", kind: "oneway", gear: { cx: 5720, cy: 960, r: 110, speed: -0.42, phase: 2, teeth: 10 }, x: 0, y: 0, w: 76, h: 12 },
     { id: "gb3", kind: "oneway", gear: { cx: 5720, cy: 960, r: 110, speed: -0.42, phase: 3.6, teeth: 10 }, x: 0, y: 0, w: 76, h: 12 },
     { id: "gb4", kind: "oneway", gear: { cx: 5720, cy: 960, r: 110, speed: -0.42, phase: 5.2, teeth: 10 }, x: 0, y: 0, w: 76, h: 12 },
-    { id: "mill", kind: "solid", terrain: true, x: 5280, y: 1240, w: 620, h: 220 },
     { id: "gc1", kind: "oneway", gear: { cx: 6100, cy: 1040, r: 200, speed: 0.42, phase: 0.2, teeth: 8 }, x: 0, y: 0, w: 78, h: 12 },
     { id: "gc2", kind: "oneway", gear: { cx: 6100, cy: 1040, r: 200, speed: 0.42, phase: 1.8, teeth: 8 }, x: 0, y: 0, w: 78, h: 12 },
     { id: "gc3", kind: "oneway", gear: { cx: 6100, cy: 1040, r: 200, speed: 0.42, phase: 3.3, teeth: 8 }, x: 0, y: 0, w: 78, h: 12 },
@@ -408,18 +407,18 @@ const GEAR: Level = {
     { id: "mid", x: 1460, surface: 470 },
     { id: "rest", x: 2600, surface: 470 },
     { id: "mid2", x: 3860, surface: 470 },
-    { id: "mill", x: 5520, surface: 1240 },
+    { id: "approach", x: 4900, surface: 470 },
     { id: "end", x: 7000, surface: 470 },
   ],
   rope: null,
   shrines: [{ id: "shrine-end", x: 7200, y: 340, w: 80, h: 130 }],
   beacons: [
     { id: "b1", x: 1560, y: 360, w: 80, h: 110 },
-    { id: "b2", x: 5480, y: 1130, w: 80, h: 110 },
+    { id: "b2", x: 4920, y: 360, w: 80, h: 110 },
   ],
   plates: [{ id: "pExit", gate: "gExit", x: 6700, y: 386, w: 110, h: 84, latch: 4.2, whenLit: true }],
   goal: { id: "goal", x: 7280, y: 300, w: 90, h: 170 },
-  pit: null,
+  pit: { x0: 5300, x1: 6600, y: 1320 },
   wind: null,
   birds: [],
   spiders: [

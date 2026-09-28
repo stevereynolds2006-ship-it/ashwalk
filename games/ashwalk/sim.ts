@@ -465,7 +465,10 @@ function stepPlates(sim: Sim, dt: number) {
         }
       }
     }
-    if (plate.whenLit && !lit) {
+    if (plate.id === "pOut" && sim.rope < 1) {
+      if (bodyOn(sim.x, sim.y, plate)) sim.plateAsleep = true;
+      held = false;
+    } else if (plate.whenLit && !lit) {
       if (bodyOn(sim.x, sim.y, plate)) sim.plateAsleep = true;
       held = false;
     } else if (held && bodyOn(sim.x, sim.y, plate)) {
@@ -529,16 +532,19 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
     }
     const standing = (!sim.linked || sim.groundId === id) && sim.groundId === id;
     if (id === "lid") {
-      const under = sim.x + PW > 2048 && sim.x < 2418 && sim.y > 210;
-      if (under) state.timer = 1;
-      if (state.timer > 0) state.fall = Math.min(268, state.fall + 460 * dt);
+      const inHole = sim.x + PW > 2048 && sim.x < 2418 && sim.y > 700;
+      if (sim.rope >= 1) {
+        state.fall = Math.max(0, state.fall - 180 * dt);
+        continue;
+      }
+      if (inHole) state.timer = 1;
+      if (state.timer > 0) state.fall = Math.min(268, state.fall + 420 * dt);
       const lidY = 180 + state.fall;
       const caught =
-        state.fall > 30 &&
-        state.fall < 260 &&
-        sim.x + PW > 2070 &&
-        sim.x < 2390 &&
-        sim.y < lidY + 16 &&
+        state.fall > 16 &&
+        sim.x + PW > 2060 &&
+        sim.x < 2400 &&
+        sim.y < lidY + 48 &&
         sim.y + PH > lidY;
       if (caught) kill(sim, events);
       continue;
@@ -760,6 +766,7 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
 
   if (events.beacon === "lock") events.beacon = null;
   sim.doorLocked =
+    (level.id === "shore" && sim.rope < 1) ||
     (level.beacons.length > 0 && sim.beacons.size < level.beacons.length) ||
     (!!level.stalker && !sim.caged) ||
     (!!level.hunter && sim.wake < 1) ||

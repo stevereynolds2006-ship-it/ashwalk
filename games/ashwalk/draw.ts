@@ -285,6 +285,81 @@ function drawTerrain(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) 
     ctx.fillStyle = "#070708";
     ctx.fillRect(-80, sim.y + PH, sim.level.worldW + 160, 2200);
   }
+  const lid = bodies.find((rect) => rect.id === "lid");
+  if (lid) {
+    ctx.fillStyle = "#070708";
+    for (let x = lid.x + 6; x < lid.x + lid.w - 10; x += 16) {
+      ctx.beginPath();
+      ctx.moveTo(x, lid.y + lid.h);
+      ctx.lineTo(x + 8, lid.y + lid.h + 28);
+      ctx.lineTo(x + 16, lid.y + lid.h);
+      ctx.fill();
+    }
+  }
+}
+
+function drawCagedFriend(
+  ctx: CanvasRenderingContext2D,
+  sprites: GenerationSprites | null,
+  sim: Sim,
+  reduced: boolean,
+) {
+  const x = 1652;
+  const floor = 468;
+  const lift = sim.rope * 130;
+  drawFriend(
+    ctx,
+    sprites,
+    { x: x + 18, y: floor - PH, facing: 1, walking: false, anim: 0, hurt: 0 },
+    sim.t,
+    reduced,
+    false,
+    null,
+  );
+  ctx.save();
+  ctx.translate(0, -lift);
+  ctx.strokeStyle = "#c8c6c0";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(x + 40, floor - 92);
+  ctx.lineTo(x + 40, floor - 210);
+  ctx.stroke();
+  ctx.fillStyle = "#070708";
+  ctx.fillRect(x, floor - 96, 80, 8);
+  ctx.fillRect(x, floor - 8, 80, 8);
+  for (let i = 0; i < 4; i++) ctx.fillRect(x + 8 + i * 20, floor - 96, 4, 96);
+  ctx.restore();
+  ctx.strokeStyle = "#e8e6e1";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(1718, 390, 8, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(1718, 390);
+  ctx.lineTo(x + 40, floor - 210 + (sim.rope > 0 ? 0 : 0));
+  ctx.lineTo(x + 40, floor - 96 - lift);
+  ctx.stroke();
+}
+
+function drawPulley(ctx: CanvasRenderingContext2D, sim: Sim) {
+  const rope = sim.level.rope;
+  if (!rope) return;
+  const fall = sim.crumbles.lid?.fall ?? 0;
+  const lidY = 180 + fall;
+  const wx = rope.x + rope.w / 2;
+  const wy = rope.y + 16;
+  ctx.save();
+  ctx.strokeStyle = "#f4f1ea";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(wx, wy, 12, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(wx, wy - 12);
+  ctx.lineTo(2233, lidY);
+  ctx.lineTo(wx, wy + 12);
+  ctx.stroke();
+  ctx.restore();
 }
 
 function drawDrainTrash(ctx: CanvasRenderingContext2D, t: number, reduced: boolean) {
@@ -1991,6 +2066,8 @@ export function renderFrame(
   }
 
   drawTerrain(ctx, sim, reduced);
+  if (sim.level.id === "shore") drawCagedFriend(ctx, sprites, sim, reduced);
+  if (sim.level.id === "latch") drawPulley(ctx, sim);
   if (sim.level.id === "roof") drawDrainTrash(ctx, sim.t, reduced);
   if (sim.level.combo) drawLatchLock(ctx, sim);
 
@@ -2865,13 +2942,14 @@ function drawBranch(ctx: CanvasRenderingContext2D) {
   ctx.stroke();
 }
 
-function drawThorns(ctx: CanvasRenderingContext2D, pit: { x0: number; x1: number }) {
+function drawThorns(ctx: CanvasRenderingContext2D, pit: { x0: number; x1: number; y?: number }) {
+  const base = pit.y ?? 640;
   ctx.fillStyle = "#070708";
   for (let x = pit.x0 + 20; x < pit.x1 - 20; x += 18) {
     ctx.beginPath();
-    ctx.moveTo(x, 640);
-    ctx.lineTo(x + 9, 590);
-    ctx.lineTo(x + 18, 640);
+    ctx.moveTo(x, base);
+    ctx.lineTo(x + 9, base - 50);
+    ctx.lineTo(x + 18, base);
     ctx.fill();
   }
 }
