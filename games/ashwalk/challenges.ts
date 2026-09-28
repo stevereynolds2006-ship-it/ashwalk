@@ -804,82 +804,75 @@ const MIRROR: Level = {
   light: { x: 2200, y: 180 },
 };
 
-/** A cave run. The boulder rolls until the shaft takes it. */
+/** A cave that drops. The coin follows you down. */
 const TUNNEL: Level = {
   id: "tunnel",
   title: "The tunnel",
   kicker: "Something is loose.",
-  rule: "Nearly black. Run. A boulder wakes behind you. Jump the gaps and do not stop. It falls at the shaft.",
-  together: "The boulder wakes for whoever runs ahead. Then everyone stays in front of it.",
-  clearKicker: "The shaft",
-  clearTitle: "The rock fell",
-  worldW: 6600,
-  killY: 820,
-  poster: 640,
+  rule: "Nearly black. Go down. A large coin wakes behind you and follows you down. Do not stop. It falls at the bottom.",
+  together: "The coin follows whoever is lowest. Stay ahead of it.",
+  clearKicker: "The bottom",
+  clearTitle: "The coin fell",
+  worldW: 5000,
+  killY: 1760,
+  poster: 280,
   introCrow: false,
   platforms: [
-    { id: "mouth", kind: "solid", terrain: true, x: 0, y: 480, w: 980, h: 440 },
-    { id: "a1", kind: "crumble", x: 1100, y: 480, w: 100, h: 12 },
-    { id: "a2", kind: "crumble", x: 1300, y: 450, w: 96, h: 12 },
-    { id: "a3", kind: "oneway", x: 1500, y: 480, w: 100, h: 12 },
-    { id: "isle", kind: "solid", terrain: true, x: 1720, y: 480, w: 300, h: 440 },
-    { id: "b1", kind: "crumble", x: 2140, y: 460, w: 96, h: 12 },
-    { id: "b2", kind: "crumble", x: 2340, y: 420, w: 90, h: 12 },
-    { id: "b3", kind: "crumble", x: 2540, y: 470, w: 96, h: 12 },
-    { id: "isle2", kind: "solid", terrain: true, x: 2760, y: 480, w: 340, h: 440 },
-    { id: "c1", kind: "crumble", x: 3220, y: 440, w: 100, h: 12 },
-    { id: "c2", kind: "crumble", x: 3440, y: 400, w: 92, h: 12 },
-    { id: "c3", kind: "crumble", x: 3640, y: 460, w: 100, h: 12 },
-    { id: "isle3", kind: "solid", terrain: true, x: 3860, y: 480, w: 360, h: 440 },
-    { id: "d1", kind: "sway", x: 4340, y: 450, w: 110, h: 12, amp: 14, freq: 0.8, phase: 0.3, dip: 8 },
-    { id: "d2", kind: "crumble", x: 4560, y: 480, w: 100, h: 12 },
-    { id: "isle4", kind: "solid", terrain: true, x: 4780, y: 480, w: 380, h: 440 },
-    { id: "s1", kind: "oneway", x: 5280, y: 450, w: 90, h: 12 },
-    { id: "s2", kind: "oneway", x: 5480, y: 420, w: 90, h: 12 },
-    { id: "far", kind: "solid", terrain: true, x: 5680, y: 480, w: 820, h: 440 },
+    { id: "mouth", kind: "solid", terrain: true, x: 0, y: 260, w: 720, h: 80 },
+    { id: "a1", kind: "crumble", x: 840, y: 340, w: 120, h: 12 },
+    { id: "a2", kind: "crumble", x: 1060, y: 430, w: 110, h: 12 },
+    { id: "a3", kind: "oneway", x: 1260, y: 520, w: 120, h: 12 },
+    { id: "isle", kind: "solid", terrain: true, x: 1480, y: 610, w: 260, h: 80 },
+    { id: "b1", kind: "crumble", x: 1840, y: 700, w: 120, h: 12 },
+    { id: "b2", kind: "crumble", x: 2060, y: 790, w: 110, h: 12 },
+    { id: "isle2", kind: "solid", terrain: true, x: 2280, y: 880, w: 260, h: 80 },
+    { id: "c1", kind: "crumble", x: 2640, y: 970, w: 120, h: 12 },
+    { id: "c2", kind: "crumble", x: 2860, y: 1060, w: 110, h: 12 },
+    { id: "isle3", kind: "solid", terrain: true, x: 3080, y: 1150, w: 280, h: 80 },
+    { id: "d1", kind: "crumble", x: 3460, y: 1240, w: 120, h: 12 },
+    { id: "d2", kind: "oneway", x: 3680, y: 1320, w: 110, h: 12 },
+    { id: "far", kind: "solid", terrain: true, x: 3900, y: 1400, w: 980, h: 80 },
   ],
   moths: [
-    { id: "m1", x: 1140, y: 420 },
-    { id: "m2", x: 1540, y: 420 },
-    { id: "m3", x: 2380, y: 360 },
-    { id: "m4", x: 3480, y: 340 },
-    { id: "m5", x: 4600, y: 410 },
-    { id: "m6", x: 5900, y: 400 },
+    { id: "m1", x: 900, y: 280 },
+    { id: "m2", x: 1300, y: 460 },
+    { id: "m3", x: 1900, y: 640 },
+    { id: "m4", x: 2700, y: 910 },
+    { id: "m5", x: 3520, y: 1180 },
+    { id: "m6", x: 4200, y: 1320 },
   ],
   checkpoints: [
-    { id: "mouth", x: 120, surface: 480 },
-    { id: "isle", x: 1820, surface: 480 },
-    { id: "isle2", x: 2860, surface: 480 },
-    { id: "isle3", x: 3960, surface: 480 },
-    { id: "isle4", x: 4880, surface: 480 },
-    { id: "far", x: 5840, surface: 480 },
+    { id: "mouth", x: 140, surface: 260 },
+    { id: "isle", x: 1560, surface: 610 },
+    { id: "isle2", x: 2360, surface: 880 },
+    { id: "isle3", x: 3160, surface: 1150 },
+    { id: "far", x: 4080, surface: 1400 },
   ],
   rope: null,
-  shrines: [{ id: "shrine-end", x: 6280, y: 350, w: 80, h: 130 }],
+  shrines: [{ id: "shrine-end", x: 4560, y: 1270, w: 80, h: 130 }],
   lamps: [
-    { id: "l0", x: 420, y: 390, w: 56, h: 92 },
-    { id: "l1", x: 1860, y: 390, w: 56, h: 92 },
-    { id: "l2", x: 2920, y: 390, w: 56, h: 92 },
-    { id: "l3", x: 4000, y: 390, w: 56, h: 92 },
-    { id: "l4", x: 5920, y: 390, w: 56, h: 92 },
+    { id: "l0", x: 280, y: 170, w: 56, h: 92 },
+    { id: "l1", x: 1560, y: 520, w: 56, h: 92 },
+    { id: "l2", x: 2360, y: 790, w: 56, h: 92 },
+    { id: "l3", x: 3160, y: 1060, w: 56, h: 92 },
+    { id: "l4", x: 4200, y: 1310, w: 56, h: 92 },
   ],
   beacons: [],
   plates: [],
-  goal: { id: "goal", x: 6320, y: 310, w: 90, h: 170 },
-  pit: { x0: 5240, x1: 5660, y: 540 },
+  goal: { id: "goal", x: 4600, y: 1230, w: 90, h: 170 },
+  pit: { x0: 760, x1: 3880, y: 1560 },
   wind: null,
   birds: [],
   spiders: [
-    { id: "gap", mode: "hang", x0: 2380, x1: 2380, y: 250, ceil: 140, speed: 0, reach: 120, period: 3.4, phase: 0.4 },
-    { id: "isle3", mode: "crawl", x0: 3920, x1: 4140, y: 458, ceil: 0, speed: 42, reach: 0, period: 1, phase: 0.2 },
+    { id: "drop", mode: "hang", x0: 2100, x1: 2100, y: 620, ceil: 480, speed: 0, reach: 110, period: 3.2, phase: 0.5 },
   ],
-  boulder: { x: 160, surface: 480, wakeX: 700, pitX: 5220, speed: 174 },
+  boulder: { x: 40, surface: 260, wakeX: 480, pitX: 3820, speed: 162 },
   chapters: [
-    { x: 0, id: "tunnel", title: "The tunnel", kicker: "Run. The rock is waiting." },
-    { x: 900, id: "rock", title: "The boulder", kicker: "Do not stop." },
-    { x: 5100, id: "shaft", title: "The shaft", kicker: "Jump. It will not." },
+    { x: 0, id: "tunnel", title: "The tunnel", kicker: "Go down. The coin is waiting." },
+    { x: 700, id: "rock", title: "The coin", kicker: "It follows you down." },
+    { x: 3600, id: "shaft", title: "The bottom", kicker: "Jump. It will not." },
   ],
-  light: { x: 2400, y: 160 },
+  light: { x: 900, y: 80 },
 };
 
 export const LEVELS: readonly Level[] = [SHORE, LATCH, GALE, CHOIR, GEAR, ROOF, ANTLER, MOON, MIRROR, TUNNEL];
@@ -894,6 +887,12 @@ export function previousFog(id: string): string | null {
 export const TRY_ALL = false;
 /** Lets the tunnel be played before December 1. */
 export const TRY_TUNNEL = true;
+/** Lets the choir be played before the road is open. */
+export const TRY_CHOIR = true;
+
+export function fogTry(id: string) {
+  return (id === "tunnel" && TRY_TUNNEL) || (id === "choir" && TRY_CHOIR);
+}
 
 export function fogReleased(id: string, now = new Date()) {
   if (TRY_ALL) return true;

@@ -4,7 +4,7 @@ import { RF } from "@rarefriends/friendsdk/game";
 import { createFriendReader, type GenerationSprites } from "@rarefriends/friendsdk/sprites";
 import { createFriendSoundKit, type FriendSoundKit } from "@rarefriends/friendsdk/sounds";
 import type { PeerInfo } from "@/lib/multiplayer";
-import { LEVELS, TRY_ALL, TRY_TUNNEL, fogHeld, fogReleased, fogUnlocked, getLevel, previousFog } from "./challenges";
+import { LEVELS, TRY_ALL, fogHeld, fogReleased, fogTry, fogUnlocked, getLevel, previousFog } from "./challenges";
 import { windAccel, chapterAt } from "./level";
 import { Online, type NetApi } from "./online";
 import type { Ghost } from "./net";
@@ -184,7 +184,7 @@ export function Playfield({
   clothRef.current = ledger.equipped;
 
   function fogOpen(id: string) {
-    if (TRY_ALL || (id === "tunnel" && TRY_TUNNEL)) return !fogHeld(id);
+    if (TRY_ALL || fogTry(id)) return !fogHeld(id);
     if (id === "shore") return true;
     if (fogHeld(id) || !fogReleased(id)) return false;
     if (!clearedRef.current.has("shore") || !roadRef.current) return false;
@@ -311,7 +311,7 @@ export function Playfield({
       );
       return;
     }
-    if (!TRY_ALL && id !== "shore" && !(id === "tunnel" && TRY_TUNNEL)) {
+    if (!TRY_ALL && id !== "shore" && !fogTry(id)) {
       if (!clearedRef.current.has("shore")) {
         setStakeMsg("Beat the shore first.");
         return;
@@ -623,7 +623,7 @@ export function Playfield({
         nextKicker = sim.caged
           ? "It fell. The door is ahead."
           : sim.wake >= 1
-            ? "The boulder is behind you. Do not stop."
+            ? "It is following you down. Do not stop."
             : "Run. The rock is waiting.";
       } else if (sim.level.beacons.length > 0) {
         nextKicker = `${sim.beacons.size} of ${sim.level.beacons.length} bells`;
@@ -1055,7 +1055,7 @@ export function Playfield({
                 : `You have ${formatRareCoins(spendable(rareBalance, account) ?? 0n)} Rare coins.`}
           </p>
           <p>The shore is free. Beat it, then 10 Rare coins opens the road. After that, beat a fog to open the next one.</p>
-          <p>Every month a new map opens, and a new cape is there to own. The moon and the white cape open October 1. The mirror opens November 1. The tunnel is open to try.</p>
+          <p>Every month a new map opens, and a new cape is there to own. The moon and the white cape open October 1. The mirror opens November 1. The choir and the tunnel are open to try.</p>
           {stakeMsg && (
             <p className="ash-error" role="alert">
               {stakeMsg}
@@ -1168,13 +1168,13 @@ export function Playfield({
           )}
           <p className="ash-note">
             {!account
-              ? "Connect a wallet to read your Rare coins. The shore and the tunnel are open."
+              ? "Connect a wallet to read your Rare coins. The shore, the choir, and the tunnel are open."
               : rareBalance == null
                 ? "Reading Rare coins…"
-                : `You have ${formatRareCoins(spendable(rareBalance, account) ?? 0n)} Rare coins. The shore and the tunnel are open.`}
+                : `You have ${formatRareCoins(spendable(rareBalance, account) ?? 0n)} Rare coins. The shore, the choir, and the tunnel are open.`}
           </p>
           <p className="ash-note">
-            The shore is free. After you beat it, 10 Rare coins opens the next fog. Then each fog opens when you beat the one before it. The moon opens October 1. The mirror opens November 1. The tunnel is open to try.
+            The shore is free. After you beat it, 10 Rare coins opens the next fog. Then each fog opens when you beat the one before it. The moon opens October 1. The mirror opens November 1. The choir and the tunnel are open to try.
           </p>
           <LevelList
             current={pickId}
@@ -1489,7 +1489,7 @@ function LevelList({
         const prev = previousFog(level.id);
         const paid = allOpen;
         const beaten = prev == null || cleared.includes(prev);
-        const open = TRY_ALL || level.id === "shore" || (level.id === "tunnel" && TRY_TUNNEL) || (!soon && paid && beaten);
+        const open = TRY_ALL || level.id === "shore" || fogTry(level.id) || (!soon && paid && beaten);
         const note = soon
           ? `Coming soon. Opens ${opens}.`
           : open

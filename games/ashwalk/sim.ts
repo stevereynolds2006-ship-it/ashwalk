@@ -117,6 +117,8 @@ export type Sim = {
   /** 0 buried, then rising to 1. Only the antler fog uses this. */
   wake: number;
   stalkX: number;
+  /** Boulder floor. It only moves down. */
+  stalkY: number;
   stalkDir: 1 | -1;
   caged: boolean;
   /** 0 open, 1 slammed. */
@@ -189,6 +191,7 @@ export function createSim(level: Level = SHORE): Sim {
     linked: false,
     wake: 0,
     stalkX: level.boulder?.x ?? level.hunter?.x ?? level.stalker?.x ?? 0,
+    stalkY: level.boulder?.surface ?? 0,
     stalkDir: 1,
     caged: false,
     cage: 0,
@@ -431,10 +434,12 @@ function respawn(sim: Sim) {
     sim.cage = 0;
     if (spot.x + PW / 2 >= rock.wakeX) {
       sim.wake = 1;
-      sim.stalkX = spot.x - 300;
+      sim.stalkX = spot.x - 280;
+      sim.stalkY = cp.surface - 220;
     } else {
       sim.wake = 0;
       sim.stalkX = rock.x;
+      sim.stalkY = rock.surface;
     }
   }
   if (!sim.linked) {
@@ -817,19 +822,22 @@ function stepBoulder(sim: Sim, dt: number, events: StepEvents) {
   const prey = sim.x + PW / 2;
   if (sim.wake <= 0) {
     sim.stalkX = spec.x;
+    sim.stalkY = spec.surface;
     if (prey >= spec.wakeX) sim.wake = 1;
     return;
   }
   sim.stalkX += spec.speed * dt;
   sim.stalkDir = 1;
+  const feet = sim.y + PH;
+  if (feet > sim.stalkY + 6) sim.stalkY = Math.min(feet, sim.stalkY + 340 * dt);
   if (sim.stalkX >= spec.pitX) {
     sim.caged = true;
     sim.cage = 0;
     return;
   }
   const dx = prey - sim.stalkX;
-  const dy = sim.y + PH / 2 - (spec.surface - 80);
-  if (sim.invuln <= 0 && sim.dead <= 0 && dx * dx + dy * dy < 92 * 92) kill(sim, events);
+  const dy = sim.y + PH / 2 - (sim.stalkY - 112);
+  if (sim.invuln <= 0 && sim.dead <= 0 && dx * dx + dy * dy < 120 * 120) kill(sim, events);
 }
 
 function stepHunter(sim: Sim, dt: number, events: StepEvents) {

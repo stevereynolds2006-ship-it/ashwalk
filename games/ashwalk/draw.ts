@@ -731,10 +731,10 @@ function drawOutfit(
 function drawBoulder(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) {
   const spec = sim.level.boulder;
   if (!spec) return;
-  const r = 80;
-  const scale = 5;
+  const r = 112;
+  const scale = 7;
   const fall = sim.caged ? sim.cage : 0;
-  const y = spec.surface - r + fall;
+  const y = sim.stalkY - r + fall;
   const rows = COIN.length;
   const cols = COIN[0]!.length;
   ctx.save();
@@ -759,7 +759,7 @@ function drawBoulder(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) 
     ctx.globalAlpha = 0.25;
     ctx.fillStyle = "#c8c8c4";
     ctx.beginPath();
-    ctx.ellipse(sim.stalkX - r, spec.surface - 6, 26, 6, 0, 0, Math.PI * 2);
+    ctx.ellipse(sim.stalkX - r, sim.stalkY - 6, 34, 7, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.globalAlpha = 1;
   }
@@ -1415,10 +1415,10 @@ function drawCave(ctx: CanvasRenderingContext2D, camera: Camera, t: number, redu
   ctx.restore();
 
   ctx.fillStyle = "#0c1014";
-  ctx.fillRect(-40, 512, world + 80, 1600);
+  ctx.fillRect(-40, 320, world + 80, 2000);
   if (!reduced) {
     for (let i = 0; i < 16; i++) {
-      const y = 524 + i * 18;
+      const y = 332 + i * 18;
       ctx.strokeStyle = `rgba(210,214,218,${Math.max(0.03, 0.14 - i * 0.007)})`;
       ctx.lineWidth = 1;
       ctx.beginPath();
@@ -2626,7 +2626,7 @@ export function frameCamera(
   reduced: boolean,
   huntPull = 0,
 ): Camera {
-  const worldH = 1680;
+  const worldH = sim.level.id === "tunnel" ? 2400 : 1680;
   let x: number;
   let y: number;
   if (!started) {
