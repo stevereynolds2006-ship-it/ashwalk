@@ -303,6 +303,7 @@ function drawCagedFriend(
   sprites: GenerationSprites | null,
   sim: Sim,
   reduced: boolean,
+  cloth: string | null,
 ) {
   const free = sim.rope >= 1;
   const floor = 468;
@@ -336,7 +337,15 @@ function drawCagedFriend(
     ctx.beginPath();
     ctx.rect(x - 24, y + melt * 46, 70, 80);
     ctx.clip();
-    drawFriend(ctx, sprites, { x, y, facing: 1, walking: false, anim: 0, hurt: 0 }, sim.t, reduced, false, null);
+    drawFriend(
+      ctx,
+      sprites,
+      { x, y, facing: sim.facing, walking: false, anim: 0, hurt: 0, vx: sim.vx, vy: 0 },
+      sim.t,
+      reduced,
+      false,
+      cloth,
+    );
     ctx.restore();
   }
   if (melt > 0.4) {
@@ -2313,17 +2322,17 @@ function drawMoonFog(ctx: CanvasRenderingContext2D, camera: Camera, t: number, r
   ctx.globalAlpha = 1;
   const sx = camera.w * 0.72;
   const sy = camera.h * 0.18;
-  const radius = 48 + light * 70;
-  const glow = radius * 2.4;
-  const star = ctx.createRadialGradient(sx, sy, radius * 0.4, sx, sy, glow);
-  star.addColorStop(0, `rgba(255,255,255,${0.45 + light * 0.55})`);
-  star.addColorStop(0.45, `rgba(255,255,255,${0.12 + light * 0.4})`);
+  const radius = 90 + light * 150;
+  const glow = radius * 3.4;
+  const star = ctx.createRadialGradient(sx, sy, radius * 0.2, sx, sy, glow);
+  star.addColorStop(0, `rgba(255,255,255,${0.7 + light * 0.3})`);
+  star.addColorStop(0.35, `rgba(255,255,255,${0.28 + light * 0.55})`);
   star.addColorStop(1, "rgba(255,255,255,0)");
   ctx.fillStyle = star;
   ctx.beginPath();
   ctx.arc(sx, sy, glow, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = `rgba(255,255,255,${0.35 + light * 0.65})`;
+  ctx.fillStyle = `rgba(255,255,255,${0.62 + light * 0.38})`;
   ctx.beginPath();
   ctx.arc(sx, sy, radius, 0, Math.PI * 2);
   ctx.fill();
@@ -2569,7 +2578,7 @@ export function renderFrame(
   }
 
   drawTerrain(ctx, sim, reduced);
-  if (sim.level.id === "shore") drawCagedFriend(ctx, sprites, sim, reduced);
+  if (sim.level.id === "shore") drawCagedFriend(ctx, sprites, sim, reduced, cloth);
   if (sim.level.id === "latch") drawPulley(ctx, sim);
   if (sim.level.id === "roof") drawDrainTrash(ctx, sim.t, reduced);
   if (sim.level.combo) drawLatchLock(ctx, sim);
@@ -2731,15 +2740,19 @@ export function renderFrame(
       cssW * 0.72,
     );
     vig.addColorStop(0, "rgba(0,0,0,0)");
-    vig.addColorStop(1, sim.level.id === "choir" ? "rgba(0,0,0,0.16)" : sim.level.id === "moon" ? `rgba(0,0,0,${0.62 * (1 - sim.altars.size / Math.max(1, sim.level.lamps?.length ?? 1))})` : "rgba(0,0,0,0.72)");
+    vig.addColorStop(1, sim.level.id === "choir" ? "rgba(0,0,0,0.16)" : sim.level.id === "moon" ? `rgba(0,0,0,${0.28 * (1 - sim.altars.size / Math.max(1, sim.level.lamps?.length ?? 1))})` : "rgba(0,0,0,0.72)");
     ctx.fillStyle = vig;
     ctx.fillRect(0, 0, cssW, cssH);
   }
 
   if (sim.level.id === "moon") {
     const open = sim.altars.size / Math.max(1, sim.level.lamps?.length ?? 1);
-    ctx.fillStyle = `rgba(0,0,0,${0.48 * (1 - open)})`;
+    ctx.fillStyle = `rgba(0,0,0,${0.22 * (1 - open)})`;
     ctx.fillRect(0, 0, cssW, cssH);
+    if (open > 0) {
+      ctx.fillStyle = `rgba(255,255,255,${open * 0.28})`;
+      ctx.fillRect(0, 0, cssW, cssH);
+    }
   }
 
   if (sim.level.id === "moon" && sim.cage > 0 && sim.suck <= 0) {
