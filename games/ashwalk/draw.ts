@@ -215,8 +215,8 @@ function drawTerrain(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) 
       ctx.lineTo(px, rect.y + jag);
     }
     ctx.lineTo(rect.x + rect.w + 10, rect.y + 16);
-    const deep = sim.level.id === "mirror" || sim.level.id === "antler";
-    const drop = deep ? 1400 : Math.min(rect.h, 420) + 40;
+    const deep = sim.level.id === "mirror" || sim.level.id === "antler" || sim.level.id === "tunnel";
+    const drop = sim.level.id === "tunnel" ? 1600 : deep ? 1400 : Math.min(rect.h, 420) + 40;
     ctx.lineTo(rect.x + rect.w + 30, rect.y + drop);
     ctx.lineTo(rect.x - 40, rect.y + drop);
     ctx.closePath();
@@ -1419,11 +1419,11 @@ function drawCave(ctx: CanvasRenderingContext2D, camera: Camera, t: number, redu
   ctx.restore();
 
   ctx.fillStyle = "#0c1014";
-  ctx.fillRect(-40, 512, world + 80, 280);
+  ctx.fillRect(-40, 512, world + 80, 1600);
   if (!reduced) {
-    for (let i = 0; i < 8; i++) {
-      const y = 524 + i * 16;
-      ctx.strokeStyle = `rgba(210,214,218,${0.08 + (i % 3) * 0.03})`;
+    for (let i = 0; i < 16; i++) {
+      const y = 524 + i * 18;
+      ctx.strokeStyle = `rgba(210,214,218,${Math.max(0.03, 0.14 - i * 0.007)})`;
       ctx.lineWidth = 1;
       ctx.beginPath();
       for (let x = -40; x <= world; x += 28) {
