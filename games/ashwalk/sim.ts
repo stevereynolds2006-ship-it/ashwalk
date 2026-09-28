@@ -759,7 +759,10 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
         sim.rope = Math.min(1, sim.rope + dt / 1.7);
         if (before < 1 && sim.rope === 1) events.rope = true;
       }
-      if (level.id === "shore" && sim.rope >= 1) sim.feast += dt;
+      if (level.id === "shore" && sim.rope >= 1) {
+        const nearCage = Math.abs(sim.x - 2460) < 200 && sim.y < 420;
+        if (sim.feast > 0 || nearCage) sim.feast += dt;
+      }
     } else if (input.interactPressed && sim.nearRope && !sim.pulling) {
       sim.pulling = true;
       events.pull = true;
