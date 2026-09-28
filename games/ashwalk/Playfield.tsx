@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
+import { isAddress } from "viem";
 import type { ChanceGameDefinition, GameClient, GameSnapshot } from "@rarefriends/friendsdk/game";
 import { RF } from "@rarefriends/friendsdk/game";
 import { createFriendReader, type GenerationSprites } from "@rarefriends/friendsdk/sprites";
 import { createFriendSoundKit, type FriendSoundKit } from "@rarefriends/friendsdk/sounds";
+import { createFriendPublicClient } from "@rarefriends/friendsdk/wallet";
 import type { PeerInfo } from "@/lib/multiplayer";
 import { LEVELS, TRY_ALL, fogHeld, fogPrice, fogReleased, fogTry, fogUnlocked, getLevel, previousFog } from "./challenges";
 import { windAccel, chapterAt } from "./level";
@@ -32,6 +34,52 @@ import "./ashwalk.css";
 type Phase = "title" | "levels" | "lobby" | "play" | "pause" | "lives" | "rite" | "clear" | "clothes";
 type Holds = { left: boolean; right: boolean; jump: boolean; down: boolean; use: boolean };
 type Session = { code: string; host: boolean };
+type WalletProvider = { request: (args: { method: string; params?: unknown[] }) => Promise<unknown> };
+
+const RARE_TOKEN = "0x0779369854d3EcdEA927206718FFD7730C67B71f";
+const RARE_ABI = [
+  {
+    type: "function",
+    name: "balanceOf",
+    stateMutability: "view",
+    inputs: [{ name: "account", type: "address" }],
+    outputs: [{ name: "balance", type: "uint256" }],
+  },
+] as const;
+
+function walletProvider(): WalletProvider | null {
+  const views: Window[] = [window];
+  try {
+    if (window.parent !== window) views.push(window.parent);
+  } catch {
+    /* the frame cannot see the parent */
+  }
+  for (const view of views) {
+    try {
+      const eth = (view as Window & { ethereum?: WalletProvider }).ethereum;
+      if (eth && typeof eth.request === "function") return eth;
+    } catch {
+      /* blocked */
+    }
+  }
+  return null;
+}
+
+function firstAddress(value: unknown) {
+  const list = Array.isArray(value) ? value : [];
+  const who = typeof list[0] === "string" ? list[0] : "";
+  return isAddress(who) ? who : null;
+}
+
+async function readRareBalance(account: string) {
+  const client = createFriendPublicClient();
+  return client.readContract({
+    address: RARE_TOKEN,
+    abi: RARE_ABI,
+    functionName: "balanceOf",
+    args: [account as `0x${string}`],
+  });
+}
 
 const LAMP_PRICE = 5;
 const LIGHT_PRICE = 1;
@@ -120,6 +168,8 @@ export function Playfield({
   const companyRef = useRef(0);
   const windRef = useRef("");
   const [walletCoins, setWalletCoins] = useState<bigint | null>(rareBalance ?? null);
+  const [linkedAccount, setLinkedAccount] = useState<string | null>(account && isAddress(account) ? account : null);
+  const [hudOpen, setHudOpen] = useState(false);
   const purseRef = useRef(0);
   const [purse, setPurse] = useState(0);
   const livesRef = useRef(LIVES);
@@ -182,8 +232,9 @@ export function Playfield({
     setPurse(0);
   }
 
-  accountRef.current = account ?? `friend-${friendId.toString()}`;
-  rareRef.current = rareBalance ?? walletCoins;
+  const payingAccount = account && isAddress(account) ? account : linkedAccount;
+  accountRef.current = payingAccount;
+  rareRef.current = payingAccount ? (rareBalance ?? walletCoins) : null;
   clothRef.current = ledger.equipped;
 
   function fogOpen(id: string) {
@@ -204,15 +255,46 @@ export function Playfield({
     clothRef.current = next.equipped;
   }
 
+  async function connectRareWallet() {
+    const eth = walletProvider();
+    if (!eth) {
+      setStakeMsg("Connect a wallet to buy a board with Rare coins.");
+      return false;
+    }
+    try {
+      const who = firstAddress(await eth.request({ method: "eth_requestAccounts" }));
+      if (!who) {
+        setStakeMsg("Connect a wallet to buy a board with Rare coins.");
+        return false;
+      }
+      const balance = await readRareBalance(who);
+      accountRef.current = who;
+      rareRef.current = balance;
+      setLinkedAccount(who);
+      setWalletCoins(balance);
+      refreshLedger(who);
+      setStakeMsg("");
+      return true;
+    } catch {
+      setStakeMsg("Connect a wallet to buy a board with Rare coins.");
+      return false;
+    }
+  }
+
+  async function ensureWallet() {
+    if (accountRef.current && isAddress(accountRef.current) && rareRef.current != null) return true;
+    return connectRareWallet();
+  }
+
   function payFog(id: string) {
     const who = accountRef.current;
     const balance = rareRef.current;
-    if (!who || balance == null) {
-      setStakeMsg(`Reading Rare coins. This fog costs ${fogPrice(id)} Rare coins.`);
+    const price = fogPrice(id);
+    if (!who || !isAddress(who) || balance == null) {
+      setStakeMsg(`Connect a wallet. ${getLevel(id).title} is ${price} Rare coins.`);
       return false;
     }
     if (openedRef.current.has(id)) return true;
-    const price = fogPrice(id);
     if (!buyFog(who, balance, id, price)) {
       setStakeMsg(`You need ${price} Rare coins to open this fog.`);
       return false;
@@ -224,16 +306,17 @@ export function Playfield({
     return true;
   }
 
-  function buyOutfit(id: string) {
+  async function buyOutfit(id: string) {
     const cloth = clothById(id);
     if (!clothReleased(id)) {
       const when = clothOpens(id);
       setStakeMsg(when ? `${cloth?.name ?? "That cape"} opens ${when}. Coming soon.` : "That cape is locked.");
       return;
     }
+    if (cloth && cloth.cost > 0 && !(await ensureWallet())) return;
     const who = accountRef.current;
     const balance = rareRef.current;
-    if (!who || balance == null) {
+    if (!who || !isAddress(who) || balance == null) {
       if (cloth && cloth.cost === 0) {
         if (!buyCloth("guest", 0n, id)) {
           setStakeMsg("That cape stayed shut.");
@@ -244,7 +327,7 @@ export function Playfield({
         onWardrobe?.();
         return;
       }
-      setStakeMsg("Reading Rare coins. The red cape is 15 Rare coins.");
+      setStakeMsg("Connect a wallet. The red cape is 15 Rare coins.");
       return;
     }
     if (!buyCloth(who, balance, id)) {
@@ -256,11 +339,12 @@ export function Playfield({
     onWardrobe?.();
   }
 
-  function buyLife() {
+  async function buyLife() {
+    if (!(await ensureWallet())) return;
     const who = accountRef.current;
     const balance = rareRef.current;
-    if (!who || balance == null) {
-      setStakeMsg("Reading Rare coins. A life is 10 Rare coins.");
+    if (!who || !isAddress(who) || balance == null) {
+      setStakeMsg("Connect a wallet. A life is 10 Rare coins.");
       return;
     }
     if (!spendWhole(who, balance, LIFE_PRICE)) {
@@ -283,8 +367,9 @@ export function Playfield({
     onWardrobe?.();
   }
 
-  function buyEveryFog() {
+  async function buyEveryFog() {
     if (allOpenRef.current) return;
+    if (!(await ensureWallet())) return;
     const who = accountRef.current;
     const balance = rareRef.current;
     if (!who || balance == null) {
@@ -314,7 +399,7 @@ export function Playfield({
     }
   };
 
-  function startLevel(id: string) {
+  async function startLevel(id: string) {
     if (fogHeld(id)) {
       setStakeMsg("The mirror stays shut.");
       return;
@@ -335,7 +420,10 @@ export function Playfield({
         setStakeMsg(`Beat ${getLevel(prev).title} before you can open this fog.`);
         return;
       }
-      if (!openedRef.current.has(id) && !payFog(id)) return;
+      if (!openedRef.current.has(id)) {
+        if (!(await ensureWallet())) return;
+        if (!payFog(id)) return;
+      }
     }
     const fee = 0;
     if (fee > 0) {
@@ -387,7 +475,7 @@ export function Playfield({
     } catch {
       /* private mode */
     }
-    refreshLedger(account ?? `friend-${friendId.toString()}`);
+    refreshLedger(account && isAddress(account) ? account : "guest");
   }, [account, friendId]);
 
   useEffect(() => {
@@ -457,12 +545,38 @@ export function Playfield({
     void client.read().then((value) => {
       if (cancel) return;
       setSnap(value);
-      setWalletCoins(value.rfBalance);
     });
     return () => {
       cancel = true;
     };
   }, [client]);
+
+  useEffect(() => {
+    if (account && isAddress(account)) {
+      setLinkedAccount(account);
+      if (rareBalance != null) setWalletCoins(rareBalance);
+      return;
+    }
+    let cancel = false;
+    const eth = walletProvider();
+    if (!eth) return;
+    void eth
+      .request({ method: "eth_accounts" })
+      .then(async (value) => {
+        const who = firstAddress(value);
+        if (!who || cancel) return;
+        const balance = await readRareBalance(who);
+        if (cancel) return;
+        setLinkedAccount(who);
+        setWalletCoins(balance);
+      })
+      .catch(() => {
+        /* the wallet is not connected yet */
+      });
+    return () => {
+      cancel = true;
+    };
+  }, [account, rareBalance]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -1020,75 +1134,88 @@ export function Playfield({
             {shopError && <p className="ash-sub">{shopError}</p>}
           </div>
           <div className="ash-hud-actions">
-            {session && (
-              <span className="ash-count">
-                {linked + 1} in the fog
-                <span className="sr-only"> including you</span>
-              </span>
-            )}
-            <span className="ash-count">{purse} in this stage</span>
-            <span className="ash-count">
-              {rareBalance == null && walletCoins == null
-                ? "Rare coins …"
-                : `${formatRareCoins(spendable(rareBalance ?? walletCoins, account ?? `friend-${friendId.toString()}`) ?? 0n)} Rare`}
-            </span>
-            <span className="ash-count">{ledger.burned} burned</span>
-            <span className="ash-count">
-              {lives} {lives === 1 ? "life" : "lives"}
-            </span>
             <button
               type="button"
               className="ash-icon"
-              aria-pressed={lampOwned ? lampOn : undefined}
-              onClick={() => toggleLamp()}
+              aria-expanded={hudOpen}
+              aria-controls="ash-hud-menu"
+              onClick={() => setHudOpen((open) => !open)}
             >
-              {simRef.current.level.id === "moon"
-                ? lampOwned
-                  ? lampOn
-                    ? "Saber on"
-                    : "Saber off"
-                  : `Buy saber · ${LAMP_PRICE} picked up`
-                : lampOwned
-                  ? lampOn
-                    ? "Light on"
-                    : "Light off"
-                  : `Buy light · ${LAMP_PRICE} picked up`}
+              {hudOpen ? "Close" : "Menu"}
             </button>
-            <button
-              type="button"
-              className="ash-icon"
-              aria-pressed={!muted}
-              onClick={() => {
-                const next = !muted;
-                setMuted(next);
-                soundRef.current?.setMuted(next);
-                musicRef.current?.setMuted(next);
-                if (!next) {
-                  void soundRef.current?.unlock();
-                  void musicRef.current?.unlock();
-                }
-              }}
-            >
-              {muted ? "Sound off" : "Sound on"}
-            </button>
-            <button
-              type="button"
-              className="ash-icon"
-              aria-pressed={reduced}
-              onClick={() => {
-                motionTouchedRef.current = true;
-                setReduced((value) => {
-                  reducedRef.current = !value;
-                  return !value;
-                });
-              }}
-            >
-              {reduced ? "Motion off" : "Motion on"}
-            </button>
-            {phase === "play" && (
-              <button type="button" className="ash-icon" onClick={() => go("pause")}>
-                Pause
-              </button>
+            {hudOpen && (
+              <div className="ash-drop" id="ash-hud-menu">
+                {session && (
+                  <span className="ash-count">
+                    {linked + 1} in the fog
+                    <span className="sr-only"> including you</span>
+                  </span>
+                )}
+                <span className="ash-count">{purse} in this stage</span>
+                <span className="ash-count">
+                  {payingAccount && (rareBalance ?? walletCoins) != null
+                    ? `${formatRareCoins(spendable(rareBalance ?? walletCoins, payingAccount) ?? 0n)} Rare`
+                    : "No wallet"}
+                </span>
+                <span className="ash-count">{ledger.burned} burned</span>
+                <span className="ash-count">
+                  {lives} {lives === 1 ? "life" : "lives"}
+                </span>
+                <button
+                  type="button"
+                  className="ash-icon"
+                  aria-pressed={lampOwned ? lampOn : undefined}
+                  onClick={() => toggleLamp()}
+                >
+                  {simRef.current.level.id === "moon"
+                    ? lampOwned
+                      ? lampOn
+                        ? "Saber on"
+                        : "Saber off"
+                      : `Buy saber · ${LAMP_PRICE} picked up`
+                    : lampOwned
+                      ? lampOn
+                        ? "Light on"
+                        : "Light off"
+                      : `Buy light · ${LAMP_PRICE} picked up`}
+                </button>
+                <button
+                  type="button"
+                  className="ash-icon"
+                  aria-pressed={!muted}
+                  onClick={() => {
+                    const next = !muted;
+                    setMuted(next);
+                    soundRef.current?.setMuted(next);
+                    musicRef.current?.setMuted(next);
+                    if (!next) {
+                      void soundRef.current?.unlock();
+                      void musicRef.current?.unlock();
+                    }
+                  }}
+                >
+                  {muted ? "Sound off" : "Sound on"}
+                </button>
+                <button
+                  type="button"
+                  className="ash-icon"
+                  aria-pressed={reduced}
+                  onClick={() => {
+                    motionTouchedRef.current = true;
+                    setReduced((value) => {
+                      reducedRef.current = !value;
+                      return !value;
+                    });
+                  }}
+                >
+                  {reduced ? "Motion off" : "Motion on"}
+                </button>
+                {phase === "play" && (
+                  <button type="button" className="ash-icon" onClick={() => go("pause")}>
+                    Pause
+                  </button>
+                )}
+              </div>
             )}
           </div>
         </div>
@@ -1100,13 +1227,9 @@ export function Playfield({
           <h1>Ashwalk</h1>
           <p>Your Friend is the small one. The fog is everything else.</p>
           <p>
-            {(() => {
-              const shown = rareBalance ?? walletCoins;
-              const who = account ?? `friend-${friendId.toString()}`;
-              return shown == null
-                ? "Reading Rare coins…"
-                : `You have ${formatRareCoins(spendable(shown, who) ?? 0n)} Rare coins. Those pay to continue and to buy a cape.`;
-            })()}
+            {payingAccount && (rareBalance ?? walletCoins) != null
+              ? `You have ${formatRareCoins(spendable(rareBalance ?? walletCoins, payingAccount) ?? 0n)} Rare coins. Those pay to continue and to buy a cape.`
+              : "Connect a wallet to buy boards with Rare coins."}
           </p>
           <p>The shore is free. You start it with 2 coins. Coins you pick up only turn things on inside the stage. Rare coins pay to open the next fog and to buy a cape. Beat a fog, then the next one is 10 Rare coins. Coming soon fogs cost 5 more each month. You cannot buy the next one until the one before it is beaten.</p>
           <p>Every month a new map opens, and a new cape is there to own. The red cape is 15 Rare coins. Each later cape costs 5 more.</p>
@@ -1164,13 +1287,9 @@ export function Playfield({
             </p>
           )}
           <p className="ash-note">
-            {(() => {
-              const shown = rareBalance ?? walletCoins;
-              const who = account ?? `friend-${friendId.toString()}`;
-              return shown == null
-                ? "Reading Rare coins…"
-                : `You have ${formatRareCoins(spendable(shown, who) ?? 0n)} Rare coins. Only the red cape is open.`;
-            })()}
+            {payingAccount && (rareBalance ?? walletCoins) != null
+              ? `You have ${formatRareCoins(spendable(rareBalance ?? walletCoins, payingAccount) ?? 0n)} Rare coins. Only the red cape is open.`
+              : "Connect a wallet to buy a cape with Rare coins."}
           </p>
           <p className="ash-note">The red cape is 15 Rare coins. The white cape opens October 1 at 20, the rainbow cape November 1 at 25, and the camo cape December 1 at 30.</p>
           <div className="ash-levels">
@@ -1224,13 +1343,9 @@ export function Playfield({
             </p>
           )}
           <p className="ash-note">
-            {(() => {
-              const shown = rareBalance ?? walletCoins;
-              const who = account ?? `friend-${friendId.toString()}`;
-              return shown == null
-                ? "Reading Rare coins…"
-                : `You have ${formatRareCoins(spendable(shown, who) ?? 0n)} Rare coins.`;
-            })()}
+            {payingAccount && (rareBalance ?? walletCoins) != null
+              ? `You have ${formatRareCoins(spendable(rareBalance ?? walletCoins, payingAccount) ?? 0n)} Rare coins.`
+              : "Connect a wallet to buy a board with Rare coins."}
           </p>
           <p className="ash-note">
             The shore is free. Beat a fog before you can buy the next one. Each open fog is 10 Rare coins. The moon opens October 1 at 15, the mirror November 1 at 20, and the tunnel December 1 at 25.

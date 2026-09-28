@@ -72,12 +72,23 @@
 }
 
 .ash-hud-actions {
+  position: relative;
   display: flex;
+  flex-direction: column;
+  align-items: flex-end;
   gap: 8px;
-  align-items: flex-start;
   pointer-events: auto;
-  flex-wrap: wrap;
-  justify-content: flex-end;
+}
+
+.ash-drop {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 10px;
+  border-radius: 16px;
+  background: rgba(7, 7, 8, 0.9);
+  border: 1px solid rgba(243, 240, 232, 0.28);
 }
 
 .ash-icon,
