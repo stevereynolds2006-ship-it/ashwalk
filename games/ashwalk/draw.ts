@@ -2723,7 +2723,7 @@ export function renderFrame(
     attract,
     cloth,
   );
-  if (lamp && sim.level.id === "moon" && sim.suck <= 0 && sim.cage <= 0 && !attract) drawSaber(ctx, sim);
+  if (sim.saber && sim.suck <= 0 && sim.cage <= 0 && !attract) drawSaber(ctx, sim);
   if (sim.suck > 0) {
     ctx.restore();
   }
