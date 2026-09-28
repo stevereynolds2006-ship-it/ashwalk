@@ -15,6 +15,7 @@ import {
   buyCloth,
   burnedHalf,
   clothById,
+  clothOpens,
   clothReleased,
   equipCloth,
   formatRareCoins,
@@ -220,7 +221,8 @@ export function Playfield({
   function buyOutfit(id: string) {
     const cloth = clothById(id);
     if (!clothReleased(id)) {
-      setStakeMsg("The camo cape opens December 1. Coming soon.");
+      const when = clothOpens(id);
+      setStakeMsg(when ? `${cloth?.name ?? "That cape"} opens ${when}. Coming soon.` : "That cape is locked.");
       return;
     }
     const who = accountRef.current;
@@ -1099,7 +1101,7 @@ export function Playfield({
                 : `You have ${formatRareCoins(spendable(rareBalance, account) ?? 0n)} Rare coins.`}
           </p>
           <p>The shore is free. Beat it, then 10 Rare coins opens the road. After that, beat a fog to open the next one.</p>
-          <p>Every month a new map opens, and a new cape is there to own. Every fog is open to try. The white, rainbow, and camo capes are free to try.</p>
+          <p>Every month a new map opens, and a new cape is there to own. Only the red cape is open to buy.</p>
           {stakeMsg && (
             <p className="ash-error" role="alert">
               {stakeMsg}
@@ -1155,16 +1157,17 @@ export function Playfield({
           )}
           <p className="ash-note">
             {!account
-              ? "No wallet needed to try the white cape or the rainbow cape."
+              ? "Connect a wallet. The red cape is 10 Rare coins. The others are locked."
               : rareBalance == null
                 ? "Reading Rare coins…"
                 : `You have ${formatRareCoins(spendable(rareBalance, account) ?? 0n)} Rare coins.`}
           </p>
-          <p className="ash-note">The white, rainbow, and camo capes are free to try. No wallet. The red cape is 10 Rare coins.</p>
+          <p className="ash-note">Only the red cape is open. 10 Rare coins. The white cape opens October 1, the rainbow cape November 1, and the camo cape December 1.</p>
           <div className="ash-levels">
             {outfitList().map((cloth) => {
               const locked = !clothReleased(cloth.id);
-              const soon = false;
+              const when = clothOpens(cloth.id);
+              const soon = locked && when != null;
               const owned = ledger.owned.includes(cloth.id);
               const wearing = ledger.equipped === cloth.id;
               return (
@@ -1179,7 +1182,7 @@ export function Playfield({
                   <span>{soon ? `${cloth.name} · coming soon` : locked ? `${cloth.name} · locked` : cloth.name}</span>
                   <small>
                     {soon
-                      ? "Coming soon. Opens December 1. 10 Rare coins."
+                      ? `Coming soon. Opens ${when}.`
                       : locked
                         ? "Locked."
                         : owned
@@ -1212,13 +1215,13 @@ export function Playfield({
           )}
           <p className="ash-note">
             {!account
-              ? "Connect a wallet to read your Rare coins. Every fog is open to try."
+              ? "Connect a wallet to read your Rare coins."
               : rareBalance == null
                 ? "Reading Rare coins…"
-                : `You have ${formatRareCoins(spendable(rareBalance, account) ?? 0n)} Rare coins. Every fog is open to try.`}
+                : `You have ${formatRareCoins(spendable(rareBalance, account) ?? 0n)} Rare coins.`}
           </p>
           <p className="ash-note">
-            The shore is free. After you beat it, 10 Rare coins opens the next fog. Then each fog opens when you beat the one before it. Every fog is open to try right now.
+            The shore is free. After you beat it, 10 Rare coins opens the next fog. Then each fog opens when you beat the one before it. The moon opens October 1, the mirror November 1, and the tunnel December 1.
           </p>
           <LevelList
             current={pickId}
