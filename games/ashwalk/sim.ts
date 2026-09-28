@@ -133,6 +133,8 @@ export type Sim = {
   palFace: 1 | -1;
   /** Seconds after you reach the landed cage. Acid falls. */
   feast: number;
+  /** 0 to 1 while the exit pulls you in. The clear waits until this finishes. */
+  suck: number;
 };
 
 export function createSim(level: Level = SHORE): Sim {
@@ -209,6 +211,7 @@ export function createSim(level: Level = SHORE): Sim {
     palY: 468 - PH,
     palFace: 1,
     feast: 0,
+    suck: 0,
   };
 }
 
@@ -460,6 +463,7 @@ function respawn(sim: Sim) {
   sim.cut = false;
   sim.drop = 0;
   sim.cage = 0;
+  sim.suck = 0;
   sim.lastRects = null;
   const stalk = sim.level.stalker;
   if (stalk && !sim.caged && sim.beacons.size >= sim.level.beacons.length && sim.level.beacons.length > 0) {
@@ -824,7 +828,7 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
   stepHunter(sim, dt, events);
   stepBoulder(sim, dt, events);
 
-  if (level.id === "choir" && comboSet(sim) && sim.beacons.size >= level.beacons.length && !sim.won) {
+  if (level.id === "choir" && comboSet(sim) && sim.beacons.size >= level.beacons.length && !sim.won && sim.suck <= 0) {
     const onCrown = sim.x > 2200 && sim.x < 2520 && sim.y < -220;
     if (onCrown || sim.cage > 0) {
       sim.cage = Math.min(1, sim.cage + dt * 0.28);
@@ -858,10 +862,18 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
     (!!level.hunter && sim.wake < 1) ||
     !comboSet(sim);
   sim.nearGoal = zoneHit(sim.x, sim.y, level.goal);
-  if (!sim.won && sim.nearGoal && !sim.doorLocked) {
-    sim.won = true;
+  if (!sim.won && !sim.doorLocked && (sim.nearGoal || sim.suck > 0)) {
+    sim.suck = Math.min(1, sim.suck + dt / 1.15);
     sim.vx = 0;
-    events.goal = true;
+    sim.vy = 0;
+    const gx = level.goal.x + level.goal.w / 2 - PW / 2;
+    const gy = level.goal.y + level.goal.h * 0.42 - PH / 2;
+    sim.x += (gx - sim.x) * Math.min(1, dt * 4);
+    sim.y += (gy - sim.y) * Math.min(1, dt * 4);
+    if (sim.suck >= 1) {
+      sim.won = true;
+      events.goal = true;
+    }
   }
 
   if (sim.x < 0) {

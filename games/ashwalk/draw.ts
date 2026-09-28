@@ -802,8 +802,10 @@ function drawChoirMarks(ctx: CanvasRenderingContext2D) {
 
 function drawChoirBalloon(ctx: CanvasRenderingContext2D, sim: Sim) {
   const flying = sim.cage > 0;
-  const x = flying ? sim.x + 18 : 2455;
-  const y = flying ? sim.y - 78 : -390;
+  const x = flying ? sim.x + PW / 2 : 2455;
+  const foot = flying ? sim.y + PH : -312;
+  const basketTop = foot - 26;
+  const y = basketTop - 36;
   ctx.save();
   ctx.fillStyle = "#f4f1ea";
   ctx.beginPath();
@@ -818,15 +820,19 @@ function drawChoirBalloon(ctx: CanvasRenderingContext2D, sim: Sim) {
   ctx.lineTo(x, y - 70);
   ctx.lineTo(x + 22, y - 20);
   ctx.fill();
-  ctx.strokeStyle = "#c8c6c0";
+  ctx.strokeStyle = "#3a3a3e";
   ctx.lineWidth = 1.5;
   ctx.beginPath();
-  ctx.moveTo(x - 18, y + 4);
-  ctx.lineTo(x - 16, y + 36);
-  ctx.moveTo(x + 18, y + 4);
-  ctx.lineTo(x + 16, y + 36);
+  ctx.moveTo(x - 16, y + 6);
+  ctx.lineTo(x - 18, basketTop);
+  ctx.moveTo(x + 16, y + 6);
+  ctx.lineTo(x + 18, basketTop);
   ctx.stroke();
-  ctx.strokeRect(x - 20, y + 36, 40, 18);
+  ctx.fillStyle = "#050506";
+  ctx.fillRect(x - 22, basketTop, 44, 28);
+  ctx.strokeStyle = "#0a0a0c";
+  ctx.lineWidth = 3;
+  ctx.strokeRect(x - 22, basketTop, 44, 28);
   ctx.restore();
 }
 
@@ -2395,7 +2401,7 @@ export function renderFrame(
   if (sim.level.boulder) drawBoulder(ctx, sim, reduced);
 
   const goal = sim.level.goal;
-  drawBlackHole(ctx, goal.x + goal.w / 2, goal.y + goal.h * 0.45, sim.t, sim.doorLocked);
+  drawBlackHole(ctx, goal.x + goal.w / 2, goal.y + goal.h * 0.45, sim.t * (1 + sim.suck * 7), sim.doorLocked && sim.suck <= 0);
 
   if (!attract) {
     for (const ghost of ghosts) {
@@ -2427,6 +2433,17 @@ export function renderFrame(
 
   if (lamp && !attract && gloom <= 0) drawLamp(ctx, sim);
 
+  if (sim.suck > 0) {
+    const cx = sim.x + PW / 2;
+    const cy = sim.y + PH / 2;
+    const scale = Math.max(0.05, 1 - sim.suck * 0.95);
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(sim.suck * 9);
+    ctx.scale(scale, scale);
+    ctx.translate(-cx, -cy);
+    ctx.globalAlpha = 1 - sim.suck * 0.9;
+  }
   drawFriend(
     ctx,
     sprites,
@@ -2445,7 +2462,10 @@ export function renderFrame(
     attract,
     cloth,
   );
-  if (sim.level.id === "choir") drawChoirBalloon(ctx, sim);
+  if (sim.suck > 0) {
+    ctx.restore();
+  }
+  if (sim.level.id === "choir" && sim.suck <= 0) drawChoirBalloon(ctx, sim);
   if (sim.level.id === "latch") drawExitSnare(ctx, sim);
 
   for (let i = motes.length - 1; i >= 0; i--) {
