@@ -135,18 +135,22 @@ export function readLedger(account: string | null): Ledger {
 }
 
 function writeLedger(account: string, ledger: Ledger) {
-  localStorage.setItem(
-    storageKey(account),
-    JSON.stringify({
-      spent: ledger.spent.toString(),
-      allFogs: ledger.allFogs,
-      road: ledger.road,
-      burned: ledger.burned,
-      owned: ledger.owned,
-      equipped: ledger.equipped,
-      opened: ledger.opened,
-    }),
-  );
+  try {
+    localStorage.setItem(
+      storageKey(account),
+      JSON.stringify({
+        spent: ledger.spent.toString(),
+        allFogs: ledger.allFogs,
+        road: ledger.road,
+        burned: ledger.burned,
+        owned: ledger.owned,
+        equipped: ledger.equipped,
+        opened: ledger.opened,
+      }),
+    );
+  } catch {
+    /* the sandboxed frame has no storage */
+  }
 }
 
 export function spendable(balance: bigint | null, account: string | null) {
