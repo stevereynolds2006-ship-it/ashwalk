@@ -67,7 +67,7 @@ const SKY: Record<string, [string, string, string, string]> = {
   roof: ["#2a2a2c", "#c8c8c6", "#6a6a6c", "#121214"],
   antler: ["#101114", "#c5c3be", "#6d6b68", "#101114"],
   moon: ["#050506", "#101218", "#1a1c22", "#050506"],
-  tunnel: ["#050506", "#6e6e6a", "#1a1a1c", "#050506"],
+  tunnel: ["#050506", "#101012", "#0c0c0e", "#050506"],
 };
 
 function drawTree(ctx: CanvasRenderingContext2D, tree: Tree, alpha: number) {
@@ -1369,98 +1369,115 @@ function drawJungle(ctx: CanvasRenderingContext2D, t: number, reduced: boolean) 
   }
 }
 
-function drawCave(ctx: CanvasRenderingContext2D, camera: Camera, t: number, reduced: boolean) {
-  const world = 6700;
-  ctx.save();
-  ctx.translate(camera.x * 0.35, camera.y * 0.08);
-  ctx.fillStyle = "rgba(8,8,10,0.9)";
-  ctx.fillRect(-200, -80, world + 400, 210);
-  ctx.fillStyle = "#070708";
-  for (let x = -40; x < world; x += 34) {
-    const h = 36 + ((x * 17) % 90);
-    ctx.beginPath();
-    ctx.moveTo(x, -20);
-    ctx.lineTo(x + 6, h);
-    ctx.lineTo(x + 14, -20);
-    ctx.fill();
+function drawCave(ctx: CanvasRenderingContext2D, camera: Camera, t: number, reduced: boolean, lit: boolean) {
+  const world = 5200;
+  const roof = (x: number) => 20 + x * 0.28;
+  ctx.fillStyle = "#050506";
+  ctx.beginPath();
+  ctx.moveTo(-120, -400);
+  ctx.lineTo(world + 160, -400);
+  ctx.lineTo(world + 160, roof(world));
+  for (let x = world; x >= -120; x -= 36) {
+    const tooth = (x * 17) % 46;
+    ctx.lineTo(x, roof(x) - tooth);
   }
-  ctx.restore();
-
-  const shafts = [900, 2100, 3600, 5200];
-  for (const x of shafts) {
-    const g = ctx.createLinearGradient(x, 0, x + 80, 520);
-    g.addColorStop(0, "rgba(244,241,234,0.22)");
-    g.addColorStop(1, "rgba(244,241,234,0)");
-    ctx.fillStyle = g;
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = "#070708";
+  for (let x = -40; x < world; x += 28) {
+    const top = roof(x) - 20;
+    const h = 30 + ((x * 19) % 84);
     ctx.beginPath();
-    ctx.moveTo(x, -40);
-    ctx.lineTo(x + 70, -40);
-    ctx.lineTo(x + 150, 560);
-    ctx.lineTo(x + 40, 560);
+    ctx.moveTo(x, top);
+    ctx.lineTo(x + 5, top + h);
+    ctx.lineTo(x + 12, top);
     ctx.fill();
   }
 
   ctx.save();
-  ctx.translate(camera.x * 0.2, 0);
-  ctx.fillStyle = "#070708";
-  for (let x = 80; x < world; x += 70) {
-    const h = 28 + ((x * 13) % 70);
+  ctx.translate(camera.x * 0.28, camera.y * 0.08);
+  ctx.fillStyle = "rgba(6,6,8,0.85)";
+  for (let i = 0; i < 8; i++) {
+    const x = i * 680;
+    const y = roof(x) + 80;
     ctx.beginPath();
-    ctx.moveTo(x, 700);
-    ctx.lineTo(x + 8, 700 - h);
-    ctx.lineTo(x + 18, 700);
+    ctx.moveTo(x, y + 220);
+    ctx.quadraticCurveTo(x + 40, y - 20, x + 180, y + 30);
+    ctx.quadraticCurveTo(x + 300, y + 70, x + 340, y + 240);
+    ctx.lineTo(x, y + 240);
     ctx.fill();
   }
-  drawHangFrame(ctx, 1680, 80, reduced ? 0 : t * 0.5, false);
   ctx.restore();
 
-  ctx.fillStyle = "#0c1014";
-  ctx.fillRect(-40, 320, world + 80, 2000);
+  if (lit) {
+    const wash = ctx.createLinearGradient(0, 280, 0, 1100);
+    wash.addColorStop(0, "rgba(214,216,220,0.62)");
+    wash.addColorStop(0.18, "rgba(120,126,134,0.38)");
+    wash.addColorStop(1, "rgba(18,20,24,0.15)");
+    ctx.fillStyle = wash;
+  } else {
+    ctx.fillStyle = "#0c1014";
+  }
+  ctx.fillRect(-40, 300, world + 80, 2100);
+  const ripples = lit ? 18 : 12;
   if (!reduced) {
-    for (let i = 0; i < 16; i++) {
-      const y = 332 + i * 18;
-      ctx.strokeStyle = `rgba(210,214,218,${Math.max(0.03, 0.14 - i * 0.007)})`;
-      ctx.lineWidth = 1;
+    for (let i = 0; i < ripples; i++) {
+      const y = 312 + i * (lit ? 16 : 22);
+      const alpha = lit ? Math.max(0.05, 0.34 - i * 0.016) : Math.max(0.03, 0.12 - i * 0.008);
+      ctx.strokeStyle = `rgba(230,232,236,${alpha})`;
+      ctx.lineWidth = lit ? 1.4 : 1;
       ctx.beginPath();
       for (let x = -40; x <= world; x += 28) {
-        const wave = Math.sin(t * 1.3 + x * 0.02 + i) * 3;
+        const wave = Math.sin(t * (lit ? 1.8 : 1.3) + x * 0.02 + i) * (lit ? 4 : 3);
         if (x === -40) ctx.moveTo(x, y + wave);
         else ctx.lineTo(x, y + wave);
       }
       ctx.stroke();
     }
-  } else {
-    ctx.strokeStyle = "rgba(210,214,218,0.12)";
-    ctx.beginPath();
-    ctx.moveTo(-40, 524);
-    ctx.lineTo(world, 524);
-    ctx.stroke();
   }
 
   ctx.save();
-  ctx.translate(camera.x * 0.45, camera.y * 0.12);
-  drawCaveBats(ctx, t, reduced);
+  ctx.fillStyle = "#070708";
+  for (let x = 40; x < world; x += 64) {
+    const h = 18 + ((x * 13) % 54);
+    const base = 360 + x * 0.22;
+    ctx.beginPath();
+    ctx.moveTo(x, base + h);
+    ctx.lineTo(x + 7, base);
+    ctx.lineTo(x + 16, base + h);
+    ctx.fill();
+  }
+  ctx.restore();
+
+  ctx.save();
+  ctx.translate(camera.x * 0.4, camera.y * 0.1);
+  drawCaveBats(ctx, t, reduced, roof);
   ctx.restore();
 }
 
-function drawCaveBats(ctx: CanvasRenderingContext2D, t: number, reduced: boolean) {
+function drawCaveBats(
+  ctx: CanvasRenderingContext2D,
+  t: number,
+  reduced: boolean,
+  roof: (x: number) => number,
+) {
   ctx.fillStyle = "#070708";
-  for (let i = 0; i < 14; i++) {
-    const x = 180 + i * 420;
-    const hang = 70 + ((i * 37) % 50);
-    ctx.fillRect(x, hang, 2, 10);
+  for (let i = 0; i < 16; i++) {
+    const x = 160 + i * 300;
+    const hang = roof(x) + 8;
+    ctx.fillRect(x, hang, 2, 12);
     ctx.beginPath();
-    ctx.moveTo(x + 1, hang + 10);
-    ctx.lineTo(x - 7, hang + 16);
-    ctx.lineTo(x + 1, hang + 13);
-    ctx.lineTo(x + 9, hang + 16);
+    ctx.moveTo(x + 1, hang + 12);
+    ctx.lineTo(x - 8, hang + 18);
+    ctx.lineTo(x + 1, hang + 15);
+    ctx.lineTo(x + 10, hang + 18);
     ctx.closePath();
     ctx.fill();
   }
-  for (let i = 0; i < 12; i++) {
-    const base = 240 + i * 520;
+  for (let i = 0; i < 10; i++) {
+    const base = 220 + i * 480;
     const x = base + (reduced ? 0 : Math.sin(t * 0.35 + i) * 70 + ((t * 22 + i * 30) % 160) - 80);
-    const y = 160 + (i % 4) * 34 + (reduced ? 0 : Math.sin(t * 2 + i) * 12);
+    const y = roof(base) + 70 + (i % 3) * 24 + (reduced ? 0 : Math.sin(t * 2 + i) * 10);
     const flap = reduced ? 0.4 : Math.sin(t * 9 + i) * 0.8;
     const face = i % 2 === 0 ? 1 : -1;
     ctx.save();
@@ -1744,7 +1761,7 @@ export function renderFrame(
   } else if (sim.level.id === "mirror") {
     drawMirrorFog(ctx, camera, sim, reduced);
   } else if (sim.level.id === "tunnel") {
-    drawCave(ctx, camera, sim.t, reduced);
+    drawCave(ctx, camera, sim.t, reduced, gloom <= 0);
   } else if (sim.level.id === "latch") {
     drawLatchFog(ctx, camera, sim.t, reduced);
   } else if (sim.level.id === "gale") {
@@ -1922,6 +1939,7 @@ export function renderFrame(
 
   if (gloom > 0 && sim.level.id === "roof") paintNeonSign(ctx, camera, cssW);
   paintLitBells(ctx, cssW, sim, camera);
+  if (sim.level.id === "tunnel") paintTunnelPlanks(ctx, cssW, sim, camera, reduced);
 
   if (lamp && !attract && !lampInDark) {
     cutFog(ctx, cssW, cssH, sim, camera);
@@ -1940,6 +1958,30 @@ export function renderFrame(
     }
     ctx.globalAlpha = 1;
   }
+}
+
+function paintTunnelPlanks(
+  ctx: CanvasRenderingContext2D,
+  cssW: number,
+  sim: Sim,
+  camera: Camera,
+  reduced: boolean,
+) {
+  const scale = cssW / camera.w;
+  ctx.save();
+  ctx.scale(scale, scale);
+  ctx.translate(-camera.x, -camera.y);
+  for (const rect of rectsAt(sim, reduced)) {
+    if (rect.kind === "gate") continue;
+    const glow = ctx.createLinearGradient(rect.x, rect.y - 30, rect.x, rect.y + 6);
+    glow.addColorStop(0, "rgba(255,255,255,0)");
+    glow.addColorStop(1, "rgba(244,241,234,0.7)");
+    ctx.fillStyle = glow;
+    ctx.fillRect(rect.x - 2, rect.y - 28, rect.w + 4, 30);
+    ctx.fillStyle = "rgba(255,255,255,0.95)";
+    ctx.fillRect(rect.x, rect.y, rect.w, 3);
+  }
+  ctx.restore();
 }
 
 function paintLitBells(ctx: CanvasRenderingContext2D, cssW: number, sim: Sim, camera: Camera) {
