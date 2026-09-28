@@ -574,8 +574,14 @@ export function Playfield({
               const next = purseRef.current - LIGHT_PRICE;
               purseRef.current = next;
               setPurse(next);
-              shoreGlowRef.current = LIGHT_SECONDS;
-              setShopError("Spent 1 coin you picked up.");
+              if (sim.level.id === "moon" && events.lampId) {
+                sim.altars.add(events.lampId);
+                sim.altarLeft[events.lampId] = 10;
+                setShopError("Spent 1 coin. The moon stays bright for 10 seconds.");
+              } else {
+                shoreGlowRef.current = LIGHT_SECONDS;
+                setShopError("Spent 1 coin you picked up.");
+              }
               sound?.play("purchase");
             }
           }
@@ -1655,7 +1661,9 @@ function promptFor(sim: Sim, phase: Phase) {
   if (sim.plateAsleep) return "Light every bell. The plate is asleep.";
   if (sim.nearRope) return sim.level.id === "shore" ? "Hold E · crank them down" : "Hold E · wind the pulley";
   if (sim.nearShrine) return "E · light a lantern";
-  if (sim.nearLamp) return sim.level.id === "moon" ? "E · light the lantern" : "E · buy light · 1 coin you picked up";
+  if (sim.nearLamp) {
+    return sim.level.id === "moon" ? "E · light the moon · 1 coin · 10 seconds" : "E · buy light · 1 coin you picked up";
+  }
   if (sim.nearCombo != null) {
     if (sim.level.id === "latch" && sim.cage > 0.4) return comboSet(sim) ? "The cage is opening" : "E · enter the number";
     return comboSet(sim) ? "The lock is open" : "E · turn this wheel";
