@@ -126,6 +126,10 @@ export type Sim = {
   nearTrap: boolean;
   combo: number[];
   nearCombo: number | null;
+  /** The freed friend. Shore only. */
+  palX: number;
+  palY: number;
+  palFace: 1 | -1;
 };
 
 export function createSim(level: Level = SHORE): Sim {
@@ -198,6 +202,9 @@ export function createSim(level: Level = SHORE): Sim {
     nearTrap: false,
     combo: (level.combo?.code ?? []).map(() => 0),
     nearCombo: null,
+    palX: 1670,
+    palY: 468 - PH,
+    palFace: 1,
   };
 }
 
@@ -400,6 +407,32 @@ function gearPerch(sim: Sim, hintX: number) {
   return best;
 }
 
+function stepPal(sim: Sim, dt: number) {
+  if (sim.rope < 1 || sim.dead > 0) return;
+  const goalX = sim.x - sim.facing * 44;
+  const dx = goalX - sim.palX;
+  const step = Math.max(-170 * dt, Math.min(170 * dt, dx));
+  sim.palX += step;
+  if (Math.abs(dx) > 6) sim.palFace = dx > 0 ? 1 : -1;
+  if (sim.grounded && Math.abs(sim.palX - sim.x) < 110) {
+    sim.palY += Math.max(-480 * dt, Math.min(640 * dt, sim.y - sim.palY));
+    return;
+  }
+  let surface: number | null = null;
+  for (const plat of rectsAt(sim, false)) {
+    if (plat.kind === "gate") continue;
+    if (sim.palX + 10 < plat.x || sim.palX + PW - 10 > plat.x + plat.w) continue;
+    if (plat.y < sim.palY + 8) continue;
+    if (plat.y > sim.palY + PH + 180) continue;
+    if (surface == null || plat.y < surface) surface = plat.y;
+  }
+  if (surface == null) sim.palY += 640 * dt;
+  else {
+    const feet = surface - PH;
+    sim.palY = feet < sim.palY ? feet : Math.min(feet, sim.palY + 640 * dt);
+  }
+}
+
 function respawn(sim: Sim) {
   const cp = sim.level.checkpoints[sim.checkpoint] ?? sim.level.checkpoints[0]!;
   const spot = placePlayer(cp.x, cp.surface, PW, PH);
@@ -441,6 +474,11 @@ function respawn(sim: Sim) {
       sim.stalkX = rock.x;
       sim.stalkY = rock.surface;
     }
+  }
+  if (sim.level.id === "shore" && sim.rope >= 1) {
+    sim.palX = sim.x - sim.facing * 40;
+    sim.palY = sim.y;
+    sim.palFace = sim.facing;
   }
   if (!sim.linked) {
     for (const id of Object.keys(sim.crumbles)) {
@@ -704,6 +742,8 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
       events.checkpoint = cp.id;
     }
   }
+
+  if (level.id === "shore") stepPal(sim, dt);
 
   sim.nearRope = false;
   if (level.rope) {

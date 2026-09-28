@@ -304,30 +304,42 @@ function drawCagedFriend(
   sim: Sim,
   reduced: boolean,
 ) {
-  const x = 1652;
+  const free = sim.rope >= 1;
   const floor = 468;
+  const cageX = 1652;
   const lift = sim.rope * 130;
+  const x = free ? sim.palX : 1670;
+  const y = free ? sim.palY : floor - PH;
+  const walking = free && Math.abs(sim.palX - (sim.x - sim.facing * 44)) > 10;
   drawFriend(
     ctx,
     sprites,
-    { x: x + 18, y: floor - PH, facing: 1, walking: false, anim: 0, hurt: 0 },
+    {
+      x,
+      y,
+      facing: free ? sim.palFace : 1,
+      walking,
+      anim: walking ? Math.floor(sim.t / 0.09) % 8 : 0,
+      hurt: 0,
+    },
     sim.t,
     reduced,
     false,
     null,
   );
+  if (free) return;
   ctx.save();
   ctx.translate(0, -lift);
   ctx.strokeStyle = "#c8c6c0";
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(x + 40, floor - 92);
-  ctx.lineTo(x + 40, floor - 210);
+  ctx.moveTo(cageX + 40, floor - 92);
+  ctx.lineTo(cageX + 40, floor - 210);
   ctx.stroke();
   ctx.fillStyle = "#070708";
-  ctx.fillRect(x, floor - 96, 80, 8);
-  ctx.fillRect(x, floor - 8, 80, 8);
-  for (let i = 0; i < 4; i++) ctx.fillRect(x + 8 + i * 20, floor - 96, 4, 96);
+  ctx.fillRect(cageX, floor - 96, 80, 8);
+  ctx.fillRect(cageX, floor - 8, 80, 8);
+  for (let i = 0; i < 4; i++) ctx.fillRect(cageX + 8 + i * 20, floor - 96, 4, 96);
   ctx.restore();
   ctx.strokeStyle = "#e8e6e1";
   ctx.lineWidth = 2;
@@ -336,8 +348,7 @@ function drawCagedFriend(
   ctx.stroke();
   ctx.beginPath();
   ctx.moveTo(1718, 390);
-  ctx.lineTo(x + 40, floor - 210 + (sim.rope > 0 ? 0 : 0));
-  ctx.lineTo(x + 40, floor - 96 - lift);
+  ctx.lineTo(cageX + 40, floor - 96 - lift);
   ctx.stroke();
 }
 
