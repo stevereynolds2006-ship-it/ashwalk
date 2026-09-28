@@ -31,6 +31,7 @@ export type Actions = {
   jumpHeld: boolean;
   jumpPressed: boolean;
   down: boolean;
+  interact: boolean;
   interactPressed: boolean;
 };
 
@@ -541,7 +542,7 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
   sim.run += dt;
   const prevRects = sim.lastRects;
 
-  if (sim.pulling && sim.rope < 1) {
+  if (sim.pulling && sim.rope < 1 && sim.level.id !== "shore") {
     const before = sim.rope;
     sim.rope = Math.min(1, sim.rope + dt / 1.15);
     if (before < 1 && sim.rope === 1) events.rope = true;
@@ -748,7 +749,15 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
   sim.nearRope = false;
   if (level.rope) {
     sim.nearRope = sim.rope < 1 && zoneHit(sim.x, sim.y, level.rope);
-    if (input.interactPressed && sim.nearRope && !sim.pulling) {
+    if (level.id === "shore") {
+      if (sim.nearRope && input.interact && sim.rope < 1) {
+        const before = sim.rope;
+        if (!sim.pulling) events.pull = true;
+        sim.pulling = true;
+        sim.rope = Math.min(1, sim.rope + dt / 1.7);
+        if (before < 1 && sim.rope === 1) events.rope = true;
+      }
+    } else if (input.interactPressed && sim.nearRope && !sim.pulling) {
       sim.pulling = true;
       events.pull = true;
     }

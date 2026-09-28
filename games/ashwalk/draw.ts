@@ -327,27 +327,53 @@ function drawCagedFriend(
     false,
     null,
   );
-  if (free) return;
-  ctx.save();
-  ctx.translate(0, -lift);
-  ctx.strokeStyle = "#c8c6c0";
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(cageX + 40, floor - 92);
-  ctx.lineTo(cageX + 40, floor - 210);
-  ctx.stroke();
-  ctx.fillStyle = "#070708";
-  ctx.fillRect(cageX, floor - 96, 80, 8);
-  ctx.fillRect(cageX, floor - 8, 80, 8);
-  for (let i = 0; i < 4; i++) ctx.fillRect(cageX + 8 + i * 20, floor - 96, 4, 96);
-  ctx.restore();
+  if (!free) {
+    ctx.save();
+    ctx.translate(0, -lift);
+    ctx.strokeStyle = "#c8c6c0";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(cageX + 40, floor - 92);
+    ctx.lineTo(cageX + 40, floor - 210);
+    ctx.stroke();
+    ctx.fillStyle = "#070708";
+    ctx.fillRect(cageX, floor - 96, 80, 8);
+    ctx.fillRect(cageX, floor - 8, 80, 8);
+    for (let i = 0; i < 4; i++) ctx.fillRect(cageX + 8 + i * 20, floor - 96, 4, 96);
+    ctx.restore();
+  }
+
+  const axleX = 1724;
+  const axleY = floor - 36;
+  const spin = sim.rope * Math.PI * 6;
   ctx.strokeStyle = "#e8e6e1";
+  ctx.fillStyle = "#141416";
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.arc(1718, 390, 8, 0, Math.PI * 2);
+  ctx.moveTo(axleX, floor);
+  ctx.lineTo(axleX, axleY);
   ctx.stroke();
   ctx.beginPath();
-  ctx.moveTo(1718, 390);
+  ctx.arc(axleX, axleY, 18, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(axleX, axleY, 5, 0, Math.PI * 2);
+  ctx.stroke();
+  const hx = axleX + Math.cos(spin) * 18;
+  const hy = axleY + Math.sin(spin) * 18;
+  ctx.beginPath();
+  ctx.moveTo(axleX, axleY);
+  ctx.lineTo(hx, hy);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(hx, hy, 3.5, 0, Math.PI * 2);
+  ctx.fillStyle = "#f4f1ea";
+  ctx.fill();
+  ctx.strokeStyle = "#c8c6c0";
+  ctx.beginPath();
+  ctx.moveTo(axleX, axleY - 8);
+  ctx.lineTo(cageX + 40, floor - 210);
   ctx.lineTo(cageX + 40, floor - 96 - lift);
   ctx.stroke();
 }
