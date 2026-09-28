@@ -528,6 +528,21 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
       continue;
     }
     const standing = (!sim.linked || sim.groundId === id) && sim.groundId === id;
+    if (id === "lid") {
+      const under = sim.x + PW > 2048 && sim.x < 2418 && sim.y > 210;
+      if (under) state.timer = 1;
+      if (state.timer > 0) state.fall = Math.min(268, state.fall + 460 * dt);
+      const lidY = 180 + state.fall;
+      const caught =
+        state.fall > 30 &&
+        state.fall < 260 &&
+        sim.x + PW > 2070 &&
+        sim.x < 2390 &&
+        sim.y < lidY + 16 &&
+        sim.y + PH > lidY;
+      if (caught) kill(sim, events);
+      continue;
+    }
     if (standing) state.timer += dt;
     else if (state.fall === 0) state.timer = 0;
     if (state.timer > 1.45) state.fall += 420 * dt;

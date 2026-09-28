@@ -227,7 +227,7 @@ function drawTerrain(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) 
     if (rect.terrain) continue;
     if (rect.id.startsWith("ceil")) continue;
     if (rect.kind === "gate") drawGate(ctx, rect);
-    else if (sim.level.platforms.find((item) => item.id === rect.id)?.gear) continue;
+    else if (sim.level.platforms.find((item) => item.id === rect.id)?.gear) drawPlank(ctx, rect, false, true);
     else if (rect.kind === "sway" || rect.kind === "rope") {
       drawCage(ctx, rect, sim.rope < 1 && rect.id === "cageC");
     } else drawPlank(ctx, rect, rect.kind === "crumble" || (sim.crumbles[rect.id]?.timer ?? 0) > 0.9, sim.level.id === "choir");
@@ -243,6 +243,10 @@ function drawTerrain(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) 
       ctx.fillStyle = "rgba(255,255,255,0.9)";
       ctx.fillRect(rect.x, rect.y, rect.w, 2);
     }
+  }
+  if (sim.level.id === "choir" && sim.y > 720) {
+    ctx.fillStyle = "#070708";
+    ctx.fillRect(-80, sim.y + PH, sim.level.worldW + 160, 2200);
   }
 }
 
@@ -2690,6 +2694,21 @@ function drawGearHall(ctx: CanvasRenderingContext2D, camera: Camera, sim: Sim, r
     ctx.arc(0, 0, wheel.r * 0.16, 0, Math.PI * 2);
     ctx.fillStyle = "#2c2c30";
     ctx.fill();
+    ctx.restore();
+  }
+
+  const seen = new Set<string>();
+  for (const plat of sim.level.platforms) {
+    const spin = plat.gear;
+    if (!spin) continue;
+    const key = `${spin.cx}:${spin.cy}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    ctx.save();
+    ctx.translate(spin.cx, spin.cy);
+    ctx.rotate(sim.t * (reduced ? spin.speed * 0.35 : spin.speed));
+    ctx.fillStyle = "#1a1a1e";
+    drawCog(ctx, spin.r, spin.teeth);
     ctx.restore();
   }
 }
