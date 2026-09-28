@@ -60,7 +60,7 @@ const LATCH: Level = {
     { id: "end", x: 3100, surface: 468 },
     { id: "finale", x: 4600, surface: 468 },
   ],
-  rope: { id: "pulley", x: 2140, y: 880, w: 90, h: 100 },
+  rope: { id: "pulley", x: 1992, y: 860, w: 72, h: 120 },
   shrines: [{ id: "shrine-end", x: 5100, y: 340, w: 86, h: 130 }],
   beacons: [
     { id: "bPit", x: 2060, y: 870, w: 70, h: 110 },

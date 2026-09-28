@@ -549,12 +549,6 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
   sim.run += dt;
   const prevRects = sim.lastRects;
 
-  if (sim.pulling && sim.rope < 1 && sim.level.id !== "shore") {
-    const before = sim.rope;
-    sim.rope = Math.min(1, sim.rope + dt / 1.15);
-    if (before < 1 && sim.rope === 1) events.rope = true;
-  }
-
   stepPlates(sim, dt);
 
   if (level.id === "roof" && sim.crack < 1) {
@@ -579,15 +573,15 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
     const standing = (!sim.linked || sim.groundId === id) && sim.groundId === id;
     if (id === "lid") {
       const inHole = sim.x + PW > 2048 && sim.x < 2418 && sim.y > 700;
-      if (sim.rope >= 1) {
-        state.fall = Math.max(0, state.fall - 180 * dt);
-        continue;
-      }
-      if (inHole) state.timer = 1;
-      if (state.timer > 0) state.fall = Math.min(268, state.fall + 420 * dt);
+      if (inHole && sim.rope <= 0) state.timer = 1;
+      const dropped = state.timer > 0 || state.fall > 0 || sim.rope > 0;
+      const target = !dropped ? 0 : 268 * (1 - sim.rope);
+      if (state.fall < target) state.fall = Math.min(target, state.fall + 420 * dt);
+      else if (state.fall > target) state.fall = Math.max(target, state.fall - 160 * dt);
       const lidY = 180 + state.fall;
       const caught =
         state.fall > 16 &&
+        sim.rope < 0.85 &&
         sim.x + PW > 2060 &&
         sim.x < 2400 &&
         sim.y < lidY + 48 &&
@@ -754,7 +748,7 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
   sim.nearRope = false;
   if (level.rope) {
     sim.nearRope = sim.rope < 1 && zoneHit(sim.x, sim.y, level.rope);
-    if (level.id === "shore") {
+    if (level.id === "shore" || level.id === "latch") {
       if (sim.nearRope && input.interact && sim.rope < 1) {
         const before = sim.rope;
         if (!sim.pulling) events.pull = true;

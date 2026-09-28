@@ -1651,7 +1651,7 @@ function promptFor(sim: Sim, phase: Phase) {
   if (sim.nearBeacon) return "E · light the bell";
   if (sim.plateAsleep && sim.level.id === "latch" && sim.rope < 1) return "Pull the pulley. Then the plate.";
   if (sim.plateAsleep) return "Light every bell. The plate is asleep.";
-  if (sim.nearRope) return sim.level.id === "latch" ? "E · wind the pulley" : "Hold E · crank them down";
+  if (sim.nearRope) return sim.level.id === "shore" ? "Hold E · crank them down" : "Hold E · wind the pulley";
   if (sim.nearShrine) return "E · light a lantern";
   if (sim.nearLamp) return "E · buy light · 1 coin you picked up";
   if (sim.nearCombo != null) return comboSet(sim) ? "The lock is open" : "E · turn this wheel";
