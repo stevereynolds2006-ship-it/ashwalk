@@ -14,6 +14,7 @@ import { createAshMusic, type AshMusic, type MusicScene } from "./music";
 import {
   buyCloth,
   burnedHalf,
+  clothById,
   clothReleased,
   equipCloth,
   formatRareCoins,
@@ -217,6 +218,7 @@ export function Playfield({
   }
 
   function buyOutfit(id: string) {
+    const cloth = clothById(id);
     if (!clothReleased(id)) {
       setStakeMsg("The white cape opens October 1. Coming soon.");
       return;
@@ -224,14 +226,14 @@ export function Playfield({
     const who = accountRef.current;
     const balance = rareRef.current;
     if (!who || balance == null) {
-      setStakeMsg("Connect a wallet. The red cape is 10 Rare coins.");
+      setStakeMsg(cloth && cloth.cost === 0 ? "Connect a wallet to try the cape." : "Connect a wallet. The red cape is 10 Rare coins.");
       return;
     }
     if (!buyCloth(who, balance, id)) {
-      setStakeMsg("The red cape wants 10 Rare coins.");
+      setStakeMsg(cloth && cloth.cost > 0 ? `${cloth.name} wants ${cloth.cost} Rare coins.` : "That cape stayed shut.");
       return;
     }
-    setStakeMsg(`Burned ${burnedHalf(10)} Rare coins.`);
+    setStakeMsg(cloth && cloth.cost > 0 ? `Burned ${burnedHalf(cloth.cost)} Rare coins.` : "The rainbow cape is on.");
     refreshLedger(who);
     onWardrobe?.();
   }
@@ -1114,7 +1116,7 @@ export function Playfield({
                 ? "Reading Rare coins…"
                 : `You have ${formatRareCoins(spendable(rareBalance, account) ?? 0n)} Rare coins.`}
           </p>
-          <p className="ash-note">The red cape is 10 Rare coins. Half of that spend is burned. The white cape opens October 1. Coming soon.</p>
+          <p className="ash-note">The red cape is 10 Rare coins. Half of that spend is burned. The rainbow cape is free to try. The white cape opens October 1. Coming soon.</p>
           <div className="ash-levels">
             {outfitList().map((cloth) => {
               const locked = !clothReleased(cloth.id);
