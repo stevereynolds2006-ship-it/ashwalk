@@ -1058,7 +1058,7 @@ function drawOutfit(
   if (layer === "front" && draped) {
     ctx.save();
     ctx.beginPath();
-    ctx.rect(-14, -48, 24, 36);
+    ctx.rect(-6, -46, 12, 12);
     ctx.clip();
     drawDrapedCape(ctx, cloth, t, vx, facing);
     ctx.restore();
