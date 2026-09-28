@@ -1661,7 +1661,7 @@ function drawHunt(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) {
   ctx.quadraticCurveTo(spec.x, ground - 22, spec.x + 62, ground + 8);
   ctx.fill();
 
-  if (sim.wake > 0) {
+  if (sim.wake > 0 && !(sim.caged && sim.cage > 0.82)) {
     ctx.save();
     const top = ground - 230 * sim.wake;
     ctx.beginPath();
@@ -1669,6 +1669,9 @@ function drawHunt(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) {
     ctx.clip();
     drawBeast(ctx, sim.stalkX, ground, sim.stalkDir, sim.t, reduced, sim.caged, sim.wake);
     ctx.restore();
+  }
+  if (sim.caged && sim.cage > 0.72) {
+    drawAntlerBones(ctx, (spec.cageX0 + spec.cageX1) / 2, ground, Math.min(1, (sim.cage - 0.72) / 0.22));
   }
 
   ctx.fillStyle = "#070708";
@@ -1683,6 +1686,53 @@ function drawHunt(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) {
 
   ctx.fillStyle = sim.caged ? "rgba(243,240,232,0.92)" : "rgba(243,240,232,0.4)";
   ctx.fillRect(spec.plate.x, ground - 5, spec.plate.w, 4);
+}
+
+function drawAntlerBones(ctx: CanvasRenderingContext2D, x: number, ground: number, alpha: number) {
+  const heap = [
+    "................######................................",
+    "..............##..##..##..........####................",
+    ".............#....##....#........##..##...............",
+    "..............##..##..##........########..............",
+    "......####......######......###############...........",
+    "...########..##.##.##.##.######################.......",
+    ".#####..#####...##...##...######....#####....###......",
+    "###..##...##....##....##....##........##....######....",
+    ".##........##...##.....##.................########....",
+    "..###............................##############.......",
+    "....#####......................######....#####........",
+    "......###....................####..........###........",
+  ];
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.translate(x, ground);
+  ctx.strokeStyle = "#f7f4ee";
+  ctx.lineWidth = 3.5;
+  ctx.lineCap = "round";
+  const antlers: [number, number, number, number, number, number][] = [
+    [-50, -30, -90, -78, -140, -96],
+    [-16, -40, -28, -100, -64, -132],
+    [24, -38, 70, -96, 118, -78],
+    [40, -32, 96, -64, 150, -42],
+    [4, -36, 8, -88, -8, -124],
+  ];
+  for (const [x0, y0, x1, y1, x2, y2] of antlers) {
+    ctx.beginPath();
+    ctx.moveTo(x0, y0);
+    ctx.quadraticCurveTo(x1, y1, x2, y2);
+    ctx.stroke();
+  }
+  const scale = 6;
+  const row = heap[0]!.length;
+  const left = (-row * scale) / 2;
+  const top = -heap.length * scale;
+  ctx.fillStyle = "#f7f4ee";
+  heap.forEach((line, py) => {
+    for (let px = 0; px < line.length; px++) {
+      if (line[px] === "#") ctx.fillRect(left + px * scale, top + py * scale, scale, scale);
+    }
+  });
+  ctx.restore();
 }
 
 function drawBeast(
