@@ -1,8 +1,10 @@
 import type { PublicClient } from "viem";
 
-/** Robinhood rejects one eth_getLogs once the span passes 10 million blocks. */
-const MAX_RANGE = 9_000_000n;
-const MIN_RANGE = 50_000n;
+/** First Generations block. Nothing before it can be a Friend transfer. */
+const DEPLOY_BLOCK = 63_100_099n;
+/** Stay far under the public node's 10 million block cap. */
+const MAX_RANGE = 200_000n;
+const MIN_RANGE = 10_000n;
 
 type LogArgs = {
   fromBlock?: bigint | string;
@@ -16,8 +18,9 @@ export function withOwnedHistory<T extends PublicClient>(client: T): T {
     getLogs: async (args: Parameters<T["getLogs"]>[0]) => {
       const call = args as LogArgs;
       const head = typeof call.toBlock === "bigint" ? call.toBlock : await client.getBlockNumber();
-      const from = typeof call.fromBlock === "bigint" ? call.fromBlock : 0n;
-      if (head < from || head - from < MAX_RANGE) return getLogs(args);
+      let from = typeof call.fromBlock === "bigint" ? call.fromBlock : 0n;
+      if (from < DEPLOY_BLOCK) from = DEPLOY_BLOCK;
+      if (head < from) return [];
       const logs = [];
       for (let start = from; start <= head; start += MAX_RANGE) {
         const end = start + MAX_RANGE - 1n;
@@ -48,5 +51,5 @@ async function rangeLogs(
 
 function rangeRejected(cause: unknown) {
   const text = `${cause instanceof Error ? cause.message : ""} ${cause instanceof Error && cause.cause instanceof Error ? cause.cause.message : ""}`;
-  return /10[,_ ]?000[,_ ]?000|block range|too many blocks|query returned more than|exceed|response size|log query/i.test(text);
+  return /block range|too many|exceed|response size|log query|timeout|limit|10[,_ ]?000[,_ ]?000/i.test(text);
 }

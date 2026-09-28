@@ -28,6 +28,7 @@ export function FriendPicker({
   const [hidden, setHidden] = useState(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [lookup, setLookup] = useState(0);
   const [rareCoins, setRareCoins] = useState<bigint | null>(null);
   const [rareCoinsError, setRareCoinsError] = useState("");
   void ledgerRev;
@@ -93,7 +94,7 @@ export function FriendPicker({
       cancel = true;
       void revision;
     };
-  }, [snap?.status, snap?.account, snap?.revision]);
+  }, [snap?.status, snap?.account, snap?.revision, lookup]);
 
   function commitText(value: string) {
     if (!/^[0-9]+$/.test(value)) return;
@@ -183,6 +184,11 @@ export function FriendPicker({
             ))}
           </div>
           {hidden > 0 && <p className="ash-note">{hidden} more could not be listed.</p>}
+          {error && (
+            <button type="button" className="ash-btn-ghost" disabled={busy} onClick={() => setLookup((value) => value + 1)}>
+              Retry loading Friends
+            </button>
+          )}
           <button type="button" className="ash-btn-ghost" onClick={() => session?.disconnect()}>
             Disconnect
           </button>
