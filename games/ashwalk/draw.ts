@@ -949,7 +949,7 @@ function drawDrapedCape(
       let color = tone[mark] ?? tone.n;
       if (cloth === "rainbow") color = mark === "k" ? "#141416" : bands[Math.min(bands.length - 1, Math.floor((y / CAPE_DRAPE.length) * bands.length))]!;
       ctx.fillStyle = color!;
-      ctx.fillRect((x - tipX) * size - trail - gust * (back / 34), -36 + y * size + ripple, size, size);
+      ctx.fillRect((x - tipX) * size - trail - gust * (back / 34) + 8, -36 + y * size + ripple, size, size);
     }
   });
 }
@@ -993,6 +993,14 @@ function drawOutfit(
 
   if (layer === "back" && (cloth === "cape" || cloth === "white" || cloth === "rainbow" || cloth === "camo")) {
     drawDrapedCape(ctx, cloth, t, vx, facing);
+  }
+  if (layer === "front" && (cloth === "cape" || cloth === "white" || cloth === "rainbow" || cloth === "camo")) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(-16, -42, 14, 32);
+    ctx.clip();
+    drawDrapedCape(ctx, cloth, t, vx, facing);
+    ctx.restore();
   }
 
   if (layer === "back" && cloth === "coat") {
