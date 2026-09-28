@@ -131,7 +131,7 @@ export type Sim = {
   palX: number;
   palY: number;
   palFace: 1 | -1;
-  /** Seconds after the shore cage lands. A spider comes up. */
+  /** Seconds after you reach the landed cage. Acid falls. */
   feast: number;
 };
 
