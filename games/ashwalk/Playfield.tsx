@@ -226,16 +226,6 @@ export function Playfield({
     const who = accountRef.current;
     const balance = rareRef.current;
     if (!who || balance == null) {
-      if (cloth && cloth.cost === 0) {
-        if (!buyCloth("guest", 0n, id)) {
-          setStakeMsg("That cape stayed shut.");
-          return;
-        }
-        setStakeMsg("The rainbow cape is on.");
-        refreshLedger("guest");
-        onWardrobe?.();
-        return;
-      }
       setStakeMsg("Connect a wallet. The red cape is 10 Rare coins.");
       return;
     }
@@ -243,7 +233,7 @@ export function Playfield({
       setStakeMsg(cloth && cloth.cost > 0 ? `${cloth.name} wants ${cloth.cost} Rare coins.` : "That cape stayed shut.");
       return;
     }
-    setStakeMsg(cloth && cloth.cost > 0 ? `Burned ${burnedHalf(cloth.cost)} Rare coins.` : "The rainbow cape is on.");
+    setStakeMsg(cloth && cloth.cost > 0 ? `Burned ${burnedHalf(cloth.cost)} Rare coins.` : "");
     refreshLedger(who);
     onWardrobe?.();
   }
@@ -1121,12 +1111,12 @@ export function Playfield({
           )}
           <p className="ash-note">
             {!account
-              ? "No wallet needed for the rainbow cape."
+              ? "Connect a wallet when a cape is for sale."
               : rareBalance == null
                 ? "Reading Rare coins…"
                 : `You have ${formatRareCoins(spendable(rareBalance, account) ?? 0n)} Rare coins.`}
           </p>
-          <p className="ash-note">The rainbow cape is free to try. No wallet. The red cape is 10 Rare coins. Half of that spend is burned. The white cape opens October 1. Coming soon.</p>
+          <p className="ash-note">The red cape is 10 Rare coins. Half of that spend is burned. The white cape opens October 1. Coming soon.</p>
           <div className="ash-levels">
             {outfitList().map((cloth) => {
               const locked = !clothReleased(cloth.id);

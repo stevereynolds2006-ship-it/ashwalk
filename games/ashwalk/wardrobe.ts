@@ -10,7 +10,6 @@ export type Cloth = {
 
 export const CLOTHES: readonly Cloth[] = [
   { id: "cape", name: "Red cape", cost: 10, rare: false, note: "A long red cape behind you." },
-  { id: "rainbow", name: "Rainbow cape", cost: 0, rare: false, note: "A wide rainbow cape with a face." },
   { id: "white", name: "White cape", cost: 10, rare: false, note: "Next month's cape." },
 ];
 
