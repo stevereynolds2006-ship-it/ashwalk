@@ -220,7 +220,11 @@ export function Playfield({
   function buyOutfit(id: string) {
     const cloth = clothById(id);
     if (!clothReleased(id)) {
-      setStakeMsg("The white cape opens October 1. Coming soon.");
+      setStakeMsg(
+        id === "rainbow"
+          ? "The rainbow cape opens November 1. Coming soon."
+          : "The white cape opens October 1. Coming soon.",
+      );
       return;
     }
     const who = accountRef.current;
@@ -1057,7 +1061,7 @@ export function Playfield({
                 : `You have ${formatRareCoins(spendable(rareBalance, account) ?? 0n)} Rare coins.`}
           </p>
           <p>The shore is free. Beat it, then 10 Rare coins opens the road. After that, beat a fog to open the next one.</p>
-          <p>Every month a new map opens, and a new cape is there to own. The moon and the white cape open October 1. The mirror opens November 1. The choir and the tunnel are open to try.</p>
+          <p>Every month a new map opens, and a new cape is there to own. The moon and the white cape open October 1. The rainbow cape opens November 1. The mirror opens November 1. The choir and the tunnel are open to try.</p>
           {stakeMsg && (
             <p className="ash-error" role="alert">
               {stakeMsg}
@@ -1118,11 +1122,12 @@ export function Playfield({
                 ? "Reading Rare coins…"
                 : `You have ${formatRareCoins(spendable(rareBalance, account) ?? 0n)} Rare coins.`}
           </p>
-          <p className="ash-note">The red cape is 10 Rare coins. Half of that spend is burned. The white cape opens October 1. Coming soon.</p>
+          <p className="ash-note">The red cape is 10 Rare coins. Half of that spend is burned. The white cape opens October 1. The rainbow cape opens November 1. Coming soon.</p>
           <div className="ash-levels">
             {outfitList().map((cloth) => {
               const locked = !clothReleased(cloth.id);
-              const soon = cloth.id === "white" && locked;
+              const soon = (cloth.id === "white" || cloth.id === "rainbow") && locked;
+              const opens = cloth.id === "rainbow" ? "November 1" : "October 1";
               const owned = ledger.owned.includes(cloth.id);
               const wearing = ledger.equipped === cloth.id;
               return (
@@ -1137,7 +1142,7 @@ export function Playfield({
                   <span>{soon ? `${cloth.name} · coming soon` : locked ? `${cloth.name} · locked` : cloth.name}</span>
                   <small>
                     {soon
-                      ? "Coming soon. Opens October 1. 10 Rare coins."
+                      ? `Coming soon. Opens ${opens}. 10 Rare coins.`
                       : locked
                         ? "Locked."
                         : owned

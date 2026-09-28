@@ -554,6 +554,64 @@ function drawOutfit(
     });
   }
 
+  if (layer === "back" && cloth === "rainbow") {
+    const size = 2.15;
+    const along = vx * facing;
+    const run = Math.max(-1, Math.min(1, along / 180));
+    const rise = Math.max(-1, Math.min(1, -vy / 520));
+    const bands = ["#ff2bd6", "#ff3b5c", "#ff6a00", "#ffb000", "#ffe14a", "#7dff3a", "#2ee6a0", "#2ee6ff", "#2f7bff", "#7a4dff"];
+    const spot = (back: number, y: number) => {
+      const ripple = Math.sin(t * 8 + back * 0.32 + y * 0.4) * (1.6 + Math.abs(run) * 2.2);
+      const trail = back * Math.max(0, run) * 0.85;
+      const flip = back * Math.max(0, -run) * 0.7;
+      return {
+        x: -4 - back * size - trail + flip,
+        y: -54 + y * size + ripple + rise * back * 0.32,
+      };
+    };
+    for (let y = 0; y < 18; y++) {
+      const belly = 1 - Math.abs(y - 7) / 10;
+      const span = 8 + Math.round(34 * Math.max(0, belly));
+      const drop = y > 10 ? (y - 10) * 3 : 0;
+      const skip = y < 3 ? 6 : 0;
+      for (let back = skip; back < span + drop; back++) {
+        const band = Math.min(bands.length - 1, Math.floor((back / 42) * bands.length));
+        ctx.fillStyle = bands[band]!;
+        const p = spot(back, y);
+        ctx.fillRect(p.x, p.y, size, size);
+      }
+    }
+    const face = [
+      "..kkkkkkk..",
+      ".krrrrrrrok",
+      "koyyyyyygok",
+      "kry.kyyk.yk",
+      "kryyyyyyyyk",
+      "kryyy.kyyyk",
+      "kryykkkyyyk",
+      "kogggggggok",
+      ".kbbbbbbbk.",
+      "..kkkkkkk..",
+    ];
+    const faceTone: Record<string, string> = {
+      k: "#070708",
+      r: "#ff4d6a",
+      o: "#ff8a00",
+      y: "#ffe14a",
+      g: "#3dff6a",
+      b: "#3d7bff",
+    };
+    const anchor = spot(18, 5);
+    face.forEach((row, y) => {
+      for (let x = 0; x < row.length; x++) {
+        const color = faceTone[row[x] ?? ""];
+        if (!color) continue;
+        ctx.fillStyle = color;
+        ctx.fillRect(anchor.x + x * 2.3, anchor.y + y * 2.3, 2.3, 2.3);
+      }
+    });
+  }
+
   if (layer === "back" && cloth === "coat") {
     ctx.beginPath();
     ctx.moveTo(-14, -40);
@@ -1832,7 +1890,7 @@ export function renderFrame(
     drawBell(ctx, x, bellSurface(sim, x, bell.y + bell.h), sim.beacons.has(bell.id), sim.t);
   }
 
-  if (sim.level.pit && camera.x < sim.level.pit.x1 && camera.x + camera.w > sim.level.pit.x0) {
+  if (sim.level.pit && sim.level.id !== "tunnel" && camera.x < sim.level.pit.x1 && camera.x + camera.w > sim.level.pit.x0) {
     drawThorns(ctx, sim.level.pit);
   }
 
