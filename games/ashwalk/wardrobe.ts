@@ -85,6 +85,7 @@ export type Ledger = {
   burned: number;
   owned: string[];
   equipped: string | null;
+  opened: string[];
 };
 
 export function clothById(id: string | null): Cloth | null {
@@ -93,7 +94,7 @@ export function clothById(id: string | null): Cloth | null {
 }
 
 function empty(): Ledger {
-  return { spent: 0n, allFogs: false, road: false, burned: 0, owned: [], equipped: null };
+  return { spent: 0n, allFogs: false, road: false, burned: 0, owned: [], equipped: null, opened: [] };
 }
 
 function storageKey(account: string) {
@@ -112,6 +113,7 @@ export function readLedger(account: string | null): Ledger {
       burned?: number;
       owned?: unknown;
       equipped?: unknown;
+      opened?: unknown;
     };
     return {
       spent: BigInt(parsed.spent ?? "0"),
@@ -125,6 +127,7 @@ export function readLedger(account: string | null): Ledger {
         typeof parsed.equipped === "string" && clothById(parsed.equipped) && clothReleased(parsed.equipped)
           ? parsed.equipped
           : null,
+      opened: Array.isArray(parsed.opened) ? parsed.opened.filter((id): id is string => typeof id === "string") : [],
     };
   } catch {
     return empty();
@@ -141,6 +144,7 @@ function writeLedger(account: string, ledger: Ledger) {
       burned: ledger.burned,
       owned: ledger.owned,
       equipped: ledger.equipped,
+      opened: ledger.opened,
     }),
   );
 }
@@ -222,12 +226,12 @@ export function equipCloth(account: string, id: string | null) {
 
 export const ROAD_COST = 10;
 
-export function openRoad(account: string, balance: bigint) {
+export function buyFog(account: string, balance: bigint, id: string) {
   const ledger = readLedger(account);
-  if (ledger.road) return true;
+  if (ledger.opened.includes(id)) return true;
   if (!pay(account, balance, ROAD_COST)) return false;
   const next = readLedger(account);
-  next.road = true;
+  next.opened = [...next.opened, id];
   writeLedger(account, next);
   return true;
 }

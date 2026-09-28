@@ -20,7 +20,7 @@ import {
   equipCloth,
   formatRareCoins,
   outfitList,
-  openRoad,
+  buyFog,
   readLedger,
   ROAD_COST,
   spendWhole,
@@ -135,8 +135,10 @@ export function Playfield({
     burned: 0,
     owned: [],
     equipped: null,
+    opened: [],
   });
   const roadRef = useRef(false);
+  const openedRef = useRef(new Set<string>());
   const markClearRef = useRef<(id: string) => void>(() => {});
   const shoreGlowRef = useRef(0);
   const huntZoomRef = useRef(0);
@@ -189,7 +191,8 @@ export function Playfield({
     if (TRY_ALL || fogTry(id)) return !fogHeld(id);
     if (id === "shore") return true;
     if (fogHeld(id) || !fogReleased(id)) return false;
-    if (!clearedRef.current.has("shore") || !roadRef.current) return false;
+    if (!clearedRef.current.has(previousFog(id) ?? "shore") && id !== "shore") return false;
+    if (!openedRef.current.has(id)) return false;
     return fogUnlocked(id, clearedRef.current);
   }
 
@@ -198,21 +201,23 @@ export function Playfield({
     setLedger(next);
     allOpenRef.current = next.allFogs;
     roadRef.current = next.road;
+    openedRef.current = new Set(next.opened);
     clothRef.current = next.equipped;
   }
 
-  function payRoad() {
+  function payFog(id: string) {
     const who = accountRef.current;
     const balance = rareRef.current;
     if (!who || balance == null) {
-      setStakeMsg("Reading Rare coins. Continuing costs 10 Rare coins.");
+      setStakeMsg("Reading Rare coins. This fog costs 10 Rare coins.");
       return false;
     }
-    if (!openRoad(who, balance)) {
-      setStakeMsg("You need 10 Rare coins to continue.");
+    if (openedRef.current.has(id)) return true;
+    if (!buyFog(who, balance, id)) {
+      setStakeMsg("You need 10 Rare coins to open this fog.");
       return false;
     }
-    roadRef.current = true;
+    openedRef.current.add(id);
     refreshLedger(who);
     onWardrobe?.();
     setShopError(`Burned ${burnedHalf(ROAD_COST)} Rare coins.`);
@@ -325,19 +330,12 @@ export function Playfield({
       return;
     }
     if (!TRY_ALL && id !== "shore" && !fogTry(id)) {
-      if (!clearedRef.current.has("shore")) {
-        setStakeMsg("Beat the shore first.");
+      const prev = previousFog(id);
+      if (prev && !clearedRef.current.has(prev)) {
+        setStakeMsg(`Beat ${getLevel(prev).title} before you can open this fog.`);
         return;
       }
-      if (!roadRef.current) {
-        setStakeMsg("Continuing costs 10 Rare coins.");
-        return;
-      }
-      if (!fogUnlocked(id, clearedRef.current)) {
-        const prev = previousFog(id);
-        setStakeMsg(prev ? `Beat ${getLevel(prev).title} before this fog.` : "That fog is still shut.");
-        return;
-      }
+      if (!openedRef.current.has(id) && !payFog(id)) return;
     }
     const fee = 0;
     if (fee > 0) {
@@ -1110,7 +1108,7 @@ export function Playfield({
                 : `You have ${formatRareCoins(spendable(shown, who) ?? 0n)} Rare coins. Those pay to continue and to buy a cape.`;
             })()}
           </p>
-          <p>The shore is free. You start it with 2 coins. Coins you pick up only turn things on inside the stage. Rare coins are what you spend to continue and to buy a cape. Beat the shore, then 10 Rare coins opens the road.</p>
+          <p>The shore is free. You start it with 2 coins. Coins you pick up only turn things on inside the stage. Rare coins pay to open the next fog and to buy a cape. Beat a fog, then the next one is 10 Rare coins. You cannot buy it until the one before it is beaten.</p>
           <p>Every month a new map opens, and a new cape is there to own. Only the red cape is open to buy.</p>
           {stakeMsg && (
             <p className="ash-error" role="alert">
@@ -1235,12 +1233,13 @@ export function Playfield({
             })()}
           </p>
           <p className="ash-note">
-            The shore is free. After you beat it, 10 Rare coins opens the next fog. Then each fog opens when you beat the one before it. The moon opens October 1, the mirror November 1, and the tunnel December 1.
+            The shore is free. Beat a fog before you can buy the next one. Each fog after the shore is 10 Rare coins. The moon opens October 1, the mirror November 1, and the tunnel December 1.
           </p>
           <LevelList
             current={pickId}
             cleared={cleared}
-            allOpen={ledger.road}
+            allOpen={false}
+            opened={ledger.opened}
             onPick={(id) => {
               armAudio();
               startLevel(id);
@@ -1316,7 +1315,7 @@ export function Playfield({
           {session.host ? (
             <>
               <p className="ash-note">{picked.together}</p>
-              <LevelList current={pickId} cleared={cleared} allOpen={ledger.allFogs} onPick={chooseLevel} />
+              <LevelList current={pickId} cleared={cleared} allOpen={false} opened={ledger.opened} onPick={chooseLevel} />
               <div className="ash-actions">
                 <button
                   type="button"
@@ -1451,9 +1450,9 @@ export function Playfield({
             {session && company === 0 && peers.length > 0 ? " Everyone is through." : ""} The lantern rite is
             simulated. One lantern costs 1 RF and returns less, on average, than it takes.
           </p>
-          {clearLevel.id === "shore" && !TRY_ALL && !ledger.road && (
-            <p className="ash-note">Pay 10 Rare coins to continue. After that, each fog opens when you beat the one before it.</p>
-          )}
+          {clearLevel.id !== "shore" || !TRY_ALL ? (
+            <p className="ash-note">The next fog is 10 Rare coins, and only after this one is beaten.</p>
+          ) : null}
           <div className="ash-actions">
             <button type="button" className="ash-btn" onClick={() => go("rite")}>
               Light a lantern
@@ -1478,16 +1477,16 @@ export function Playfield({
                   </button>
                 );
               }
-              if (!TRY_ALL && !ledger.road) {
+              if (!TRY_ALL && !ledger.opened.includes(next.id)) {
                 return (
                   <button
                     type="button"
                     className="ash-btn"
                     onClick={() => {
-                      if (payRoad()) startLevel(next.id);
+                      if (payFog(next.id)) startLevel(next.id);
                     }}
                   >
-                    Continue · {ROAD_COST} Rare coins
+                    Open {next.title} · {ROAD_COST} Rare coins
                   </button>
                 );
               }
@@ -1546,11 +1545,13 @@ function LevelList({
   current,
   cleared,
   allOpen,
+  opened,
   onPick,
 }: {
   current: string;
   cleared: readonly string[];
   allOpen: boolean;
+  opened: readonly string[];
   onPick: (id: string) => void;
 }) {
   return (
@@ -1560,30 +1561,31 @@ function LevelList({
           level.id === "moon" ? "October 1" : level.id === "mirror" ? "November 1" : level.id === "tunnel" ? "December 1" : null;
         const soon = !TRY_ALL && opens != null && !fogReleased(level.id);
         const prev = previousFog(level.id);
-        const paid = allOpen;
         const beaten = prev == null || cleared.includes(prev);
-        const open = TRY_ALL || level.id === "shore" || fogTry(level.id) || (!soon && paid && beaten);
+        const bought = allOpen || opened.includes(level.id);
+        const open = TRY_ALL || level.id === "shore" || fogTry(level.id) || (!soon && bought && beaten);
+        const canBuy = !open && !soon && beaten && !bought;
         const note = soon
           ? `Coming soon. Opens ${opens}.`
           : open
             ? level.rule
-            : !cleared.includes("shore")
-              ? "Beat the shore first."
-              : !paid
-                ? "10 Rare coins to continue."
-                : prev
-                  ? `Beat ${getLevel(prev).title} first.`
-                  : "Locked.";
+            : canBuy
+              ? "10 Rare coins to open."
+              : prev
+                ? `Beat ${getLevel(prev).title} before you can buy this.`
+                : "Locked.";
         return (
           <button
             key={level.id}
             type="button"
             className="ash-level"
             aria-current={level.id === current ? "true" : undefined}
-            disabled={!open}
+            disabled={!open && !canBuy}
             onClick={() => onPick(level.id)}
           >
-            <span>{soon ? `${level.title} · coming soon` : open ? level.title : `${level.title} · locked`}</span>
+            <span>
+              {soon ? `${level.title} · coming soon` : canBuy ? `${level.title} · 10 Rare coins` : open ? level.title : `${level.title} · locked`}
+            </span>
             <small>{note}</small>
           </button>
         );
