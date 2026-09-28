@@ -944,11 +944,11 @@ function drawDrapedCape(
       if (mark === ".") continue;
       const back = Math.max(0, tipX - x);
       const ripple = Math.sin(t * 5.5 + y * 0.22 + back * 0.18) * (0.45 + Math.abs(run) * 1.3);
-      const trail = back * Math.max(0, run) * 0.28;
+      const trail = back * Math.max(0, run) * 0.22;
       let color = tone[mark] ?? tone.n;
       if (cloth === "rainbow") color = mark === "k" ? "#141416" : bands[Math.min(bands.length - 1, Math.floor((y / CAPE_DRAPE.length) * bands.length))]!;
       ctx.fillStyle = color!;
-      ctx.fillRect((x - tipX) * size - trail, -52 + y * size + ripple, size, size);
+      ctx.fillRect((tipX - x) * size * 0.72 + trail, -36 + y * size + ripple, size, size);
     }
   });
 }
@@ -990,7 +990,7 @@ function drawOutfit(
     ctx.stroke();
   }
 
-  if (layer === "back" && (cloth === "cape" || cloth === "white" || cloth === "rainbow" || cloth === "camo")) {
+  if (layer === "front" && (cloth === "cape" || cloth === "white" || cloth === "rainbow" || cloth === "camo")) {
     drawDrapedCape(ctx, cloth, t, vx, facing);
   }
 
