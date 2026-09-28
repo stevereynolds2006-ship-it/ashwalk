@@ -776,7 +776,6 @@ const MOON: Level = {
   wind: null,
   birds: [
     { kind: "ship", x0: 40, x1: 1680, y: 980, amp: 10, speed: 90, start: 200 },
-    { kind: "alien", x0: 80, x1: 420, y: 1176, amp: 0, speed: 42, start: 120 },
     { kind: "ship", x0: 20, x1: 1680, y: 460, amp: 8, speed: 110, start: 400 },
     { kind: "alien", x0: 70, x1: 320, y: 836, amp: 0, speed: 36, start: 80 },
     { kind: "ship", x0: 40, x1: 1680, y: -160, amp: 12, speed: 100, start: 300 },

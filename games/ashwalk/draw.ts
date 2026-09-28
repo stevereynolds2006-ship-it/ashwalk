@@ -1622,11 +1622,28 @@ function blitWhite(ctx: CanvasRenderingContext2D, rows: readonly string[], scale
   });
 }
 
-function drawAlien(ctx: CanvasRenderingContext2D, x: number, y: number, dir: number) {
+function drawAlien(ctx: CanvasRenderingContext2D, x: number, y: number, dir: number, t: number) {
   ctx.save();
   ctx.translate(x, y - 20);
   ctx.scale(dir < 0 ? -1 : 1, 1);
-  blitWhite(ctx, ALIEN, 1.15);
+  const scale = 1.15;
+  const left = (-ALIEN[0]!.length * scale) / 2;
+  const step = Math.sin(t * 9);
+  ctx.fillStyle = "#f7f4ee";
+  ALIEN.forEach((row, py) => {
+    for (let px = 0; px < row.length; px++) {
+      if (row[px] !== "#") continue;
+      let ox = 0;
+      let oy = 0;
+      if (py >= 31) {
+        const leg = px < 11 ? -1 : 1;
+        const stride = leg * step;
+        ox = stride * 3.2;
+        oy = stride > 0 ? -2.4 : 1.6;
+      }
+      ctx.fillRect(left + px * scale + ox, py * scale + oy, scale, scale);
+    }
+  });
   ctx.restore();
 }
 
@@ -2561,7 +2578,7 @@ export function renderFrame(
     else if (bird.kind === "turtle") drawTurtle(ctx, bird.x, bird.y, bird.dir, sim.t);
     else if (bird.kind === "gator") drawGator(ctx, bird.x, bird.y, bird.dir, sim.t, reduced);
     else if (bird.kind === "rocket") drawRocket(ctx, bird.x, bird.y, bird.dir, sim.t, reduced);
-    else if (bird.kind === "alien") drawAlien(ctx, bird.x, bird.y, bird.dir);
+    else if (bird.kind === "alien") drawAlien(ctx, bird.x, bird.y, bird.dir, sim.t);
     else if (bird.kind === "ship") drawShip(ctx, bird.x, bird.y, bird.dir);
     else drawCrow(ctx, bird.x, bird.y, sim.t * 14, bird.dir);
   }
