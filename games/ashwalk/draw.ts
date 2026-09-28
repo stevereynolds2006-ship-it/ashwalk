@@ -1009,7 +1009,7 @@ function drawDrapedCape(
         color = streak === 0 ? "#ff6a00" : streak === 1 ? "#ff3d00" : "#1a0a04";
       }
       ctx.fillStyle = color!;
-      ctx.fillRect((x - tipX) * size - trail - gust * (back / 34) + 2, -34 + y * size + ripple, size, size);
+      ctx.fillRect((x - tipX) * size - trail - gust * (back / 34) - 18, -34 + y * size + ripple, size, size);
     }
   });
 }
@@ -1056,14 +1056,6 @@ function drawOutfit(
     ctx.save();
     ctx.beginPath();
     ctx.rect(-120, -36, 240, 140);
-    ctx.clip();
-    drawDrapedCape(ctx, cloth, t, vx, facing);
-    ctx.restore();
-  }
-  if (layer === "front" && draped) {
-    ctx.save();
-    ctx.beginPath();
-    ctx.rect(-8, -36, 14, 14);
     ctx.clip();
     drawDrapedCape(ctx, cloth, t, vx, facing);
     ctx.restore();
