@@ -982,6 +982,7 @@ export function fogPrice(id: string) {
   if (id === "moon") return 15;
   if (id === "mirror") return 20;
   if (id === "tunnel") return 25;
+  if (id === "roof" || id === "antler") return 10;
   return 10;
 }
 
