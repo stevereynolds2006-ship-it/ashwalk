@@ -210,7 +210,7 @@ const CHOIR: Level = {
   id: "choir",
   title: "The choir",
   kicker: "Coins are below the west ledge and above the north bell.",
-  rule: "Three bells. The second is beside the hanging spider. The third is on the cage. Go down, then climb, for the coins. A lantern costs 1 coin and lasts 13 seconds. A floor that falls only kills you if it is over an open hole.",
+  rule: "Three bells. The second is beside the hanging spider. The third is on the cage. The numbers 3, 8, and 5 are painted on the walk. At the top, enter them in the balloon. It is the only way to the black hole.",
   together: "Bells are shared. Split up and light them at once.",
   clearKicker: "The choir",
   clearTitle: "Every bell was yours",
@@ -307,7 +307,8 @@ const CHOIR: Level = {
     { id: "c-low", x: 2040, y: 468, w: 56, h: 92 },
   ],
   plates: [],
-  goal: { id: "goal", x: 1900, y: 40, w: 90, h: 170 },
+  goal: { id: "goal", x: 2560, y: -680, w: 120, h: 160 },
+  combo: { code: [3, 8, 5], x: 2264, span: 168, y: -290 },
   pit: null,
   wind: null,
   birds: [],
@@ -337,7 +338,7 @@ const CHOIR: Level = {
       phase: 0.3,
     },
   ],
-  chapters: [{ x: 0, id: "choir", title: "The choir", kicker: "Down for coins. Up for coins. Then the bells." }],
+  chapters: [{ x: 0, id: "choir", title: "The choir", kicker: "Find 3, 8, and 5. The balloon is at the top." }],
   light: { x: 1400, y: 120 },
 };
 

@@ -459,7 +459,7 @@ function respawn(sim: Sim) {
   sim.invuln = 0.7;
   sim.cut = false;
   sim.drop = 0;
-  sim.cage = sim.level.id === "latch" ? 0 : sim.cage;
+  sim.cage = 0;
   sim.lastRects = null;
   const stalk = sim.level.stalker;
   if (stalk && !sim.caged && sim.beacons.size >= sim.level.beacons.length && sim.level.beacons.length > 0) {
@@ -823,6 +823,17 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
   stepStalker(sim, dt, events);
   stepHunter(sim, dt, events);
   stepBoulder(sim, dt, events);
+
+  if (level.id === "choir" && comboSet(sim) && sim.beacons.size >= level.beacons.length && !sim.won) {
+    const onCrown = sim.x > 2200 && sim.x < 2520 && sim.y < -220;
+    if (onCrown || sim.cage > 0) {
+      sim.cage = Math.min(1, sim.cage + dt * 0.28);
+      sim.vx = 0;
+      sim.vy = 0;
+      sim.x += (2588 - sim.x) * Math.min(1, dt * 0.7);
+      sim.y += (-690 - sim.y) * Math.min(1, dt * 0.7);
+    }
+  }
 
   if (level.id === "latch" && !sim.won) {
     const px = sim.x + PW / 2;

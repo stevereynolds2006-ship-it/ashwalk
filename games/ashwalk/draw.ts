@@ -754,6 +754,82 @@ function drawLatchLock(ctx: CanvasRenderingContext2D, sim: Sim) {
   });
 }
 
+function drawBlackHole(ctx: CanvasRenderingContext2D, x: number, y: number, t: number, locked: boolean) {
+  ctx.save();
+  ctx.translate(x, y);
+  const spin = t * 0.85;
+  const count = 640;
+  for (let i = 0; i < count; i++) {
+    const u = i / count;
+    const arm = i % 4;
+    const ang = spin + u * Math.PI * 9 + arm * 1.57 + Math.sin(i * 12.3) * 0.15;
+    const wave = Math.sin(ang * 2.4 + u * 8) * (6 + u * 16);
+    const rad = 16 + Math.pow(u, 0.85) * 86 + wave;
+    const px = Math.cos(ang) * rad * 1.25;
+    const py = Math.sin(ang) * rad * 0.78;
+    const fade = locked ? 0.28 : 0.2 + (1 - u) * 0.8;
+    ctx.fillStyle = `rgba(244,241,234,${fade})`;
+    const s = u < 0.2 ? 1.8 : u < 0.55 ? 1.25 : 0.85;
+    ctx.fillRect(px, py, s, s);
+  }
+  ctx.beginPath();
+  ctx.arc(0, 0, 16, 0, Math.PI * 2);
+  ctx.fillStyle = "#000";
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawChoirMarks(ctx: CanvasRenderingContext2D) {
+  const marks: [number, number, number][] = [
+    [3, 700, 430],
+    [8, 180, 748],
+    [5, 2340, 250],
+  ];
+  ctx.textAlign = "center";
+  for (const [digit, x, y] of marks) {
+    ctx.save();
+    ctx.shadowColor = "#f7f4ee";
+    ctx.shadowBlur = 16;
+    ctx.fillStyle = "#f7f4ee";
+    ctx.fillRect(x - 16, y - 30, 32, 38);
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = "#111114";
+    ctx.font = "bold 26px sans-serif";
+    ctx.fillText(String(digit), x, y);
+    ctx.restore();
+  }
+}
+
+function drawChoirBalloon(ctx: CanvasRenderingContext2D, sim: Sim) {
+  const flying = sim.cage > 0;
+  const x = flying ? sim.x + 18 : 2455;
+  const y = flying ? sim.y - 78 : -390;
+  ctx.save();
+  ctx.fillStyle = "#f4f1ea";
+  ctx.beginPath();
+  ctx.moveTo(x, y + 8);
+  ctx.bezierCurveTo(x - 62, y - 10, x - 48, y - 96, x, y - 108);
+  ctx.bezierCurveTo(x + 48, y - 96, x + 62, y - 10, x, y + 8);
+  ctx.fill();
+  ctx.fillStyle = "#111114";
+  ctx.fillRect(x - 3, y - 96, 6, 88);
+  ctx.beginPath();
+  ctx.moveTo(x - 22, y - 20);
+  ctx.lineTo(x, y - 70);
+  ctx.lineTo(x + 22, y - 20);
+  ctx.fill();
+  ctx.strokeStyle = "#c8c6c0";
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(x - 18, y + 4);
+  ctx.lineTo(x - 16, y + 36);
+  ctx.moveTo(x + 18, y + 4);
+  ctx.lineTo(x + 16, y + 36);
+  ctx.stroke();
+  ctx.strokeRect(x - 20, y + 36, 40, 18);
+  ctx.restore();
+}
+
 function drawExitSnare(ctx: CanvasRenderingContext2D, sim: Sim) {
   if (sim.cage <= 0) return;
   const x = 4984;
@@ -2264,6 +2340,7 @@ export function renderFrame(
   if (sim.level.id === "latch") drawPulley(ctx, sim);
   if (sim.level.id === "roof") drawDrainTrash(ctx, sim.t, reduced);
   if (sim.level.combo) drawLatchLock(ctx, sim);
+  if (sim.level.id === "choir") drawChoirMarks(ctx);
 
   for (const plate of sim.level.plates) {
     const hot = (sim.latch[plate.id] ?? 0) > 0;
@@ -2318,21 +2395,7 @@ export function renderFrame(
   if (sim.level.boulder) drawBoulder(ctx, sim, reduced);
 
   const goal = sim.level.goal;
-  const doorX = goal.x + goal.w / 2 - 9;
-  const locked = sim.doorLocked;
-  const door = ctx.createLinearGradient(doorX, goal.y, doorX, goal.y + goal.h);
-  door.addColorStop(0, "rgba(255,255,255,0)");
-  door.addColorStop(0.5, locked ? "rgba(255,255,255,0.28)" : "rgba(255,255,255,0.85)");
-  door.addColorStop(1, "rgba(255,255,255,0)");
-  ctx.fillStyle = door;
-  ctx.fillRect(doorX, goal.y, 18, goal.h);
-  if (sim.level.beacons.length > 0) {
-    const lit = sim.beacons.size;
-    for (let i = 0; i < sim.level.beacons.length; i++) {
-      ctx.fillStyle = i < lit ? "rgba(243,240,232,0.9)" : "rgba(243,240,232,0.25)";
-      ctx.fillRect(doorX - 10, goal.y + 28 + i * 14, 5, 5);
-    }
-  }
+  drawBlackHole(ctx, goal.x + goal.w / 2, goal.y + goal.h * 0.45, sim.t, sim.doorLocked);
 
   if (!attract) {
     for (const ghost of ghosts) {
@@ -2382,6 +2445,7 @@ export function renderFrame(
     attract,
     cloth,
   );
+  if (sim.level.id === "choir") drawChoirBalloon(ctx, sim);
   if (sim.level.id === "latch") drawExitSnare(ctx, sim);
 
   for (let i = motes.length - 1; i >= 0; i--) {
