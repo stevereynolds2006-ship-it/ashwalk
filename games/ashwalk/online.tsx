@@ -205,6 +205,7 @@ export function Online({
         if (inRun(phaseRef.current)) {
           applyShared(simRef.current, {
             rope: pose.r,
+            rope2: pose.r2,
             moths: pose.m,
             beacons: pose.b,
             crumbles: pose.c.map(([id, fall, gone]) => ({
@@ -273,6 +274,7 @@ export function Online({
         if (!level || sim.level.id === level) {
           applyShared(sim, {
             rope: typeof data.rope === "number" ? data.rope : undefined,
+            rope2: typeof data.rope2 === "number" ? data.rope2 : undefined,
             pulling: data.pulling === true,
             moths: stringList(data.moths),
             beacons: stringList(data.beacons),

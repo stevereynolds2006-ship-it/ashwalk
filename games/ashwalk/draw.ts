@@ -304,32 +304,43 @@ function drawCagedFriend(
   sim: Sim,
   reduced: boolean,
   cloth: string | null,
+  spec: {
+    rope: number;
+    feast: number;
+    startX: number;
+    landX: number;
+    hangTop: number;
+    landTop: number;
+    floor: number;
+    axleX: number;
+    wireY: number;
+  },
 ) {
-  const free = sim.rope >= 1;
-  const floor = 468;
-  const startX = 1644;
-  const landX = 2410;
+  const free = spec.rope >= 1;
+  const startX = spec.startX;
+  const landX = spec.landX;
   const cageW = 84;
   const cageH = 100;
-  const hangTop = 150;
-  const landTop = 368 - cageH;
-  const back = sim.feast < 4.9 ? 0 : Math.min(1, (sim.feast - 4.9) / 1.5);
-  const ride = sim.rope * (1 - back);
+  const hangTop = spec.hangTop;
+  const landTop = spec.landTop;
+  const floor = spec.floor;
+  const back = spec.feast < 4.9 ? 0 : Math.min(1, (spec.feast - 4.9) / 1.5);
+  const ride = spec.rope * (1 - back);
   const cageX = startX + (landX - startX) * ride;
   const dropTop = hangTop + (landTop - hangTop) * ride;
   const home = ride < 0.04;
   const sway = (!free || home) && !reduced ? Math.sin(sim.t * 1.3) * 6 : 0;
   const top = dropTop;
-  const cheer = free && sim.feast < 3 && !reduced ? Math.abs(Math.sin(sim.t * 7)) * 10 : 0;
-  const melt = free ? Math.min(1, Math.max(0, (sim.feast - 3) / 0.85)) : 0;
+  const cheer = free && spec.feast < 3 && !reduced ? Math.abs(Math.sin(sim.t * 7)) * 10 : 0;
+  const melt = free ? Math.min(1, Math.max(0, (spec.feast - 3) / 0.85)) : 0;
   const x = cageX + 22 + sway;
   const y = top + cageH - PH - cheer;
   const hookX = cageX + cageW / 2 + sway;
   ctx.strokeStyle = "#c8c6c0";
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(1752, 110);
-  ctx.lineTo(hookX, 110);
+  ctx.moveTo(spec.axleX, spec.wireY);
+  ctx.lineTo(hookX, spec.wireY);
   ctx.lineTo(hookX, top);
   ctx.stroke();
   if (melt < 1) {
@@ -361,7 +372,7 @@ function drawCagedFriend(
   ctx.fillRect(cageX, top + cageH - 7, cageW, 7);
   for (let i = 0; i < 5; i++) ctx.fillRect(cageX + 6 + i * 18, top, 4, cageH);
   ctx.restore();
-  if (free && sim.feast < 3) {
+  if (free && spec.feast < 3) {
     ctx.strokeStyle = "#f4f1ea";
     ctx.lineWidth = 2;
     ctx.beginPath();
@@ -371,13 +382,13 @@ function drawCagedFriend(
     ctx.lineTo(x + 28, y);
     ctx.stroke();
   }
-  if (free && back === 0 && sim.feast > 3 && sim.feast < 4.7) {
-    drawAcidDump(ctx, landX + cageW / 2, landTop, sim.t, Math.min(1, (sim.feast - 3) / 0.35));
+  if (free && back === 0 && spec.feast > 3 && spec.feast < 4.7) {
+    drawAcidDump(ctx, landX + cageW / 2, landTop, sim.t, Math.min(1, (spec.feast - 3) / 0.35));
   }
 
-  const axleX = 1752;
+  const axleX = spec.axleX;
   const axleY = floor - 46;
-  const spin = sim.rope * Math.PI * 6;
+  const spin = spec.rope * Math.PI * 6;
   const r = 26;
   ctx.strokeStyle = "#c8c6c0";
   ctx.lineWidth = 3;
@@ -402,7 +413,7 @@ function drawCagedFriend(
   ctx.lineWidth = 2;
   ctx.beginPath();
   ctx.moveTo(axleX, axleY - r);
-  ctx.lineTo(axleX, 110);
+  ctx.lineTo(axleX, spec.wireY);
   ctx.stroke();
 }
 
@@ -2650,7 +2661,30 @@ export function renderFrame(
   }
 
   drawTerrain(ctx, sim, reduced);
-  if (sim.level.id === "shore") drawCagedFriend(ctx, sprites, sim, reduced, cloth);
+  if (sim.level.id === "shore") {
+    drawCagedFriend(ctx, sprites, sim, reduced, cloth, {
+      rope: sim.rope,
+      feast: sim.feast,
+      startX: 1644,
+      landX: 2410,
+      hangTop: 150,
+      landTop: 268,
+      floor: 468,
+      axleX: 1752,
+      wireY: 110,
+    });
+    drawCagedFriend(ctx, sprites, sim, reduced, cloth, {
+      rope: sim.rope2,
+      feast: sim.feast2,
+      startX: 4280,
+      landX: 4748,
+      hangTop: 148,
+      landTop: 356,
+      floor: 456,
+      axleX: 4840,
+      wireY: 96,
+    });
+  }
   if (sim.level.id === "latch") drawPulley(ctx, sim);
   if (sim.level.id === "roof") drawDrainTrash(ctx, sim.t, reduced);
   if (sim.level.combo) drawLatchLock(ctx, sim);

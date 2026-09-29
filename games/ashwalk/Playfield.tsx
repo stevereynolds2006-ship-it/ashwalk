@@ -752,6 +752,7 @@ export function Playfield({
             d: q(sim.dead),
             n: sim.won ? 1 : 0,
             r: q(sim.rope),
+            r2: q(sim.rope2),
             c: Object.entries(sim.crumbles)
               .filter(([, crumb]) => crumb.timer > 0 || crumb.fall > 0 || crumb.gone)
               .map(([id, crumb]) => [id, q(crumb.fall), crumb.gone ? 1 : 0]),

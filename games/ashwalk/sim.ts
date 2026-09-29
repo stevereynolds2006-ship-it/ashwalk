@@ -57,6 +57,7 @@ export type RemoteBody = { x: number; y: number; dead: boolean };
 
 export type SharedWorld = {
   rope?: number;
+  rope2?: number;
   pulling?: boolean;
   moths?: string[];
   beacons?: string[];
@@ -83,6 +84,7 @@ export type Sim = {
   t: number;
   run: number;
   rope: number;
+  rope2: number;
   pulling: boolean;
   won: boolean;
   dead: number;
@@ -134,6 +136,8 @@ export type Sim = {
   palFace: 1 | -1;
   /** Seconds after you reach the landed cage. Acid falls. */
   feast: number;
+  /** Seconds after you reach the second landed cage. */
+  feast2: number;
   /** 0 to 1 while the exit pulls you in. The clear waits until this finishes. */
   suck: number;
   /** Moon lanterns that are currently lit. */
@@ -177,6 +181,7 @@ export function createSim(level: Level = SHORE): Sim {
     t: 0,
     run: 0,
     rope: 0,
+    rope2: 0,
     pulling: false,
     won: false,
     dead: 0,
@@ -220,6 +225,7 @@ export function createSim(level: Level = SHORE): Sim {
     palY: 468 - PH,
     palFace: 1,
     feast: 0,
+    feast2: 0,
     suck: 0,
     altars: new Set(),
     altarLeft: {},
@@ -233,6 +239,10 @@ export function applyShared(sim: Sim, world: SharedWorld) {
   if (typeof world.rope === "number" && world.rope > sim.rope) {
     sim.rope = world.rope;
     if (world.rope > 0) sim.pulling = true;
+  }
+  if (typeof world.rope2 === "number" && world.rope2 > sim.rope2) {
+    sim.rope2 = world.rope2;
+    if (world.rope2 > 0) sim.pulling = true;
   }
   for (const id of world.moths ?? []) sim.moths.add(id);
   for (const id of world.beacons ?? []) {
@@ -260,6 +270,7 @@ export function applyShared(sim: Sim, world: SharedWorld) {
 export function snapshotWorld(sim: Sim): SharedWorld {
   return {
     rope: sim.rope,
+    rope2: sim.rope2,
     pulling: sim.pulling,
     moths: [...sim.moths],
     beacons: [...sim.beacons],
@@ -804,6 +815,22 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
         const nearCage = Math.abs(sim.x - 2460) < 200 && sim.y < 420;
         if (sim.feast > 0 || nearCage) sim.feast += dt;
       }
+      if (level.id === "shore") {
+        const flyCrank = { id: "rope-fly", x: 4760, y: 336, w: 100, h: 130 };
+        const atFly = sim.rope2 < 1 && zoneHit(sim.x, sim.y, flyCrank);
+        if (atFly) sim.nearRope = true;
+        if (atFly && input.interact) {
+          const before = sim.rope2;
+          if (!sim.pulling) events.pull = true;
+          sim.pulling = true;
+          sim.rope2 = Math.min(1, sim.rope2 + dt / 1.7);
+          if (before < 1 && sim.rope2 === 1) events.rope = true;
+        }
+        if (sim.rope2 >= 1) {
+          const nearFly = Math.abs(sim.x - 4788) < 180 && sim.y < 520;
+          if (sim.feast2 > 0 || nearFly) sim.feast2 += dt;
+        }
+      }
     } else if (input.interactPressed && sim.nearRope && !sim.pulling) {
       sim.pulling = true;
       events.pull = true;
@@ -941,7 +968,7 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
 
   if (events.beacon === "lock") events.beacon = null;
   sim.doorLocked =
-    (level.id === "shore" && sim.rope < 1) ||
+    (level.id === "shore" && (sim.rope < 1 || sim.rope2 < 1)) ||
     (level.beacons.length > 0 && sim.beacons.size < level.beacons.length) ||
     (!!level.stalker && !sim.caged) ||
     (!!level.hunter && sim.wake < 1) ||
