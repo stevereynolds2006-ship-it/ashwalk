@@ -856,10 +856,14 @@ export function Playfield({
               const next = purseRef.current - LIGHT_PRICE;
               purseRef.current = next;
               setPurse(next);
-              if (sim.level.id === "moon" && events.lampId) {
+              if ((sim.level.id === "moon" || sim.level.id === "hoist") && events.lampId) {
                 sim.altars.add(events.lampId);
-                sim.altarLeft[events.lampId] = 10;
-                setShopError("Spent 1 coin. The moon stays bright for 10 seconds.");
+                sim.altarLeft[events.lampId] = sim.level.id === "hoist" ? LIGHT_SECONDS : 10;
+                setShopError(
+                  sim.level.id === "hoist"
+                    ? "Spent 1 coin. The yard is brighter for 13 seconds."
+                    : "Spent 1 coin. The moon stays bright for 10 seconds.",
+                );
               } else {
                 shoreGlowRef.current = LIGHT_SECONDS;
                 setShopError("Spent 1 coin you picked up.");
@@ -1038,7 +1042,9 @@ export function Playfield({
           ? sim.level.id === "choir"
             ? 0.58
             : 0.86
-          : 0,
+          : sim.level.id === "hoist"
+            ? Math.max(0.08, 0.84 - (sim.altars.size / Math.max(1, sim.level.lamps?.length ?? 1)) * 0.76)
+            : 0,
         clothRef.current,
       );
     };
@@ -2005,7 +2011,11 @@ function promptFor(sim: Sim, phase: Phase) {
   if (sim.nearRope) return sim.level.id === "shore" ? "Hold E · crank them down" : "Hold E · wind the pulley";
   if (sim.nearShrine) return "E · light a lantern";
   if (sim.nearLamp) {
-    return sim.level.id === "moon" ? "E · light the moon · 1 coin · 10 seconds" : "E · buy light · 1 coin you picked up";
+    return sim.level.id === "moon"
+      ? "E · light the moon · 1 coin · 10 seconds"
+      : sim.level.id === "hoist"
+        ? "E · light the yard · 1 coin · 13 seconds"
+        : "E · buy light · 1 coin you picked up";
   }
   if (sim.nearCombo != null) {
     if (sim.level.id === "latch" && sim.cage > 0.4) return comboSet(sim) ? "The cage is opening" : "E · enter the number";

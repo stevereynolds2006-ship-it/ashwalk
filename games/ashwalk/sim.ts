@@ -965,13 +965,13 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
       sim.nearLamp = true;
       if (input.interactPressed) {
         events.lamp = true;
-        events.lampId = level.id === "moon" ? lamp.id : null;
+        events.lampId = level.id === "moon" || level.id === "hoist" ? lamp.id : null;
       }
       break;
     }
   }
 
-  if (level.id === "moon") {
+  if (level.id === "moon" || level.id === "hoist") {
     for (const id of [...sim.altars]) {
       sim.altarLeft[id] = (sim.altarLeft[id] ?? 0) - dt;
       if (sim.altarLeft[id] <= 0) {
