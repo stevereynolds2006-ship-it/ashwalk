@@ -1536,7 +1536,7 @@ function drawTwin(
   if (!spec) return;
   const scale = 11;
   const center = sim.wake > 0 ? sim.stalkX : spec.x;
-  const bottom = spec.surface;
+  const bottom = sim.wake > 0 && sim.stalkY > 40 ? sim.stalkY : spec.surface;
   if (!sprites) return;
   const facing = sim.stalkDir < 0 ? "left" : "right";
   const walking = sim.wake >= 1 && !reduced;
@@ -2836,21 +2836,14 @@ function drawToxic(ctx: CanvasRenderingContext2D, sim: Sim, camera: Camera) {
     if (plat.kind === "ladder" || plat.kind === "gate" || plat.terrain) continue;
     if (plat.y > 640) continue;
     if (plat.x > camera.x + camera.w + 20 || plat.x + plat.w < camera.x - 20) continue;
-    const count = Math.max(2, Math.floor(plat.w / 70));
+    const count = Math.max(1, Math.floor(plat.w / 180));
     for (let i = 0; i < count; i++) {
       drips.push({
         x: plat.x + 14 + ((i * 61 + plat.x) % Math.max(8, plat.w - 20)),
         y: plat.y + Math.max(10, plat.h),
-        len: 22 + ((i * 17) % 48),
+        len: 12 + ((i * 17) % 22),
       });
     }
-  }
-  for (let i = 0; i < 8; i++) {
-    drips.push({
-      x: camera.x + 30 + ((i * 97) % Math.max(40, camera.w - 40)),
-      y: camera.y + 8,
-      len: 36 + (i % 4) * 18,
-    });
   }
   for (const drip of drips) {
     const cycle = ((sim.t * 0.45 + drip.x * 0.01) % 1 + 1) % 1;
@@ -2871,6 +2864,38 @@ function drawToxic(ctx: CanvasRenderingContext2D, sim: Sim, camera: Camera) {
       ctx.fill();
     }
   }
+  ctx.restore();
+}
+
+function drawZip(ctx: CanvasRenderingContext2D, sim: Sim) {
+  ctx.save();
+  ctx.strokeStyle = "rgba(244,241,234,0.85)";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(2120, 148);
+  ctx.lineTo(180, 430);
+  ctx.stroke();
+  const riding = sim.cage > 0 && sim.suck <= 0;
+  const x = riding ? sim.x + PW / 2 : 2060;
+  const y = riding ? sim.y + 8 : 168;
+  if (!riding && sim.wake < 1) {
+    ctx.restore();
+    return;
+  }
+  ctx.strokeStyle = "#f4f1ea";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(x, y - 22);
+  ctx.lineTo(x, y - 4);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x - 16, y - 4);
+  ctx.lineTo(x - 11, y + 18);
+  ctx.lineTo(x + 11, y + 18);
+  ctx.lineTo(x + 16, y - 4);
+  ctx.closePath();
+  ctx.stroke();
+  if (!riding) ctx.globalAlpha = 0.45 + Math.sin(sim.t * 3) * 0.15;
   ctx.restore();
 }
 
@@ -3201,6 +3226,14 @@ function drawMirrorFog(
     cloth,
   );
   ctx.restore();
+  if (sim.level.hunter && sim.wake > 0) {
+    ctx.save();
+    ctx.globalAlpha = 0.18;
+    const home = sim.stalkX;
+    ctx.translate(camera.x * 0.55 + home * 0.2 - home, -50);
+    drawTwin(ctx, sprites, sim, reduced);
+    ctx.restore();
+  }
   const waterTop = 500;
   const waterBottom = camera.y + camera.h + 60;
   const wash = ctx.createLinearGradient(0, waterTop, 0, waterBottom);
@@ -3517,6 +3550,7 @@ export function renderFrame(
 
   drawTerrain(ctx, sim, reduced);
   if (sim.level.id === "hoist") drawToxic(ctx, sim, camera);
+  if (sim.level.id === "mirror") drawZip(ctx, sim);
   if (sim.level.id === "yule") drawYuleHill(ctx, sim, reduced);
   if (sim.level.id === "shore") {
     drawCagedFriend(ctx, sprites, sim, reduced, cloth, {

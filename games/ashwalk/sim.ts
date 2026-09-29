@@ -388,6 +388,7 @@ export function rectsAt(sim: Sim, reduced: boolean): Rect[] {
       continue;
     }
     if (plat.id === "r5" && sim.crack > 0.55) continue;
+    if (sim.level.hunter && sim.wake >= 1 && (plat.id === "c4" || plat.id === "c4b" || plat.id === "c5")) continue;
     const crackShake = plat.id === "r5" && sim.crack > 0 ? Math.sin(sim.t * 46) * 5 : 0;
     const rest = sim.crumbles[plat.id];
     if (rest?.gone) continue;
@@ -1058,6 +1059,20 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
   stepHunter(sim, dt, events);
   stepBoulder(sim, dt, events);
 
+  if (level.id === "mirror" && sim.wake >= 1 && !sim.won && sim.suck <= 0 && sim.dead <= 0) {
+    const inBucket = sim.x > 1980 && sim.x < 2160 && sim.y < 190 && sim.y + PH > 120;
+    if (sim.cage > 0 || inBucket) {
+      if (sim.cage <= 0) sim.cage = 0.02;
+      sim.cage = Math.min(1, sim.cage + dt / 4.5);
+      const u = sim.cage;
+      sim.vx = 0;
+      sim.vy = 0;
+      sim.climbing = false;
+      sim.x = 2040 + (120 - 2040) * u;
+      sim.y = 160 - PH + (468 - 160) * u;
+    }
+  }
+
   if (level.id === "moon" && !sim.won && sim.suck <= 0) {
     const pad = sim.x > 1480 && sim.y < -600 && sim.y > -780;
     if (sim.cage > 0 || pad) {
@@ -1270,21 +1285,41 @@ function stepHunter(sim: Sim, dt: number, events: StepEvents) {
   if (sim.wake < 1) {
     sim.wake = Math.min(1, sim.wake + dt / 0.7);
     sim.stalkX = spec.x;
+    sim.stalkY = spec.surface;
     sim.stalkDir = -1;
     return;
   }
-  const speed = 168;
-  if (sim.stalkX > prey + 28) {
+  if (sim.stalkY < 40) sim.stalkY = spec.surface;
+  const speed = 148;
+  const ladderX = 2154;
+  const top = 196;
+  const onClimb = sim.y + PH < spec.surface - 24 && sim.x > 1900 && sim.x < 2400;
+  const followUp = sim.cage > 0 || onClimb || sim.stalkY < spec.surface - 16;
+  if (followUp && (sim.x < 2500 || sim.cage > 0 || sim.stalkY < spec.surface - 16)) {
+    if (Math.abs(sim.stalkX - ladderX) > 16 && sim.stalkY > spec.surface - 20) {
+      sim.stalkDir = sim.stalkX > ladderX ? -1 : 1;
+      sim.stalkX += (sim.stalkDir * speed) * dt;
+    } else {
+      sim.stalkX += (ladderX - sim.stalkX) * Math.min(1, dt * 4);
+      const goalY = sim.cage > 0 ? top : Math.max(top, sim.y + PH + 10);
+      const step = 72 * dt;
+      if (sim.stalkY > goalY + 2) sim.stalkY = Math.max(goalY, sim.stalkY - step);
+      sim.stalkDir = -1;
+    }
+  } else if (sim.stalkX > prey + 28) {
     sim.stalkX -= speed * dt;
     sim.stalkDir = -1;
+    sim.stalkY += (spec.surface - sim.stalkY) * Math.min(1, dt * 3);
   }
+  if (sim.cage > 0) return;
+  const feet = sim.stalkY;
   if (
     sim.invuln <= 0 &&
     sim.dead <= 0 &&
-    prey > sim.stalkX - 86 &&
-    prey < sim.stalkX + 16 &&
-    sim.y < spec.surface &&
-    sim.y + PH > spec.surface - 140
+    prey > sim.stalkX - 70 &&
+    prey < sim.stalkX + 36 &&
+    sim.y < feet &&
+    sim.y + PH > feet - 90
   ) {
     kill(sim, events);
   }
