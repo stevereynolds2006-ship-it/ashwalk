@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
-import { isAddress } from "viem";
+import { isAddress, parseAbiItem } from "viem";
 import type { ChanceGameDefinition, GameClient, GameSnapshot } from "@rarefriends/friendsdk/game";
 import { RF } from "@rarefriends/friendsdk/game";
 import { createFriendReader, type GenerationSprites } from "@rarefriends/friendsdk/sprites";
@@ -25,6 +25,7 @@ import {
   grantAllFogs,
   grantCloth,
   grantFog,
+  mergeLedger,
   outfitList,
   readLedger,
   spendable,
@@ -85,10 +86,24 @@ async function readRareBalance(account: string) {
   });
 }
 
-function encodeTransfer(to: string, amount: bigint) {
+function encodeTransfer(to: string, amount: bigint, tag = "") {
   const addr = to.toLowerCase().replace(/^0x/, "").padStart(64, "0");
   const value = amount.toString(16).padStart(64, "0");
-  return `0xa9059cbb${addr}${value}`;
+  const note = tag
+    ? [...new TextEncoder().encode(`ash:${tag}`)].map((byte) => byte.toString(16).padStart(2, "0")).join("")
+    : "";
+  return `0xa9059cbb${addr}${value}${note}`;
+}
+
+function readPurchaseTag(input: string) {
+  const data = input.toLowerCase();
+  if (!data.startsWith("0xa9059cbb") || data.length <= 138) return "";
+  const extra = data.slice(138);
+  if (extra.length % 2 !== 0) return "";
+  const bytes = extra.match(/../g);
+  if (!bytes) return "";
+  const text = new TextDecoder().decode(new Uint8Array(bytes.map((byte) => Number.parseInt(byte, 16))));
+  return text.startsWith("ash:") ? text.slice(4) : "";
 }
 
 async function onRareChain(eth: WalletProvider) {
@@ -116,15 +131,51 @@ async function onRareChain(eth: WalletProvider) {
   }
 }
 
-async function sendRare(eth: WalletProvider, from: string, to: string, amount: bigint) {
+async function sendRare(eth: WalletProvider, from: string, to: string, amount: bigint, tag = "") {
   if (amount <= 0n) return;
   const hash = await eth.request({
     method: "eth_sendTransaction",
-    params: [{ from, to: RARE_TOKEN, data: encodeTransfer(to, amount), value: "0x0" }],
+    params: [{ from, to: RARE_TOKEN, data: encodeTransfer(to, amount, tag), value: "0x0" }],
   });
   if (typeof hash !== "string" || !hash.startsWith("0x")) throw new Error("The wallet did not return a transaction.");
   const receipt = await createFriendPublicClient().waitForTransactionReceipt({ hash: hash as `0x${string}` });
   if (receipt.status !== "success") throw new Error("The Rare coin transaction failed.");
+}
+
+const PURCHASE_EVENT = parseAbiItem("event Transfer(address indexed from, address indexed to, uint256 value)");
+
+async function purchasesOnChain(account: string) {
+  const client = createFriendPublicClient();
+  const latest = await client.getBlockNumber();
+  const span = 800_000n;
+  const start = latest > span ? latest - span : 0n;
+  const opened: string[] = [];
+  const owned: string[] = [];
+  let allFogs = false;
+  const chunk = 200_000n;
+  for (let from = start; from <= latest; from += chunk) {
+    const toBlock = from + chunk - 1n > latest ? latest : from + chunk - 1n;
+    const logs = await client.getLogs({
+      address: RARE_TOKEN,
+      event: PURCHASE_EVENT,
+      args: { from: account as `0x${string}`, to: PAYOUT_ADDRESS },
+      fromBlock: from,
+      toBlock,
+    });
+    for (const log of logs) {
+      if (!log.transactionHash) continue;
+      const tx = await client.getTransaction({ hash: log.transactionHash });
+      const tag = readPurchaseTag(tx.input);
+      if (tag.startsWith("fog:")) {
+        const id = tag.slice(4);
+        if (LEVELS.some((level) => level.id === id) && !opened.includes(id)) opened.push(id);
+      } else if (tag.startsWith("cape:")) {
+        const id = tag.slice(5);
+        if (clothById(id) && !owned.includes(id)) owned.push(id);
+      } else if (tag === "all") allFogs = true;
+    }
+  }
+  return { opened, owned, allFogs };
 }
 
 const LAMP_PRICE = 5;
@@ -303,6 +354,18 @@ export function Playfield({
     clothRef.current = next.equipped;
   }
 
+  async function recallPurchases(who: string) {
+    if (!isAddress(who)) return;
+    try {
+      const found = await purchasesOnChain(who);
+      if (found.opened.length === 0 && found.owned.length === 0 && !found.allFogs) return;
+      mergeLedger(who, found);
+      if (accountRef.current?.toLowerCase() === who.toLowerCase()) refreshLedger(who);
+    } catch {
+      /* the browser copy still applies if the chain read fails */
+    }
+  }
+
   async function connectRareWallet() {
     const eth = walletProvider();
     if (!eth) {
@@ -321,6 +384,7 @@ export function Playfield({
       setLinkedAccount(who);
       setWalletCoins(balance);
       refreshLedger(who);
+      void recallPurchases(who);
       setStakeMsg("");
       return true;
     } catch {
@@ -334,7 +398,7 @@ export function Playfield({
     return connectRareWallet();
   }
 
-  async function chargeRare(whole: number) {
+  async function chargeRare(whole: number, tag: string) {
     if (whole <= 0) return true;
     const eth = walletProvider();
     if (!eth) {
@@ -358,7 +422,7 @@ export function Playfield({
         setStakeMsg(`You need ${whole} Rare coins.`);
         return false;
       }
-      await sendRare(eth, who, PAYOUT_ADDRESS, share);
+      await sendRare(eth, who, PAYOUT_ADDRESS, share, tag);
       sent = true;
       setStakeMsg("Confirm burning the other half.");
       await sendRare(eth, who, BURN_ADDRESS, burn);
@@ -389,7 +453,7 @@ export function Playfield({
       return false;
     }
     if (openedRef.current.has(id)) return true;
-    if (!(await chargeRare(price))) return false;
+    if (!(await chargeRare(price, `fog:${id}`))) return false;
     grantFog(who, id, price);
     openedRef.current.add(id);
     refreshLedger(who);
@@ -434,7 +498,7 @@ export function Playfield({
       return;
     }
     if (cloth && cloth.cost > 0 && !readLedger(who).owned.includes(id)) {
-      if (!(await chargeRare(cloth.cost))) return;
+      if (!(await chargeRare(cloth.cost, `cape:${id}`))) return;
       if (!grantCloth(who, id, cloth.cost)) {
         setStakeMsg("The cape was paid, but this browser could not save it.");
         return;
@@ -461,7 +525,7 @@ export function Playfield({
       setStakeMsg("Connect a wallet. A life is 10 Rare coins.");
       return;
     }
-    if (!(await chargeRare(LIFE_PRICE))) return;
+    if (!(await chargeRare(LIFE_PRICE, "life"))) return;
     refreshLedger(who);
     onWardrobe?.();
     livesRef.current = 1;
@@ -487,7 +551,7 @@ export function Playfield({
       setStakeMsg("Connect a wallet. Every fog costs 20 Rare coins.");
       return;
     }
-    if (!(await chargeRare(ALL_FOGS_COST))) return;
+    if (!(await chargeRare(ALL_FOGS_COST, "all"))) return;
     grantAllFogs(who, ALL_FOGS_COST);
     setStakeMsg("");
     refreshLedger(who);
@@ -569,6 +633,7 @@ export function Playfield({
       /* private mode */
     }
     refreshLedger(account && isAddress(account) ? account : "guest");
+    if (account && isAddress(account)) void recallPurchases(account);
   }, [account, friendId]);
 
   useEffect(() => {

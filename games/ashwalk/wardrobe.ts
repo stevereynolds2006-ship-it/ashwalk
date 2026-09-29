@@ -180,9 +180,26 @@ function writeLedger(account: string, ledger: Ledger) {
         opened: ledger.opened,
       }),
     );
+    return true;
   } catch {
-    /* the sandboxed frame has no storage */
+    return false;
   }
+}
+
+export function mergeLedger(
+  account: string,
+  extra: { opened?: readonly string[]; owned?: readonly string[]; allFogs?: boolean },
+) {
+  const ledger = readLedger(account);
+  for (const id of extra.opened ?? []) {
+    if (!ledger.opened.includes(id)) ledger.opened.push(id);
+  }
+  for (const id of extra.owned ?? []) {
+    if (clothById(id) && !ledger.owned.includes(id)) ledger.owned.push(id);
+  }
+  if (extra.allFogs) ledger.allFogs = true;
+  writeLedger(account, ledger);
+  return ledger;
 }
 
 export function spendable(balance: bigint | null, account: string | null) {
