@@ -964,7 +964,7 @@ const HOIST: Level = {
   id: "hoist",
   title: "The hoist",
   kicker: "The ladder is the only way.",
-  rule: "Use grabs the ladder and turns you to it. Hold Use to climb. Press Use again to climb down. Left or right steps off. Rats keep the floor. Spiders keep the beams.",
+  rule: "Use climbs up. Down climbs down. The character turns to the ladder. Left or right steps off. Rats keep the floor. Spiders keep the beams.",
   together: "The ladders are shared. So are the spiders.",
   clearKicker: "The hoist",
   clearTitle: "You came back down",

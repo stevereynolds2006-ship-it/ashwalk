@@ -717,21 +717,21 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
   if (Math.abs(sim.vy) < APEX) gravity = GRAV_APEX;
   const shaft = ladderHit(sim);
   sim.nearLadder = shaft != null;
-  if (shaft && input.interactPressed) {
-    if (!sim.climbing) {
-      sim.climbing = true;
-      sim.climbDir = -1;
-    } else sim.climbDir = sim.climbDir < 0 ? 1 : -1;
-  }
+  if (shaft && (input.interact || input.down)) sim.climbing = true;
   if (!shaft) sim.climbing = false;
-  if (sim.climbing && shaft && (input.left || input.right) && !input.interact) sim.climbing = false;
+  if (sim.climbing && shaft && (input.left || input.right) && !input.interact && !input.down) sim.climbing = false;
   if (sim.climbing && input.jumpPressed) sim.climbing = false;
   if (sim.climbing && shaft) {
     sim.x = shaft.x + shaft.w / 2 - PW / 2;
     sim.vx = 0;
     sim.facing = 1;
-    if (input.interact) {
-      sim.vy = (sim.climbDir < 0 ? -1 : 1) * 120;
+    if (input.down) {
+      sim.climbDir = 1;
+      sim.vy = 120;
+      sim.anim += dt;
+    } else if (input.interact) {
+      sim.climbDir = -1;
+      sim.vy = -120;
       sim.anim += dt;
     } else sim.vy = 0;
     sim.grounded = false;
