@@ -850,9 +850,9 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
       sim.slain.add(i);
       continue;
     }
-    const feet = spec.kind === "deer" || spec.kind === "scare";
-    const hitW = feet && spec.kind === "scare" ? 36 : spec.kind === "deer" ? 72 : spec.kind === "gator" ? 86 : spec.kind === "eagle" ? 54 : spec.kind === "ship" ? 52 : spec.kind === "alien" ? 26 : spec.kind === "rocket" ? 48 : spec.kind === "turtle" ? 34 : spec.kind === "rat" ? 28 : 22;
-    const hitH = spec.kind === "scare" ? 72 : spec.kind === "deer" ? 40 : spec.kind === "gator" ? 30 : spec.kind === "eagle" ? 24 : spec.kind === "ship" ? 22 : spec.kind === "alien" ? 40 : spec.kind === "rocket" ? 18 : spec.kind === "turtle" ? 26 : spec.kind === "rat" ? 20 : 14;
+    const feet = spec.kind === "deer" || spec.kind === "scare" || spec.kind === "shade";
+    const hitW = spec.kind === "shade" ? 28 : spec.kind === "scare" ? 36 : spec.kind === "deer" ? 72 : spec.kind === "gator" ? 86 : spec.kind === "eagle" ? 54 : spec.kind === "ship" ? 52 : spec.kind === "alien" ? 26 : spec.kind === "rocket" ? 48 : spec.kind === "turtle" ? 34 : spec.kind === "rat" ? 28 : 22;
+    const hitH = spec.kind === "shade" ? 60 : spec.kind === "scare" ? 72 : spec.kind === "deer" ? 40 : spec.kind === "gator" ? 30 : spec.kind === "eagle" ? 24 : spec.kind === "ship" ? 22 : spec.kind === "alien" ? 40 : spec.kind === "rocket" ? 18 : spec.kind === "turtle" ? 26 : spec.kind === "rat" ? 20 : 14;
     const top = feet ? birdY - hitH : birdY;
     const bot = feet ? birdY : birdY + hitH;
     if (

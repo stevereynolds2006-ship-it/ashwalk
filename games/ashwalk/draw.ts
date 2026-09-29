@@ -438,6 +438,7 @@ function drawTerrain(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) 
   drawSaws(ctx, sim);
   drawBlood(ctx, sim);
   drawPumpkins(ctx, sim);
+  if (sim.level.id === "hallow") drawHallowFog(ctx, sim.t);
   if (sim.level.id === "hoist") drawHoistHangs(ctx, sim);
   if (sim.level.id === "choir") {
     for (const rect of bodies) {
@@ -3020,8 +3021,11 @@ function drawTrapDoor(ctx: CanvasRenderingContext2D, sim: Sim, rect: { id: strin
   const state = sim.crumbles[rect.id];
   const warn = Math.min(1, (state?.timer ?? 0) / 1.45);
   const open = state?.gone ? 1 : Math.min(1, (state?.fall ?? 0) / 150);
+  const reach = 0.35 + open * 0.65;
   ctx.fillStyle = "#050506";
-  ctx.fillRect(rect.x + 2, rect.y + 4, rect.w - 4, 90);
+  ctx.fillRect(rect.x + 2, rect.y + 4, rect.w - 4, 110);
+  drawCrawler(ctx, rect.x + rect.w * 0.32, rect.y + 108, sim.t, reach);
+  drawCrawler(ctx, rect.x + rect.w * 0.7, rect.y + 112, sim.t + 1.4, reach * 0.85);
   ctx.save();
   ctx.translate(rect.x, rect.y);
   ctx.rotate(open * 1.2 + warn * 0.06);
@@ -3125,6 +3129,22 @@ function drawHauntedHouse(ctx: CanvasRenderingContext2D, t: number) {
   ctx.moveTo(4900, 80);
   ctx.quadraticCurveTo(4840, 280, 4920, 500);
   ctx.stroke();
+  ctx.fillStyle = "#2a2628";
+  ctx.fillRect(3440, 470, 2140, 30);
+  ctx.fillStyle = "#1a181c";
+  ctx.beginPath();
+  ctx.moveTo(3440, 310);
+  ctx.lineTo(3640, 268);
+  ctx.lineTo(3640, 286);
+  ctx.lineTo(3440, 328);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = "#0c0c10";
+  ctx.lineWidth = 3;
+  for (const [x, y] of [[3580, 230], [4020, 220], [4560, 270]] as [number, number][]) {
+    ctx.strokeRect(x - 6, y + 4, 8, 42);
+    ctx.strokeRect(x + 32, y + 6, 8, 40);
+  }
   ctx.strokeStyle = "#1a181c";
   ctx.lineWidth = 2;
   for (let x = 3280; x < 3480; x += 18) {
@@ -3136,6 +3156,95 @@ function drawHauntedHouse(ctx: CanvasRenderingContext2D, t: number) {
     ctx.lineTo(x + 18, 500);
     ctx.stroke();
   }
+  ctx.restore();
+}
+
+function drawCrawler(ctx: CanvasRenderingContext2D, x: number, floor: number, t: number, reach: number) {
+  const up = floor - 22 - reach * 52 + Math.sin(t * 2.1) * 3;
+  ctx.save();
+  ctx.fillStyle = "#07080c";
+  ctx.beginPath();
+  ctx.ellipse(x, floor - 6, 15, 9, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(x, up, 8, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = "#07080c";
+  ctx.lineWidth = 4;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(x - 5, up + 8);
+  ctx.lineTo(x - 14, up - 14 - reach * 10);
+  ctx.moveTo(x + 5, up + 8);
+  ctx.lineTo(x + 15, up - 18 - reach * 12);
+  ctx.stroke();
+  ctx.fillStyle = "#f7f4ee";
+  ctx.fillRect(x - 4, up - 2, 2, 2);
+  ctx.fillRect(x + 2, up - 2, 2, 2);
+  ctx.restore();
+}
+
+function drawShade(ctx: CanvasRenderingContext2D, x: number, y: number, face: number, seed: number) {
+  ctx.save();
+  ctx.translate(x + 12, y);
+  ctx.scale(face < 0 ? -1 : 1, 1);
+  const tall = seed % 3 === 0;
+  const h = tall ? 78 : 60;
+  ctx.fillStyle = "#07080c";
+  ctx.fillRect(-7, -18, 4, 18);
+  ctx.fillRect(4, -18, 4, 18);
+  ctx.beginPath();
+  ctx.ellipse(-5, -1, 5, 2.2, 0, 0, Math.PI * 2);
+  ctx.ellipse(6, -1, 5, 2.2, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(-13, -h + 18);
+  ctx.quadraticCurveTo(-18, -28, -11, -16);
+  ctx.lineTo(12, -16);
+  ctx.quadraticCurveTo(18, -28, 13, -h + 18);
+  ctx.closePath();
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(0, -h + 8, tall ? 11 : 9, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#e4e0d8";
+  ctx.beginPath();
+  ctx.ellipse(0, -h + 10, 8, 9, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#07080c";
+  ctx.beginPath();
+  ctx.ellipse(-3, -h + 10, 2.3, 2.8, 0, 0, Math.PI * 2);
+  ctx.ellipse(3.2, -h + 10, 2.3, 2.8, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#f7f4ee";
+  ctx.fillRect(-3.6, -h + 9, 1.3, 1.3);
+  ctx.fillRect(2.8, -h + 9, 1.3, 1.3);
+  if (seed % 2 === 0) {
+    ctx.strokeStyle = "#07080c";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(8, -h + 26);
+    ctx.lineTo(24, -h + 6);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawHallowFog(ctx: CanvasRenderingContext2D, t: number) {
+  ctx.save();
+  for (let i = 0; i < 9; i++) {
+    const x = ((i * 820 + t * 16) % 7800) - 300;
+    const y = 220 + (i % 4) * 70;
+    ctx.fillStyle = i % 2 ? "rgba(186, 186, 190, 0.14)" : "rgba(210, 210, 214, 0.1)";
+    ctx.beginPath();
+    ctx.ellipse(x, y, 320, 34, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  const mist = ctx.createLinearGradient(0, 420, 0, 620);
+  mist.addColorStop(0, "rgba(200, 200, 204, 0)");
+  mist.addColorStop(1, "rgba(200, 200, 204, 0.22)");
+  ctx.fillStyle = mist;
+  ctx.fillRect(-200, 420, 7400, 220);
   ctx.restore();
 }
 
@@ -4127,6 +4236,7 @@ export function renderFrame(
     else if (bird.kind === "ship") drawShip(ctx, bird.x, bird.y, bird.dir);
     else if (bird.kind === "eagle") drawEagle(ctx, bird.x, bird.y, sim.t * 8, bird.dir);
     else if (bird.kind === "scare") drawScarecrow(ctx, bird.x, bird.y, sim.t, bird.dir);
+    else if (bird.kind === "shade") drawShade(ctx, bird.x, bird.y, bird.dir, bird.index);
     else drawCrow(ctx, bird.x, bird.y, sim.t * 14, bird.dir);
   }
 
