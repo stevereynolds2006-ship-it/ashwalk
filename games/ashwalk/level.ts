@@ -53,7 +53,7 @@ export type Bird = {
   amp: number;
   speed: number;
   start?: number;
-  kind?: "crow" | "rat" | "turtle" | "gator" | "rocket" | "alien" | "ship" | "deer" | "eagle";
+  kind?: "crow" | "rat" | "turtle" | "gator" | "rocket" | "alien" | "ship" | "deer" | "eagle" | "scare";
 };
 
 export type Wind = {
@@ -62,6 +62,23 @@ export type Wind = {
   strength: number;
   period: number;
   mode: "gust" | "tide";
+};
+
+export type Saw = {
+  x: number;
+  y: number;
+  len: number;
+  swing: number;
+  speed: number;
+  phase: number;
+};
+
+export type Drip = {
+  x: number;
+  y0: number;
+  y1: number;
+  period: number;
+  phase: number;
 };
 
 export type Chapter = { x: number; id: string; title: string; kicker: string };
@@ -137,6 +154,8 @@ export type Level = {
   stalker?: Stalker;
   hunter?: Hunter;
   boulder?: Boulder;
+  saws?: readonly Saw[];
+  drips?: readonly Drip[];
   /** Exit lock. The code is the marks on the gates. */
   combo?: { code: readonly number[]; x: number; span: number; y: number };
 };

@@ -1826,7 +1826,7 @@ export function Playfield({
       {phase === "play" && (
         <div
           className={
-            pickId === "hoist" ? "ash-touch ash-touch-hoist" : pickId === "yule" ? "ash-touch ash-touch-eve" : pickId === "tunnel" ? "ash-touch ash-touch-tunnel" : pickId === "roof" ? "ash-touch ash-touch-sign" : pickId === "gale" ? "ash-touch ash-touch-gale" : "ash-touch"
+            pickId === "hoist" ? "ash-touch ash-touch-hoist" : pickId === "yule" ? "ash-touch ash-touch-eve" : pickId === "tunnel" ? "ash-touch ash-touch-tunnel" : pickId === "roof" ? "ash-touch ash-touch-sign" : pickId === "gale" || pickId === "hallow" ? "ash-touch ash-touch-gale" : "ash-touch"
           }
           ref={bindTouch}
         >
@@ -1842,7 +1842,7 @@ export function Playfield({
             <button type="button" aria-label="Use" draggable={false} {...hold("use")}>
               Use
             </button>
-            {(pickId === "hoist" || pickId === "yule" || pickId === "antler" || pickId === "roof" || pickId === "tunnel" || pickId === "gale") && (
+            {(pickId === "hoist" || pickId === "yule" || pickId === "antler" || pickId === "roof" || pickId === "tunnel" || pickId === "gale" || pickId === "hallow") && (
               <button type="button" aria-label="Climb down" draggable={false} {...hold("down")}>
                 Down
               </button>
@@ -2000,6 +2000,7 @@ function musicScene(phase: Phase, sim: Sim): MusicScene {
   if (phase === "rite") return "rite";
   if (phase === "clear") return "clear";
   if (phase === "title" || phase === "levels" || phase === "lobby" || phase === "clothes") return "title";
+  if (sim.level.id === "hallow") return "hallow";
   if (sim.level.id === "yule") return "yule";
   if (sim.level.id === "hoist") return "hoist";
   if (sim.level.id === "tunnel") return "tunnel";
@@ -2016,6 +2017,7 @@ function musicScene(phase: Phase, sim: Sim): MusicScene {
 
 function promptFor(sim: Sim, phase: Phase) {
   if (phase !== "play" || sim.won || sim.dead > 0) return "";
+  if (sim.level.id === "hallow" && sim.beacons.size < sim.level.beacons.length) return "Use lights a pumpkin. The gate wants three.";
   if (sim.level.id === "gale" && sim.cage > 0) return "Jump rises. Down drops. 8 seconds to the hole.";
   if (sim.level.id === "yule" && sim.x > 11200 && sim.hearthLeave > 0) return "The tree keeps them.";
   if (sim.level.id === "yule" && sim.x > 11200 && sim.gifts < sim.level.moths.length) {

@@ -71,6 +71,7 @@ const SKY: Record<string, [string, string, string, string]> = {
   tunnel: ["#1e2228", "#7a8088", "#4a5058", "#1a1e24"],
   hoist: ["#2c3036", "#d8d6d0", "#a4a29c", "#24282e"],
   yule: ["#050506", "#9a9894", "#2a2a2c", "#050506"],
+  hallow: ["#07060a", "#2a241c", "#100e12", "#050408"],
 };
 
 function drawLowerFill(ctx: CanvasRenderingContext2D, camera: Camera, id: string) {
@@ -399,7 +400,7 @@ function drawTerrain(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) 
       ctx.fillStyle = "rgba(255,255,255,0.92)";
       ctx.fillRect(rect.x, rect.y, rect.w, 2);
     }
-    if (sim.level.id !== "roof" && sim.level.id !== "gale" && sim.level.id !== "choir" && sim.level.id !== "gear" && sim.level.id !== "hoist") drawGrass(ctx, rect, 26);
+    if (sim.level.id !== "roof" && sim.level.id !== "gale" && sim.level.id !== "choir" && sim.level.id !== "gear" && sim.level.id !== "hoist" && sim.level.id !== "hallow") drawGrass(ctx, rect, 26);
   }
   for (const rect of bodies) {
     if (rect.terrain) continue;
@@ -416,6 +417,9 @@ function drawTerrain(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) 
       else drawLadder(ctx, plat);
     }
   }
+  drawSaws(ctx, sim);
+  drawBlood(ctx, sim);
+  drawPumpkins(ctx, sim);
   if (sim.level.id === "hoist") drawHoistHangs(ctx, sim);
   if (sim.level.id === "choir") {
     for (const rect of bodies) {
@@ -2753,6 +2757,235 @@ function drawBeast(
   ctx.restore();
 }
 
+function drawScarecrow(ctx: CanvasRenderingContext2D, x: number, y: number, t: number, face: number) {
+  ctx.save();
+  ctx.translate(x + 8, y);
+  ctx.scale(face < 0 ? -1 : 1, 1);
+  const sway = Math.sin(t * 2.2) * 2;
+  ctx.strokeStyle = "#6a5840";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(-18, -46 + sway);
+  ctx.lineTo(18, -46 - sway);
+  ctx.moveTo(0, -58);
+  ctx.lineTo(0, -8);
+  ctx.stroke();
+  ctx.strokeStyle = "#8a7048";
+  ctx.lineWidth = 1;
+  for (let i = -3; i <= 3; i++) {
+    ctx.beginPath();
+    ctx.moveTo(i * 5, -46);
+    ctx.lineTo(i * 6, -34 + (i % 2) * 4);
+    ctx.stroke();
+  }
+  ctx.fillStyle = "#1a140e";
+  ctx.beginPath();
+  ctx.moveTo(-10, -78);
+  ctx.lineTo(0, -96);
+  ctx.lineTo(12, -76);
+  ctx.lineTo(8, -70);
+  ctx.lineTo(-8, -70);
+  ctx.closePath();
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(0, -62, 8, 9, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#ff8a1e";
+  ctx.fillRect(-4, -64, 2, 2);
+  ctx.fillRect(2, -64, 2, 2);
+  ctx.restore();
+}
+
+function drawSaws(ctx: CanvasRenderingContext2D, sim: Sim) {
+  const saws = sim.level.saws ?? [];
+  for (const saw of saws) {
+    const ang = Math.sin(sim.t * saw.speed + saw.phase) * saw.swing;
+    const bx = saw.x + Math.sin(ang) * saw.len;
+    const by = saw.y + Math.cos(ang) * saw.len;
+    ctx.save();
+    ctx.strokeStyle = "#c8c4bc";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(saw.x, saw.y);
+    ctx.lineTo(bx, by);
+    ctx.stroke();
+    ctx.translate(bx, by);
+    ctx.rotate(sim.t * 14);
+    ctx.fillStyle = "#1a1c20";
+    ctx.strokeStyle = "#e8e4dc";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(0, 0, 16, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.beginPath();
+    for (let i = 0; i < 10; i++) {
+      const a = (i / 10) * Math.PI * 2;
+      ctx.moveTo(Math.cos(a) * 14, Math.sin(a) * 14);
+      ctx.lineTo(Math.cos(a) * 22, Math.sin(a) * 22);
+    }
+    ctx.stroke();
+    ctx.fillStyle = "#ffb45a";
+    ctx.beginPath();
+    ctx.arc(0, 0, 3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+function drawBlood(ctx: CanvasRenderingContext2D, sim: Sim) {
+  if (sim.level.id !== "hallow") return;
+  ctx.save();
+  ctx.strokeStyle = "rgba(140, 16, 22, 0.85)";
+  ctx.fillStyle = "#8a1018";
+  ctx.lineWidth = 2;
+  for (let i = 0; i < 18; i++) {
+    const x = 3520 + i * 110;
+    const hang = 18 + (i % 4) * 14;
+    const drop = ((sim.t * 40 + i * 37) % (hang + 80));
+    ctx.beginPath();
+    ctx.moveTo(x, 150);
+    ctx.lineTo(x, 150 + hang);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(x, 150 + hang + drop * 0.35, 2.2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  const drips = sim.level.drips ?? [];
+  for (const drip of drips) {
+    const u = ((sim.t + drip.phase) % drip.period) / drip.period;
+    const y = drip.y0 + u * (drip.y1 - drip.y0);
+    ctx.fillStyle = "#c41822";
+    ctx.beginPath();
+    ctx.moveTo(drip.x, drip.y0);
+    ctx.lineTo(drip.x, y);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.ellipse(drip.x, y, 5, 8, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawHallow(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) {
+  ctx.save();
+  const moon = ctx.createRadialGradient(520, 40, 8, 520, 40, 280);
+  moon.addColorStop(0, "rgba(230,230,226,0.55)");
+  moon.addColorStop(1, "rgba(230,230,226,0)");
+  ctx.fillStyle = moon;
+  ctx.fillRect(-200, -400, 1400, 700);
+  ctx.fillStyle = "#f4f1ea";
+  ctx.beginPath();
+  ctx.arc(520, 40, 28, 0, Math.PI * 2);
+  ctx.fill();
+  if (!reduced) {
+    ctx.fillStyle = "#0a0a0c";
+    for (let i = 0; i < 6; i++) {
+      const bx = ((i * 380 + sim.t * 28) % 2400) + 40;
+      const by = 80 + (i % 3) * 36 + Math.sin(sim.t * 3 + i) * 8;
+      ctx.beginPath();
+      ctx.moveTo(bx, by);
+      ctx.quadraticCurveTo(bx - 8, by - 7, bx - 14, by);
+      ctx.quadraticCurveTo(bx - 8, by - 2, bx, by);
+      ctx.quadraticCurveTo(bx + 8, by - 2, bx + 14, by);
+      ctx.quadraticCurveTo(bx + 8, by - 7, bx, by);
+      ctx.fill();
+    }
+  }
+  if (!reduced) {
+    ctx.fillStyle = "rgba(8,8,10,0.35)";
+    for (let i = 0; i < 5; i++) {
+      ctx.beginPath();
+      ctx.ellipse(200 + i * 420, 180 + (i % 2) * 40, 180, 40, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  const trees = [1480, 2100, 5600];
+  ctx.strokeStyle = "#141216";
+  ctx.lineWidth = 3;
+  for (const x of trees) {
+    ctx.beginPath();
+    ctx.moveTo(x, 500);
+    ctx.lineTo(x + 10, 180);
+    ctx.moveTo(x + 10, 280);
+    ctx.lineTo(x - 70, 200);
+    ctx.moveTo(x + 10, 240);
+    ctx.lineTo(x + 90, 150);
+    ctx.moveTo(x + 10, 200);
+    ctx.lineTo(x + 40, 120);
+    ctx.stroke();
+  }
+  ctx.fillStyle = "#161418";
+  const stones: [number, number, number][] = [
+    [180, 500, 28],
+    [250, 500, 36],
+    [330, 500, 24],
+    [1040, 500, 30],
+    [1160, 500, 22],
+  ];
+  for (const [x, y, h] of stones) {
+    ctx.beginPath();
+    ctx.roundRect(x, y - h, 22, h, 8);
+    ctx.fill();
+  }
+  ctx.fillStyle = "#0c0a0e";
+  ctx.fillRect(3460, 80, 2100, 430);
+  ctx.beginPath();
+  ctx.moveTo(3380, 160);
+  ctx.lineTo(4200, -20);
+  ctx.lineTo(5560, 160);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = "rgba(255, 120, 30, 0.18)";
+  for (const win of [3720, 4020, 4480, 5120, 5340]) {
+    ctx.fillRect(win, 250, 46, 64);
+  }
+  ctx.strokeStyle = "#101014";
+  ctx.lineWidth = 2;
+  for (let x = 40; x < 6400; x += 18) {
+    const h = 10 + (x % 5) * 3;
+    ctx.beginPath();
+    ctx.moveTo(x, 500);
+    ctx.lineTo(x + 2, 500 - h);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawPumpkins(ctx: CanvasRenderingContext2D, sim: Sim) {
+  if (sim.level.id !== "hallow") return;
+  ctx.save();
+  for (const bell of sim.level.beacons) {
+    const lit = sim.beacons.has(bell.id);
+    const x = bell.x + bell.w / 2;
+    const y = bellSurface(sim, x, bell.y + bell.h);
+    ctx.fillStyle = lit ? "#e07018" : "#6a3810";
+    ctx.beginPath();
+    ctx.ellipse(x, y - 10, 16, 12, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#2a1a0c";
+    ctx.fillRect(x - 2, y - 24, 4, 6);
+    ctx.fillStyle = lit ? "#ffd27a" : "#2a1408";
+    ctx.fillRect(x - 8, y - 14, 3, 3);
+    ctx.fillRect(x + 4, y - 14, 3, 3);
+    ctx.beginPath();
+    ctx.moveTo(x - 4, y - 6);
+    ctx.lineTo(x, y - 2);
+    ctx.lineTo(x + 5, y - 6);
+    ctx.fill();
+    if (lit) {
+      const glow = ctx.createRadialGradient(x, y - 10, 2, x, y - 10, 40);
+      glow.addColorStop(0, "rgba(255,150,40,0.75)");
+      glow.addColorStop(1, "rgba(255,150,40,0)");
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(x, y - 10, 40, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  ctx.restore();
+}
+
 function drawRopeLine(ctx: CanvasRenderingContext2D, plat: { x: number; y: number; w: number; h: number }) {
   const x = plat.x + plat.w / 2;
   ctx.save();
@@ -3621,6 +3854,8 @@ export function renderFrame(
     drawHoistFog(ctx, camera, sim.t, reduced);
   } else if (sim.level.id === "yule") {
     drawYuleSky(ctx, camera, sim.t, reduced);
+  } else if (sim.level.id === "hallow") {
+    drawHallow(ctx, sim, reduced);
   } else {
     ctx.save();
     ctx.translate(camera.x * 0.72, camera.y * 0.4);
@@ -3738,6 +3973,7 @@ export function renderFrame(
     else if (bird.kind === "alien") drawAlien(ctx, bird.x, bird.y, bird.dir, sim.t);
     else if (bird.kind === "ship") drawShip(ctx, bird.x, bird.y, bird.dir);
     else if (bird.kind === "eagle") drawEagle(ctx, bird.x, bird.y, sim.t * 8, bird.dir);
+    else if (bird.kind === "scare") drawScarecrow(ctx, bird.x, bird.y, sim.t, bird.dir);
     else drawCrow(ctx, bird.x, bird.y, sim.t * 14, bird.dir);
   }
 
@@ -4711,7 +4947,7 @@ export function frameCamera(
       y -= 36 * huntPull;
     }
   }
-  const yMin = sim.level.id === "moon" ? -1400 : sim.level.id === "choir" ? -820 : sim.level.id === "tunnel" ? -280 : sim.level.id === "mirror" ? -560 : sim.level.id === "roof" ? -200 : sim.level.id === "gale" ? -760 : -40;
+  const yMin = sim.level.id === "moon" ? -1400 : sim.level.id === "choir" ? -820 : sim.level.id === "tunnel" ? -280 : sim.level.id === "mirror" ? -560 : sim.level.id === "roof" ? -200 : sim.level.id === "gale" ? -760 : sim.level.id === "hallow" ? -280 : -40;
   x = Math.max(0, Math.min(Math.max(0, sim.level.worldW - viewW), x));
   y = Math.max(yMin, Math.min(worldH - viewH, y));
   return { x, y, w: viewW, h: viewH };

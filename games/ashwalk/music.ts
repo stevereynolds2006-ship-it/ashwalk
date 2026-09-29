@@ -13,6 +13,7 @@ export type MusicScene =
   | "tunnel"
   | "hoist"
   | "yule"
+  | "hallow"
   | "moon"
   | "mirror"
   | "hunt"
@@ -171,6 +172,16 @@ const SCENES: Record<MusicScene, SceneScore> = {
       [-5], [], [4, 16], [],
     ],
     noise: 0.05,
+  },
+  hallow: {
+    step: 1.2,
+    drones: [32, 39, 44],
+    pluck: 56,
+    wave: "triangle",
+    gain: 0.08,
+    sustain: 1.4,
+    steps: [[0], [], [1], [3], [], [6], [1], []],
+    noise: 0.045,
   },
   moon: {
     step: 2.2,

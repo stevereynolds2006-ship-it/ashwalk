@@ -850,17 +850,44 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
       sim.slain.add(i);
       continue;
     }
-    const deer = spec.kind === "deer";
-    const hitW = deer ? 72 : spec.kind === "gator" ? 86 : spec.kind === "eagle" ? 54 : spec.kind === "ship" ? 52 : spec.kind === "alien" ? 26 : spec.kind === "rocket" ? 48 : spec.kind === "turtle" ? 34 : spec.kind === "rat" ? 28 : 22;
-    const hitH = deer ? 40 : spec.kind === "gator" ? 30 : spec.kind === "eagle" ? 24 : spec.kind === "ship" ? 22 : spec.kind === "alien" ? 40 : spec.kind === "rocket" ? 18 : spec.kind === "turtle" ? 26 : spec.kind === "rat" ? 20 : 14;
-    const top = deer ? birdY - hitH : birdY;
-    const bot = deer ? birdY : birdY + hitH;
+    const feet = spec.kind === "deer" || spec.kind === "scare";
+    const hitW = feet && spec.kind === "scare" ? 36 : spec.kind === "deer" ? 72 : spec.kind === "gator" ? 86 : spec.kind === "eagle" ? 54 : spec.kind === "ship" ? 52 : spec.kind === "alien" ? 26 : spec.kind === "rocket" ? 48 : spec.kind === "turtle" ? 34 : spec.kind === "rat" ? 28 : 22;
+    const hitH = spec.kind === "scare" ? 72 : spec.kind === "deer" ? 40 : spec.kind === "gator" ? 30 : spec.kind === "eagle" ? 24 : spec.kind === "ship" ? 22 : spec.kind === "alien" ? 40 : spec.kind === "rocket" ? 18 : spec.kind === "turtle" ? 26 : spec.kind === "rat" ? 20 : 14;
+    const top = feet ? birdY - hitH : birdY;
+    const bot = feet ? birdY : birdY + hitH;
     if (
       sim.invuln <= 0 &&
       sim.x < bird.x + hitW &&
       sim.x + PW > bird.x - 8 &&
       sim.y < bot &&
       sim.y + PH > top
+    ) {
+      kill(sim, events);
+    }
+  }
+
+  const saws = level.saws ?? [];
+  for (let i = 0; i < saws.length; i++) {
+    const saw = saws[i]!;
+    const ang = Math.sin(sim.t * saw.speed + saw.phase) * saw.swing;
+    const bx = saw.x + Math.sin(ang) * saw.len;
+    const by = saw.y + Math.cos(ang) * saw.len;
+    const cx = sim.x + PW / 2;
+    const cy = sim.y + PH / 2;
+    if (sim.invuln <= 0 && (cx - bx) * (cx - bx) + (cy - by) * (cy - by) < 28 * 28) kill(sim, events);
+  }
+  const drips = level.drips ?? [];
+  for (let i = 0; i < drips.length; i++) {
+    const drip = drips[i]!;
+    const u = ((sim.t + drip.phase) % drip.period) / drip.period;
+    const y = drip.y0 + u * (drip.y1 - drip.y0);
+    if (
+      sim.invuln <= 0 &&
+      u > 0.22 &&
+      sim.x < drip.x + 8 &&
+      sim.x + PW > drip.x - 8 &&
+      sim.y < y + 14 &&
+      sim.y + PH > y - 6
     ) {
       kill(sim, events);
     }

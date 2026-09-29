@@ -1207,7 +1207,108 @@ const YULE: Level = {
   light: { x: 220, y: 80 },
 };
 
-export const LEVELS: readonly Level[] = [SHORE, LATCH, GALE, CHOIR, GEAR, ROOF, ANTLER, MOON, MIRROR, TUNNEL, HOIST, YULE];
+/** A night yard. Saws, scarecrows, ropes, then the house. */
+const HALLOW: Level = {
+  id: "hallow",
+  title: "The hallow",
+  kicker: "The yard is awake.",
+  rule: "Saws swing over the gaps. Scarecrows walk the ground. Climb the ropes to the house. Blood falls from the ceiling. Use lights three pumpkins, then the gate.",
+  together: "The pumpkins are shared. The saws and the scarecrows are the same for everyone.",
+  clearKicker: "The hallow",
+  clearTitle: "The house let you out",
+  worldW: 6800,
+  killY: 1100,
+  poster: 900,
+  introCrow: false,
+  platforms: [
+    { id: "yard", kind: "solid", terrain: true, x: 0, y: 500, w: 620, h: 420 },
+    { id: "p1", kind: "oneway", x: 740, y: 460, w: 80, h: 12 },
+    { id: "plot", kind: "solid", terrain: true, x: 960, y: 500, w: 420, h: 420 },
+    { id: "sawA", kind: "oneway", x: 1520, y: 450, w: 76, h: 12 },
+    { id: "sawB", kind: "oneway", x: 1740, y: 400, w: 76, h: 12 },
+    { id: "sawC", kind: "crumble", x: 1960, y: 460, w: 68, h: 12 },
+    { id: "field", kind: "solid", terrain: true, x: 2160, y: 500, w: 380, h: 420 },
+    { id: "lip", kind: "oneway", x: 2580, y: 430, w: 80, h: 12 },
+    { id: "line1", kind: "ladder", x: 2720, y: 250, w: 14, h: 210 },
+    { id: "knot1", kind: "oneway", x: 2680, y: 250, w: 64, h: 12 },
+    { id: "line2", kind: "ladder", x: 2820, y: 80, w: 14, h: 200 },
+    { id: "knot2", kind: "crumble", x: 2780, y: 80, w: 56, h: 12 },
+    { id: "line3", kind: "ladder", x: 2940, y: -30, w: 14, h: 150 },
+    { id: "knot3", kind: "oneway", x: 2900, y: -30, w: 64, h: 12 },
+    { id: "line4", kind: "ladder", x: 3040, y: 90, w: 14, h: 160 },
+    { id: "knot4", kind: "oneway", x: 3000, y: 90, w: 60, h: 12 },
+    { id: "line5", kind: "ladder", x: 3140, y: 240, w: 14, h: 230 },
+    { id: "stepH", kind: "oneway", x: 3100, y: 470, w: 140, h: 12 },
+    { id: "porch", kind: "solid", terrain: true, x: 3220, y: 470, w: 220, h: 450 },
+    { id: "hall", kind: "solid", terrain: true, x: 3480, y: 500, w: 560, h: 420 },
+    { id: "loft", kind: "oneway", x: 3680, y: 340, w: 140, h: 12 },
+    { id: "hLad", kind: "ladder", x: 3760, y: 340, w: 22, h: 170 },
+    { id: "loft2", kind: "oneway", x: 3920, y: 230, w: 120, h: 12 },
+    { id: "hLad2", kind: "ladder", x: 3980, y: 230, w: 22, h: 130 },
+    { id: "mid", kind: "solid", terrain: true, x: 4160, y: 500, w: 300, h: 420 },
+    { id: "blood", kind: "oneway", x: 4560, y: 430, w: 80, h: 12 },
+    { id: "blood2", kind: "oneway", x: 4760, y: 370, w: 76, h: 12 },
+    { id: "den", kind: "solid", terrain: true, x: 4960, y: 500, w: 520, h: 420 },
+    { id: "gHallow", kind: "gate", x: 5476, y: 80, w: 24, h: 420, openY: -90 },
+    { id: "out", kind: "solid", terrain: true, x: 5500, y: 500, w: 900, h: 420 },
+  ],
+  moths: [
+    { id: "m1", x: 220, y: 450 },
+    { id: "m2", x: 1120, y: 450 },
+    { id: "m3", x: 1560, y: 400 },
+    { id: "m4", x: 2748, y: 200 },
+    { id: "m5", x: 2930, y: -70 },
+    { id: "m6", x: 3980, y: 190 },
+    { id: "m7", x: 5200, y: 450 },
+  ],
+  checkpoints: [
+    { id: "yard", x: 120, surface: 500 },
+    { id: "plot", x: 1080, surface: 500 },
+    { id: "field", x: 2280, surface: 500 },
+    { id: "hall", x: 3560, surface: 500 },
+    { id: "den", x: 5080, surface: 500 },
+  ],
+  rope: null,
+  shrines: [],
+  beacons: [
+    { id: "pk1", x: 2300, y: 400, w: 70, h: 100 },
+    { id: "pk2", x: 3940, y: 140, w: 70, h: 90 },
+    { id: "pk3", x: 5120, y: 400, w: 70, h: 100 },
+  ],
+  plates: [{ id: "pH", gate: "gHallow", x: 5280, y: 416, w: 100, h: 84, latch: 4, whenLit: true }],
+  goal: { id: "goal", x: 6080, y: 330, w: 110, h: 170 },
+  pit: null,
+  wind: null,
+  birds: [
+    { x0: 80, x1: 520, y: 220, amp: 18, speed: 64, start: 200 },
+    { x0: 1100, x1: 1900, y: 160, amp: 22, speed: 80, start: 1400 },
+    { kind: "scare", x0: 1000, x1: 1320, y: 500, amp: 0, speed: 34, start: 1100 },
+    { kind: "scare", x0: 2200, x1: 2480, y: 500, amp: 0, speed: 28, start: 2300 },
+    { kind: "scare", x0: 3560, x1: 3960, y: 500, amp: 0, speed: 30, start: 3700 },
+    { kind: "scare", x0: 5020, x1: 5380, y: 500, amp: 0, speed: 26, start: 5160 },
+  ],
+  spiders: [],
+  saws: [
+    { x: 1460, y: 250, len: 170, swing: 0.95, speed: 1.45, phase: 0.2 },
+    { x: 1860, y: 210, len: 160, swing: 1.05, speed: 1.7, phase: 1.4 },
+    { x: 3010, y: -150, len: 100, swing: 0.8, speed: 1.9, phase: 0.6 },
+    { x: 4660, y: 180, len: 200, swing: 0.7, speed: 1.25, phase: 2.1 },
+  ],
+  drips: [
+    { x: 4380, y0: 150, y1: 500, period: 2.2, phase: 0.2 },
+    { x: 4700, y0: 120, y1: 430, period: 1.7, phase: 0.8 },
+    { x: 5220, y0: 140, y1: 500, period: 2.6, phase: 1.4 },
+  ],
+  chapters: [
+    { x: 0, id: "yard", title: "The hallow", kicker: "The scarecrows walk." },
+    { x: 1400, id: "saws", title: "The saws", kicker: "They swing. Wait." },
+    { x: 2500, id: "ropes", title: "The ropes", kicker: "Up, then down to the house." },
+    { x: 3480, id: "house", title: "The house", kicker: "Three pumpkins. Then the gate." },
+  ],
+  light: { x: 400, y: 40 },
+};
+
+export const LEVELS: readonly Level[] = [SHORE, LATCH, GALE, CHOIR, GEAR, ROOF, ANTLER, MOON, MIRROR, TUNNEL, HOIST, YULE, HALLOW];
 
 export function previousFog(id: string): string | null {
   const index = LEVELS.findIndex((level) => level.id === id);
@@ -1244,6 +1345,7 @@ export function fogReleased(id: string, now = new Date()) {
   if (id === "mirror") return now >= new Date(2026, 10, 1);
   if (id === "tunnel") return now >= new Date(2026, 11, 1);
   if (id === "hoist") return now >= new Date(2027, 0, 1);
+  if (id === "hallow") return now >= new Date(2026, 9, 31);
   return true;
 }
 
