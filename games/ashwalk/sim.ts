@@ -916,7 +916,7 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
       const tree = sim.x > 11810 && sim.x < 12020 && sim.y + PH > 590;
       if (tree && sim.gifts < sim.moths.size) {
         sim.gifts += 1;
-        sim.feast = 0.55;
+        sim.feast = 1.2;
         if (sim.gifts >= level.moths.length) sim.hearthLeave = 5;
       }
     }
@@ -1097,8 +1097,9 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
       const slope = rideX < 5600 ? 440 : 440 + ((rideX - 5600) / 3800) * 420;
       sim.x = rideX;
       sim.y = slope - PH;
-      sim.stalkX = sim.x - 260;
-      sim.stalkY = sim.y + PH;
+      const ballX = sim.x - 280;
+      sim.stalkX = ballX;
+      sim.stalkY = ballX < 5600 ? 440 : 440 + ((ballX - 5600) / 3800) * 420;
       sim.wake = 1;
     }
   }

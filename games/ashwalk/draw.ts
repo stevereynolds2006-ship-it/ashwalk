@@ -2196,14 +2196,17 @@ function drawHearth(ctx: CanvasRenderingContext2D, sim: Sim) {
   ctx.quadraticCurveTo(11580, 570, 11560, 630);
   ctx.fill();
   drawPine(ctx, 11940, 640, 1.7, true, sim.t);
+  const wraps = ["#c43838", "#2f8f4e", "#e2b23a", "#3a6fd4"];
   for (let i = 0; i < sim.gifts; i++) {
-    const slotX = 11810 + i * 38;
-    const slotY = 612;
+    const slotX = 11830 + i * 36;
+    const slotY = 618;
     const settling = i === sim.gifts - 1 && sim.feast > 0;
-    const u = settling ? 1 - sim.feast / 0.55 : 1;
-    const x = settling ? sim.x + PW / 2 + (slotX - sim.x - PW / 2) * Math.min(1, u) : slotX;
-    const y = settling ? sim.y + 10 + (slotY - sim.y - 10) * Math.min(1, u) : slotY;
-    drawPresent(ctx, x, y, sim.t + i);
+    const u = settling ? Math.min(1, 1 - sim.feast / 1.2) : 1;
+    const fromX = sim.x + PW / 2;
+    const fromY = sim.y + 8;
+    const x = settling ? fromX + (slotX - fromX) * u : slotX;
+    const y = settling ? fromY + (slotY - fromY) * u - Math.sin(u * Math.PI) * 84 : slotY;
+    drawPresent(ctx, x, y, sim.t + i, wraps[i % wraps.length], !settling);
   }
 }
 
@@ -2299,39 +2302,46 @@ function drawSled(ctx: CanvasRenderingContext2D, x: number, y: number, deep = fa
 }
 
 function drawSnowball(ctx: CanvasRenderingContext2D, x: number, y: number, t: number) {
+  const r = 92;
   ctx.save();
   ctx.translate(x, y);
-  ctx.rotate(t * 2.2);
+  ctx.fillStyle = "rgba(247,244,238,0.35)";
+  ctx.beginPath();
+  ctx.ellipse(0, 2, 54, 8, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.translate(0, -r);
+  ctx.rotate(x / r);
   ctx.fillStyle = "#f7f4ee";
   ctx.beginPath();
-  ctx.arc(0, -78, 86, 0, Math.PI * 2);
+  ctx.arc(0, 0, r, 0, Math.PI * 2);
   ctx.fill();
-  ctx.strokeStyle = "rgba(7,7,8,0.35)";
+  ctx.strokeStyle = "rgba(7,7,8,0.28)";
   ctx.lineWidth = 3;
   ctx.beginPath();
-  ctx.arc(0, -78, 86, 0.2, 1.4);
+  ctx.arc(0, 0, r - 4, 0.4, 1.5);
   ctx.stroke();
   ctx.beginPath();
-  ctx.arc(0, -78, 48, 2.2, 4.2);
+  ctx.arc(0, 0, r * 0.55, 2.4, 4.4);
   ctx.stroke();
   ctx.restore();
+  void t;
 }
 
-function drawPresent(ctx: CanvasRenderingContext2D, x: number, y: number, t: number) {
-  const bob = Math.sin(t * 3 + x) * 4;
+function drawPresent(ctx: CanvasRenderingContext2D, x: number, y: number, t: number, color = "#c43838", still = false) {
+  const bob = still ? 0 : Math.sin(t * 3 + x) * 4;
   ctx.save();
   ctx.translate(x, y + bob);
-  ctx.fillStyle = "#f7f4ee";
-  ctx.fillRect(-9, -6, 18, 16);
-  ctx.strokeStyle = "#070708";
+  ctx.fillStyle = color;
+  ctx.fillRect(-11, -8, 22, 18);
+  ctx.strokeStyle = "#f4f1ea";
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(0, -6);
+  ctx.moveTo(0, -8);
   ctx.lineTo(0, 10);
-  ctx.moveTo(-9, 1);
-  ctx.lineTo(9, 1);
-  ctx.moveTo(-5, -6);
-  ctx.quadraticCurveTo(0, -14, 5, -6);
+  ctx.moveTo(-11, 0);
+  ctx.lineTo(11, 0);
+  ctx.moveTo(-6, -8);
+  ctx.quadraticCurveTo(0, -16, 6, -8);
   ctx.stroke();
   ctx.restore();
 }
@@ -3280,12 +3290,12 @@ export function renderFrame(
     }
   }
 
-  for (const moth of sim.level.moths) {
-    if (!sim.moths.has(moth.id)) {
-      if (sim.level.id === "yule") drawPresent(ctx, moth.x, moth.y, sim.t);
-      else drawCoin(ctx, moth.x, moth.y, sim.t, reduced);
-    }
-  }
+  const wraps = ["#c43838", "#2f8f4e", "#e2b23a", "#3a6fd4"];
+  sim.level.moths.forEach((moth, index) => {
+    if (sim.moths.has(moth.id)) return;
+    if (sim.level.id === "yule") drawPresent(ctx, moth.x, moth.y, sim.t, wraps[index % wraps.length]);
+    else drawCoin(ctx, moth.x, moth.y, sim.t, reduced);
+  });
 
   for (const zone of sim.level.shrines) {
     drawShrine(ctx, zone.x + zone.w / 2 - 4, zone.y + zone.h - 8, sim.t);
