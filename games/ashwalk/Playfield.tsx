@@ -1519,7 +1519,7 @@ export function Playfield({
               : "Connect a wallet to buy a board with Rare coins."}
           </p>
           <p className="ash-note">
-            The shore is free. Beat a fog before you can buy the next one. Every board after the shore is 25 Rare coins. The moon opens October 1, the mirror November 1, the tunnel December 1, and the hoist January 1st.
+            The shore is free. Beat a fog before you can buy the next one. Every board after the shore is 25 Rare coins. The moon opens October 1, the mirror November 1, the tunnel December 1, and the hoist January 1st. The eve is open to try.
           </p>
           <LevelList
             current={pickId}
@@ -1969,6 +1969,7 @@ function musicScene(phase: Phase, sim: Sim): MusicScene {
   if (phase === "rite") return "rite";
   if (phase === "clear") return "clear";
   if (phase === "title" || phase === "levels" || phase === "lobby" || phase === "clothes") return "title";
+  if (sim.level.id === "yule") return "yule";
   if (sim.level.id === "hoist") return "hoist";
   if (sim.level.id === "tunnel") return "tunnel";
   if (sim.level.id === "mirror") return "mirror";

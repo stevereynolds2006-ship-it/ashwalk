@@ -69,6 +69,7 @@ const SKY: Record<string, [string, string, string, string]> = {
   moon: ["#050506", "#101218", "#1a1c22", "#050506"],
   tunnel: ["#050506", "#101012", "#0c0c0e", "#050506"],
   hoist: ["#101012", "#cfcbc6", "#8a8682", "#0c0c0e"],
+  yule: ["#050506", "#9a9894", "#2a2a2c", "#050506"],
 };
 
 function drawTree(ctx: CanvasRenderingContext2D, tree: Tree, alpha: number) {
@@ -2012,6 +2013,134 @@ function drawRocket(
   ctx.restore();
 }
 
+function drawDeer(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  dir: number,
+  t: number,
+  reduced: boolean,
+) {
+  const gallop = reduced ? 0 : Math.sin(t * 16) * 7;
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(dir < 0 ? -1 : 1, 1);
+  ctx.fillStyle = "#070708";
+  ctx.beginPath();
+  ctx.ellipse(0, -18, 24, 10, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(14, -22);
+  ctx.quadraticCurveTo(34, -42, 40, -30);
+  ctx.lineTo(36, -16);
+  ctx.quadraticCurveTo(24, -12, 14, -12);
+  ctx.fill();
+  ctx.strokeStyle = "#f7f4ee";
+  ctx.lineWidth = 1.7;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(34, -36);
+  ctx.lineTo(28, -62);
+  ctx.moveTo(30, -50);
+  ctx.lineTo(16, -58);
+  ctx.moveTo(31, -46);
+  ctx.lineTo(42, -64);
+  ctx.moveTo(36, -34);
+  ctx.lineTo(48, -56);
+  ctx.moveTo(44, -46);
+  ctx.lineTo(56, -52);
+  ctx.stroke();
+  ctx.fillStyle = "#070708";
+  ctx.fillRect(-16, -12, 3, 14 + gallop);
+  ctx.fillRect(-6, -12, 3, 14 - gallop);
+  ctx.fillRect(8, -12, 3, 14 + gallop * 0.6);
+  ctx.fillRect(16, -12, 3, 14 - gallop);
+  ctx.fillStyle = "#f7f4ee";
+  ctx.fillRect(38, -28, 2.2, 2.2);
+  ctx.beginPath();
+  ctx.arc(42, -24, 1.8, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawCandle(ctx: CanvasRenderingContext2D, x: number, ground: number, lit: boolean, t: number) {
+  const h = lit ? 36 : 28;
+  ctx.fillStyle = "#070708";
+  ctx.fillRect(x - 2, ground - h, 4, h);
+  const fy = ground - h - 4 + Math.sin(t * 8 + x) * 1.5;
+  if (lit) {
+    const glow = ctx.createRadialGradient(x, fy, 1, x, fy, 22);
+    glow.addColorStop(0, "rgba(255,255,255,0.95)");
+    glow.addColorStop(1, "rgba(255,255,255,0)");
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(x, fy, 22, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#f7f4ee";
+    ctx.fillRect(x - 1, fy - 8, 2, 8);
+  } else {
+    ctx.fillStyle = "#3a3a3e";
+    ctx.fillRect(x - 1, fy - 4, 2, 5);
+  }
+}
+
+function drawYuleSky(ctx: CanvasRenderingContext2D, camera: Camera, t: number, reduced: boolean) {
+  ctx.save();
+  ctx.translate(camera.x * 0.15, 0);
+  const beam = ctx.createLinearGradient(40, -80, 520, 780);
+  beam.addColorStop(0, "rgba(244,241,234,0.42)");
+  beam.addColorStop(1, "rgba(244,241,234,0)");
+  ctx.fillStyle = beam;
+  ctx.beginPath();
+  ctx.moveTo(-40, -120);
+  ctx.lineTo(340, -120);
+  ctx.lineTo(860, 860);
+  ctx.lineTo(160, 860);
+  ctx.fill();
+  if (!reduced) {
+    ctx.fillStyle = "rgba(247,244,238,0.8)";
+    for (let i = 0; i < 28; i++) {
+      const x = 80 + ((i * 37) % 420);
+      const y = 40 + ((i * 53 + t * 12) % 520);
+      ctx.fillRect(x, y, i % 4 === 0 ? 2 : 1, i % 4 === 0 ? 2 : 1);
+    }
+  }
+  ctx.restore();
+}
+
+function drawYuleHill(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) {
+  ctx.fillStyle = "rgba(244,241,234,0.88)";
+  for (const plat of sim.level.platforms) {
+    if (plat.kind === "ladder" || plat.kind === "gate") continue;
+    ctx.fillRect(plat.x, plat.y - 3, plat.w, 3);
+  }
+  const candles: [number, number][] = [
+    [140, 640],
+    [190, 640],
+    [250, 640],
+    [320, 640],
+    [390, 640],
+    [1280, 620],
+    [1360, 620],
+    [1500, 620],
+    [2180, 600],
+    [2280, 600],
+    [2860, 640],
+    [2940, 640],
+    [3040, 640],
+  ];
+  for (const [x, y] of candles) drawCandle(ctx, x, y, true, sim.t);
+  if (reduced) return;
+  ctx.fillStyle = "#f7f4ee";
+  for (let i = 0; i < 90; i++) {
+    const x = (i * 97 + sim.t * 26) % (sim.level.worldW + 80) - 40;
+    const y = (i * 53 + sim.t * 42) % 760;
+    ctx.globalAlpha = 0.28 + (i % 5) * 0.12;
+    ctx.fillRect(x, y, i % 6 === 0 ? 2.4 : 1.3, i % 6 === 0 ? 2.4 : 1.3);
+  }
+  ctx.globalAlpha = 1;
+}
+
 function drawRat(
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -2864,6 +2993,8 @@ export function renderFrame(
     drawGearHall(ctx, camera, sim, reduced);
   } else if (sim.level.id === "hoist") {
     drawHoistFog(ctx, camera, sim.t, reduced);
+  } else if (sim.level.id === "yule") {
+    drawYuleSky(ctx, camera, sim.t, reduced);
   } else {
     ctx.save();
     ctx.translate(camera.x * 0.72, camera.y * 0.4);
@@ -2877,6 +3008,7 @@ export function renderFrame(
   }
 
   drawTerrain(ctx, sim, reduced);
+  if (sim.level.id === "yule") drawYuleHill(ctx, sim, reduced);
   if (sim.level.id === "shore") {
     drawCagedFriend(ctx, sprites, sim, reduced, cloth, {
       rope: sim.rope,
@@ -2950,7 +3082,9 @@ export function renderFrame(
   }
   for (const bell of sim.level.beacons) {
     const x = bell.x + bell.w / 2;
-    drawBell(ctx, x, bellSurface(sim, x, bell.y + bell.h), sim.beacons.has(bell.id), sim.t);
+    const ground = bellSurface(sim, x, bell.y + bell.h);
+    if (sim.level.id === "yule") drawCandle(ctx, x, ground, sim.beacons.has(bell.id), sim.t);
+    else drawBell(ctx, x, ground, sim.beacons.has(bell.id), sim.t);
   }
 
   if (sim.level.pit && sim.level.id !== "tunnel" && camera.x < sim.level.pit.x1 && camera.x + camera.w > sim.level.pit.x0) {
@@ -2964,6 +3098,7 @@ export function renderFrame(
   for (const bird of birdSpots(sim, reduced)) {
     if (bird.kind === "alien" && sim.slain.has(bird.index)) continue;
     if (bird.kind === "rat") drawRat(ctx, bird.x, bird.y, bird.dir, sim.t, reduced);
+    else if (bird.kind === "deer") drawDeer(ctx, bird.x, bird.y, bird.dir, sim.t, reduced);
     else if (bird.kind === "turtle") drawTurtle(ctx, bird.x, bird.y, bird.dir, sim.t);
     else if (bird.kind === "gator") drawGator(ctx, bird.x, bird.y, bird.dir, sim.t, reduced);
     else if (bird.kind === "rocket") drawRocket(ctx, bird.x, bird.y, bird.dir, sim.t, reduced);

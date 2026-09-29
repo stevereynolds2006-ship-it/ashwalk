@@ -1093,7 +1093,72 @@ const HOIST: Level = {
   combo: { code: [6, 1, 9], x: 4920, span: 180, y: 260 },
 };
 
-export const LEVELS: readonly Level[] = [SHORE, LATCH, GALE, CHOIR, GEAR, ROOF, ANTLER, MOON, MIRROR, TUNNEL, HOIST];
+/** A dark hill, candles, snow, and reindeer that leap. */
+const YULE: Level = {
+  id: "yule",
+  title: "The eve",
+  kicker: "The light is only on the hill.",
+  rule: "Snow falls through one shaft of light. Light the three tall candles. The reindeer charge and leap. Run under them when they are in the air.",
+  together: "The candles stay lit for everyone. The reindeer do not.",
+  clearKicker: "The eve",
+  clearTitle: "The hill kept the light",
+  worldW: 3600,
+  killY: 980,
+  poster: 280,
+  introCrow: false,
+  platforms: [
+    { id: "hill", kind: "solid", terrain: true, x: 0, y: 640, w: 860, h: 420 },
+    { id: "step", kind: "solid", x: 960, y: 560, w: 130, h: 16 },
+    { id: "step2", kind: "crumble", x: 1160, y: 500, w: 90, h: 12 },
+    { id: "ridge", kind: "solid", terrain: true, x: 1320, y: 620, w: 560, h: 440 },
+    { id: "drift", kind: "crumble", x: 1960, y: 540, w: 90, h: 12 },
+    { id: "drift2", kind: "crumble", x: 2120, y: 470, w: 80, h: 12 },
+    { id: "knoll", kind: "solid", terrain: true, x: 2280, y: 600, w: 360, h: 460 },
+    { id: "sway", kind: "sway", x: 2720, y: 520, w: 120, h: 12, amp: 22, freq: 0.85, phase: 0.3, dip: 6 },
+    { id: "last", kind: "solid", terrain: true, x: 2920, y: 640, w: 680, h: 420 },
+  ],
+  moths: [
+    { id: "m1", x: 220, y: 560 },
+    { id: "m2", x: 1020, y: 500 },
+    { id: "m3", x: 1480, y: 540 },
+    { id: "m4", x: 2060, y: 420 },
+    { id: "m5", x: 2400, y: 520 },
+    { id: "m6", x: 3180, y: 560 },
+  ],
+  checkpoints: [
+    { id: "hill", x: 80, surface: 640 },
+    { id: "ridge", x: 1400, surface: 620 },
+    { id: "knoll", x: 2360, surface: 600 },
+    { id: "last", x: 3040, surface: 640 },
+  ],
+  rope: null,
+  shrines: [],
+  lamps: [],
+  beacons: [
+    { id: "c1", x: 460, y: 520, w: 36, h: 120 },
+    { id: "c2", x: 1580, y: 500, w: 36, h: 120 },
+    { id: "c3", x: 2460, y: 480, w: 36, h: 120 },
+  ],
+  plates: [],
+  goal: { id: "goal", x: 3380, y: 470, w: 90, h: 170 },
+  pit: null,
+  wind: null,
+  birds: [
+    { x0: 80, x1: 760, y: 640, amp: 70, speed: 210, start: 420, kind: "deer" },
+    { x0: 1360, x1: 1780, y: 620, amp: 130, speed: 250, start: 1500, kind: "deer" },
+    { x0: 2300, x1: 2560, y: 600, amp: 90, speed: 180, start: 2400, kind: "deer" },
+    { x0: 2960, x1: 3480, y: 640, amp: 150, speed: 280, start: 3200, kind: "deer" },
+  ],
+  spiders: [],
+  chapters: [
+    { x: 0, id: "eve", title: "The eve", kicker: "Light the candles." },
+    { x: 1300, id: "leap", title: "The leap", kicker: "Run under them." },
+    { x: 2700, id: "last", title: "The last hill", kicker: "One more candle." },
+  ],
+  light: { x: 220, y: 80 },
+};
+
+export const LEVELS: readonly Level[] = [SHORE, LATCH, GALE, CHOIR, GEAR, ROOF, ANTLER, MOON, MIRROR, TUNNEL, HOIST, YULE];
 
 export function previousFog(id: string): string | null {
   const index = LEVELS.findIndex((level) => level.id === id);
@@ -1110,8 +1175,11 @@ export const TRY_CHOIR = false;
 /** The hoist stays shut until January 1. */
 export const TRY_HOIST = false;
 
+/** The eve is open to try. */
+export const TRY_YULE = true;
+
 export function fogTry(id: string) {
-  return (id === "tunnel" && TRY_TUNNEL) || (id === "choir" && TRY_CHOIR) || (id === "hoist" && TRY_HOIST);
+  return (id === "tunnel" && TRY_TUNNEL) || (id === "choir" && TRY_CHOIR) || (id === "hoist" && TRY_HOIST) || (id === "yule" && TRY_YULE);
 }
 
 export function fogPrice(_id: string) {
@@ -1122,6 +1190,7 @@ export function fogReleased(id: string, now = new Date()) {
   if (TRY_ALL) return true;
   if (id === "tunnel" && TRY_TUNNEL) return true;
   if (id === "hoist" && TRY_HOIST) return true;
+  if (id === "yule" && TRY_YULE) return true;
   if (id === "moon") return now >= new Date(2026, 9, 1);
   if (id === "mirror") return now >= new Date(2026, 10, 1);
   if (id === "tunnel") return now >= new Date(2026, 11, 1);

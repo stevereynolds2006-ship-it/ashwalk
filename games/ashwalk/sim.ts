@@ -833,19 +833,22 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
     bird.x += bird.dir * spec.speed * dt;
     if (bird.x > spec.x1) bird.dir = -1;
     if (bird.x < spec.x0) bird.dir = 1;
-    const birdY = spec.y + Math.sin(sim.t * 2.1) * (reduced ? 0 : spec.amp);
+    const birdY = spec.y + birdLift(spec, sim.t, i, reduced);
     if (spec.kind === "alien" && sim.saber && saberHits(sim, bird.x + 8, birdY + 16)) {
       sim.slain.add(i);
       continue;
     }
-    const hitW = spec.kind === "gator" ? 86 : spec.kind === "ship" ? 52 : spec.kind === "alien" ? 26 : spec.kind === "rocket" ? 48 : spec.kind === "turtle" ? 34 : spec.kind === "rat" ? 28 : 22;
-    const hitH = spec.kind === "gator" ? 30 : spec.kind === "ship" ? 22 : spec.kind === "alien" ? 40 : spec.kind === "rocket" ? 18 : spec.kind === "turtle" ? 26 : spec.kind === "rat" ? 20 : 14;
+    const deer = spec.kind === "deer";
+    const hitW = deer ? 72 : spec.kind === "gator" ? 86 : spec.kind === "ship" ? 52 : spec.kind === "alien" ? 26 : spec.kind === "rocket" ? 48 : spec.kind === "turtle" ? 34 : spec.kind === "rat" ? 28 : 22;
+    const hitH = deer ? 40 : spec.kind === "gator" ? 30 : spec.kind === "ship" ? 22 : spec.kind === "alien" ? 40 : spec.kind === "rocket" ? 18 : spec.kind === "turtle" ? 26 : spec.kind === "rat" ? 20 : 14;
+    const top = deer ? birdY - hitH : birdY;
+    const bot = deer ? birdY : birdY + hitH;
     if (
       sim.invuln <= 0 &&
       sim.x < bird.x + hitW &&
-      sim.x + PW > bird.x - 4 &&
-      sim.y < birdY + hitH &&
-      sim.y + PH > birdY
+      sim.x + PW > bird.x - 8 &&
+      sim.y < bot &&
+      sim.y + PH > top
     ) {
       kill(sim, events);
     }
@@ -1298,12 +1301,18 @@ export function birdSpots(sim: Sim, reduced: boolean) {
     const bird = sim.birds[index]!;
     return {
       x: bird.x,
-      y: spec.y + Math.sin(sim.t * 2.1) * (reduced ? 0 : spec.amp),
+      y: spec.y + birdLift(spec, sim.t, index, reduced),
       dir: bird.dir,
       kind: spec.kind ?? "crow",
       index,
     };
   });
+}
+
+function birdLift(spec: { amp: number; kind?: string }, t: number, index: number, reduced: boolean) {
+  if (reduced || spec.amp === 0) return 0;
+  if (spec.kind === "deer") return -Math.abs(Math.sin(t * 3.6 + index * 1.7)) * spec.amp;
+  return Math.sin(t * 2.1) * spec.amp;
 }
 
 export type SpiderPose = {
