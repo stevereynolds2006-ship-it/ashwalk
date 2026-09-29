@@ -978,12 +978,8 @@ export function fogTry(id: string) {
   return (id === "tunnel" && TRY_TUNNEL) || (id === "choir" && TRY_CHOIR);
 }
 
-export function fogPrice(id: string) {
-  if (id === "moon") return 15;
-  if (id === "mirror") return 20;
-  if (id === "tunnel") return 25;
-  if (id === "roof" || id === "antler") return 10;
-  return 10;
+export function fogPrice(_id: string) {
+  return 25;
 }
 
 export function fogReleased(id: string, now = new Date()) {

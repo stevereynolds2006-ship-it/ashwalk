@@ -1401,7 +1401,7 @@ export function Playfield({
               ? `You have ${formatRareCoins(spendable(rareBalance ?? walletCoins, payingAccount) ?? 0n)} Rare coins. Those pay to continue and to buy a cape.`
               : "Connect a wallet to buy boards with Rare coins."}
           </p>
-          <p>The shore is free. You start it with 2 coins. Coins you pick up only turn things on inside the stage. Rare coins pay to open the next fog and to buy a cape. Beat a fog, then the next one is 10 Rare coins. Coming soon fogs cost 5 more each month. You cannot buy the next one until the one before it is beaten.</p>
+          <p>The shore is free. You start it with 2 coins. Coins you pick up only turn things on inside the stage. Rare coins pay to open the next fog and to buy a cape. Beat a fog, then the next one is 25 Rare coins. You cannot buy the next one until the one before it is beaten.</p>
           <p>Every month a new map opens. A new cape opens each week, starting October 1. Every cape is 15 Rare coins. Only the red cape is open now.</p>
           {stakeMsg && (
             <p className="ash-error" role="alert">
@@ -1518,7 +1518,7 @@ export function Playfield({
               : "Connect a wallet to buy a board with Rare coins."}
           </p>
           <p className="ash-note">
-            The shore is free. Beat a fog before you can buy the next one. Each open fog is 10 Rare coins. The moon opens October 1 at 15, the mirror November 1 at 20, and the tunnel December 1 at 25.
+            The shore is free. Beat a fog before you can buy the next one. Every board after the shore is 25 Rare coins. The moon opens October 1, the mirror November 1, and the tunnel December 1.
           </p>
           <LevelList
             current={pickId}
@@ -1736,7 +1736,7 @@ export function Playfield({
             simulated. One lantern costs 1 RF and returns less, on average, than it takes.
           </p>
           {clearLevel.id !== "shore" || !TRY_ALL ? (
-            <p className="ash-note">The next fog is 10 Rare coins, and only after this one is beaten.</p>
+            <p className="ash-note">The next fog is 25 Rare coins, and only after this one is beaten.</p>
           ) : null}
           <div className="ash-actions">
             <button type="button" className="ash-btn" onClick={() => go("rite")}>
