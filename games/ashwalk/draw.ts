@@ -2776,40 +2776,47 @@ function drawBeast(
 
 function drawScarecrow(ctx: CanvasRenderingContext2D, x: number, y: number, t: number, face: number) {
   ctx.save();
-  ctx.translate(x + 8, y);
+  ctx.translate(x + 16, y);
   ctx.scale(face < 0 ? -1 : 1, 1);
-  const sway = Math.sin(t * 2.2) * 2;
-  ctx.strokeStyle = "#6a5840";
-  ctx.lineWidth = 3;
+  const sway = Math.sin(t * 2.2) * 1.6;
+  ctx.strokeStyle = "#4a3828";
+  ctx.lineWidth = 4;
   ctx.beginPath();
-  ctx.moveTo(-18, -46 + sway);
-  ctx.lineTo(18, -46 - sway);
-  ctx.moveTo(0, -58);
-  ctx.lineTo(0, -8);
+  ctx.moveTo(0, -4);
+  ctx.lineTo(0, -86);
+  ctx.moveTo(-28, -54 + sway);
+  ctx.lineTo(28, -54 - sway);
   ctx.stroke();
-  ctx.strokeStyle = "#8a7048";
-  ctx.lineWidth = 1;
-  for (let i = -3; i <= 3; i++) {
-    ctx.beginPath();
-    ctx.moveTo(i * 5, -46);
-    ctx.lineTo(i * 6, -34 + (i % 2) * 4);
-    ctx.stroke();
+  ctx.strokeStyle = "#d2b07a";
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  for (let i = -9; i <= 9; i++) {
+    ctx.moveTo(i * 1.7, -78);
+    ctx.lineTo(i * 2.6, -16 + (i % 3) * 2);
   }
+  for (let i = 0; i < 8; i++) {
+    ctx.moveTo(-26 + i * 2, -54);
+    ctx.lineTo(-34 + i * 1.2, -30 - (i % 3) * 5);
+    ctx.moveTo(26 - i * 2, -54);
+    ctx.lineTo(34 - i * 1.2, -30 - (i % 3) * 5);
+  }
+  ctx.stroke();
   ctx.fillStyle = "#1a140e";
   ctx.beginPath();
-  ctx.moveTo(-10, -78);
-  ctx.lineTo(0, -96);
-  ctx.lineTo(12, -76);
-  ctx.lineTo(8, -70);
-  ctx.lineTo(-8, -70);
+  ctx.ellipse(0, -72, 16, 4, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(-9, -74);
+  ctx.lineTo(0, -100);
+  ctx.lineTo(11, -74);
   ctx.closePath();
   ctx.fill();
   ctx.beginPath();
-  ctx.ellipse(0, -62, 8, 9, 0, 0, Math.PI * 2);
+  ctx.ellipse(0, -68, 10, 9, 0, 0, Math.PI * 2);
   ctx.fill();
   ctx.fillStyle = "#ff8a1e";
-  ctx.fillRect(-4, -64, 2, 2);
-  ctx.fillRect(2, -64, 2, 2);
+  ctx.fillRect(-6, -70, 3, 3);
+  ctx.fillRect(3, -70, 3, 3);
   ctx.restore();
 }
 
@@ -2820,32 +2827,42 @@ function drawSaws(ctx: CanvasRenderingContext2D, sim: Sim) {
     const bx = saw.x + Math.sin(ang) * saw.len;
     const by = saw.y + Math.cos(ang) * saw.len;
     ctx.save();
-    ctx.strokeStyle = "#c8c4bc";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(saw.x, saw.y);
-    ctx.lineTo(bx, by);
-    ctx.stroke();
+    ctx.strokeStyle = "#d0ccc4";
+    ctx.lineWidth = 2.5;
+    const links = 8;
+    for (let i = 0; i < links; i++) {
+      const a = i / links;
+      const b = (i + 0.62) / links;
+      ctx.beginPath();
+      ctx.moveTo(saw.x + (bx - saw.x) * a, saw.y + (by - saw.y) * a);
+      ctx.lineTo(saw.x + (bx - saw.x) * b, saw.y + (by - saw.y) * b);
+      ctx.stroke();
+    }
+    drawSheave(ctx, saw.x, saw.y, 14, -sim.t * saw.speed * 2);
     ctx.translate(bx, by);
-    ctx.rotate(sim.t * 14);
-    ctx.fillStyle = "#1a1c20";
-    ctx.strokeStyle = "#e8e4dc";
-    ctx.lineWidth = 2;
+    ctx.rotate(sim.t * 16);
+    ctx.fillStyle = "#b7bcc2";
     ctx.beginPath();
     ctx.arc(0, 0, 16, 0, Math.PI * 2);
     ctx.fill();
-    ctx.stroke();
-    ctx.beginPath();
-    for (let i = 0; i < 10; i++) {
-      const a = (i / 10) * Math.PI * 2;
-      ctx.moveTo(Math.cos(a) * 14, Math.sin(a) * 14);
-      ctx.lineTo(Math.cos(a) * 22, Math.sin(a) * 22);
+    ctx.fillStyle = "#e8eaee";
+    for (let i = 0; i < 14; i++) {
+      const a = (i / 14) * Math.PI * 2;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(a - 0.1) * 12, Math.sin(a - 0.1) * 12);
+      ctx.lineTo(Math.cos(a) * 25, Math.sin(a) * 25);
+      ctx.lineTo(Math.cos(a + 0.1) * 12, Math.sin(a + 0.1) * 12);
+      ctx.fill();
     }
-    ctx.stroke();
-    ctx.fillStyle = "#ffb45a";
+    ctx.fillStyle = "#141618";
     ctx.beginPath();
-    ctx.arc(0, 0, 3, 0, Math.PI * 2);
+    ctx.arc(0, 0, 5, 0, Math.PI * 2);
     ctx.fill();
+    ctx.strokeStyle = "#f4f1ea";
+    ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    ctx.arc(0, 0, 16, 0, Math.PI * 2);
+    ctx.stroke();
     ctx.restore();
   }
 }
@@ -2961,14 +2978,17 @@ function drawHallow(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) {
   for (const win of [3720, 4020, 4480, 5120, 5340]) {
     ctx.fillRect(win, 250, 46, 64);
   }
-  ctx.strokeStyle = "#101014";
+  ctx.strokeStyle = "#6a6840";
   ctx.lineWidth = 2;
-  for (let x = 40; x < 6400; x += 18) {
-    const h = 10 + (x % 5) * 3;
-    ctx.beginPath();
-    ctx.moveTo(x, 500);
-    ctx.lineTo(x + 2, 500 - h);
-    ctx.stroke();
+  for (const plat of sim.level.platforms) {
+    if (plat.kind === "ladder" || plat.kind === "gate") continue;
+    for (let x = plat.x + 6; x < plat.x + plat.w - 4; x += 14) {
+      const h = 8 + ((x / 14) % 4) * 3;
+      ctx.beginPath();
+      ctx.moveTo(x, plat.y);
+      ctx.lineTo(x + 1, plat.y - h);
+      ctx.stroke();
+    }
   }
   ctx.restore();
 }

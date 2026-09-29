@@ -1839,14 +1839,14 @@ export function Playfield({
             </button>
           </div>
           <div>
-            <button type="button" aria-label="Use" draggable={false} {...hold("use")}>
-              Use
-            </button>
             {(pickId === "hoist" || pickId === "yule" || pickId === "antler" || pickId === "roof" || pickId === "tunnel" || pickId === "gale" || pickId === "hallow") && (
               <button type="button" aria-label="Climb down" draggable={false} {...hold("down")}>
                 Down
               </button>
             )}
+            <button type="button" aria-label="Use" draggable={false} {...hold("use")}>
+              Use
+            </button>
             <button type="button" aria-label="Jump" draggable={false} {...hold("jump")}>
               Jump
             </button>
