@@ -72,6 +72,43 @@ const SKY: Record<string, [string, string, string, string]> = {
   yule: ["#050506", "#9a9894", "#2a2a2c", "#050506"],
 };
 
+function drawLowerFill(ctx: CanvasRenderingContext2D, camera: Camera, id: string) {
+  if (id === "yule" || id === "tunnel") return;
+  ctx.save();
+  const spacing = id === "moon" ? 360 : 280;
+  const layer = camera.x * 0.7;
+  const first = Math.floor((layer - 700) / spacing) * spacing;
+  const last = layer + camera.w + 700;
+  const ground = camera.y + camera.h + 24;
+  for (let x = first; x <= last; x += spacing) {
+    const n = Math.abs(Math.round(x / spacing));
+    const worldX = camera.x + (x - layer);
+    const g = ground + (n % 2) * 24;
+    if (id === "gear" || id === "choir" || id === "hoist" || id === "latch") {
+      ctx.fillStyle = "rgba(8,8,10,0.62)";
+      const h = 340 + (n % 3) * 90;
+      ctx.fillRect(worldX, g - h, 54 + (n % 2) * 24, h + 180);
+      ctx.fillRect(worldX + 16, g - h - 48, 10, 56);
+    } else if (id === "gale") {
+      ctx.fillStyle = "rgba(16,16,18,0.5)";
+      ctx.beginPath();
+      ctx.moveTo(worldX - 90, g + 90);
+      ctx.quadraticCurveTo(worldX + 20, g - 260 - (n % 3) * 50, worldX + 180, g + 90);
+      ctx.fill();
+    } else if (id === "moon") {
+      ctx.fillStyle = "rgba(16,16,20,0.82)";
+      ctx.beginPath();
+      ctx.arc(worldX, g + 10, 110 + (n % 3) * 36, Math.PI, 0);
+      ctx.lineTo(worldX + 160, g + 180);
+      ctx.lineTo(worldX - 160, g + 180);
+      ctx.fill();
+    } else {
+      drawTree(ctx, { x: worldX, ground: g, scale: 2.6 + (n % 3) * 0.5, seed: 90 + n * 13 }, 0.78);
+    }
+  }
+  ctx.restore();
+}
+
 function drawTree(ctx: CanvasRenderingContext2D, tree: Tree, alpha: number) {
   const rand = rng(tree.seed);
   const s = tree.scale;
@@ -3255,6 +3292,8 @@ export function renderFrame(
     ctx.restore();
   }
 
+  drawLowerFill(ctx, camera, sim.level.id);
+
   drawTerrain(ctx, sim, reduced);
   if (sim.level.id === "yule") drawYuleHill(ctx, sim, reduced);
   if (sim.level.id === "shore") {
@@ -3441,7 +3480,7 @@ export function renderFrame(
       const top = sim.y + PH - 48;
       ctx.save();
       ctx.beginPath();
-      ctx.rect(sim.x - 36, top - 8, 90, 16);
+      ctx.rect(sim.x - 40, top - 10, 100, 30);
       ctx.clip();
     }
     drawFriend(
@@ -3490,6 +3529,22 @@ export function renderFrame(
     ctx.fillStyle = "#f4f1ea";
     ctx.fillRect(mote.x, mote.y, 2, 2);
     ctx.globalAlpha = 1;
+  }
+
+  if (sim.level.id === "yule" && sim.x > 11200) {
+    const rx = 11370;
+    const ry = 140;
+    const rw = 1000;
+    const rh = 530;
+    const left = camera.x - 80;
+    const top = camera.y - 80;
+    const right = camera.x + camera.w + 80;
+    const bottom = camera.y + camera.h + 80;
+    ctx.fillStyle = "#050506";
+    ctx.fillRect(left, top, Math.max(0, rx - left), bottom - top);
+    ctx.fillRect(rx + rw, top, Math.max(0, right - (rx + rw)), bottom - top);
+    ctx.fillRect(rx, top, rw, Math.max(0, ry - top));
+    ctx.fillRect(rx, ry + rh, rw, Math.max(0, bottom - (ry + rh)));
   }
 
   ctx.restore();

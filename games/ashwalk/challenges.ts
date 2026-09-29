@@ -1103,7 +1103,7 @@ const YULE: Level = {
   clearKicker: "The eve",
   clearTitle: "The hill kept the light",
   worldW: 12600,
-  killY: 1500,
+  killY: 960,
   poster: 280,
   introCrow: false,
   platforms: [
