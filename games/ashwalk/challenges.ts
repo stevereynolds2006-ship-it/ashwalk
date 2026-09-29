@@ -605,8 +605,6 @@ const ROOF: Level = {
       period: 1,
       phase: 0.2,
     },
-    { id: "gap", mode: "hang", x0: 4588, x1: 4588, y: 520, ceil: 400, speed: 0, reach: 100, period: 2.4, phase: 0.2 },
-    { id: "lip", mode: "crawl", x0: 4768, x1: 4816, y: 162, ceil: 0, speed: 32, reach: 0, period: 1, phase: 0.5 },
   ],
   chapters: [
     { x: 0, id: "roof", title: "The sign", kicker: "A coin buys ten seconds of light." },
@@ -1169,6 +1167,9 @@ const YULE: Level = {
     { id: "b4", kind: "solid", x: 4400, y: 340, w: 160, h: 14 },
     { id: "rise", kind: "solid", x: 4880, y: 660, w: 90, h: 14 },
     { id: "rise2", kind: "solid", x: 5040, y: 540, w: 100, h: 14 },
+    { id: "stack", kind: "solid", x: 5060, y: 220, w: 70, h: 14 },
+    { id: "cLad", kind: "ladder", x: 5084, y: 220, w: 22, h: 230 },
+    { id: "roof", kind: "solid", x: 4980, y: 440, w: 280, h: 16 },
     { id: "crest", kind: "solid", x: 5240, y: 440, w: 360, h: 18 },
     { id: "hearth", kind: "solid", terrain: true, x: 11440, y: 640, w: 860, h: 420 },
   ],

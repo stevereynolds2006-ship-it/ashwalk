@@ -908,8 +908,8 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
       sim.hearthLeave -= dt;
       if (sim.hearthLeave <= 0 && sim.hearthX > 0) {
         sim.hearthLeave = 0;
-        sim.x = sim.hearthX;
-        sim.y = sim.hearthY;
+        sim.x = 5072;
+        sim.y = 220 - PH;
         sim.vx = 0;
         sim.vy = 0;
       }

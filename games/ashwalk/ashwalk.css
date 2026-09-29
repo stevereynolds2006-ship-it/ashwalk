@@ -521,6 +521,32 @@
   font-size: 16px;
 }
 
+.ash-touch-gale {
+  gap: 6px;
+  bottom: 16px;
+  padding: 6px 6px calc(6px + env(safe-area-inset-bottom));
+}
+
+.ash-touch-gale div {
+  flex: 1;
+  gap: 5px;
+}
+
+.ash-touch-gale button {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0 6px;
+  font-size: 13px;
+}
+
+.ash-touch-gale button[aria-label="Jump"] {
+  flex: 1.15;
+  min-width: 0;
+  min-height: 62px;
+  font-size: 16px;
+}
+
 @media (pointer: coarse), (max-width: 800px) {
   .ash-touch {
     display: flex;
