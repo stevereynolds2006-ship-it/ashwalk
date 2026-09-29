@@ -1033,6 +1033,19 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
     }
   }
 
+  if (level.id === "yule" && !sim.won && sim.suck <= 0 && sim.beacons.size >= level.beacons.length) {
+    const crest = sim.x > 2920 && sim.x < 3120 && sim.y + PH > 360 && sim.y + PH < 410;
+    if (sim.cage > 0 || crest) {
+      sim.cage = Math.min(1, sim.cage + dt / 6);
+      const u = sim.cage;
+      sim.vx = 0;
+      sim.vy = 0;
+      sim.climbing = false;
+      sim.x = 2980 + u * 1380;
+      sim.y = 380 - PH + u * 280;
+    }
+  }
+
   if (level.id === "gale" && !sim.won && sim.suck <= 0) {
     const lip = sim.x > 4240 && sim.y > 360 && sim.y < 520;
     if (sim.cage > 0 || lip) {

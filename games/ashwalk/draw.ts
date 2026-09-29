@@ -2114,22 +2114,28 @@ function drawYuleHill(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean)
     if (plat.kind === "ladder" || plat.kind === "gate") continue;
     ctx.fillRect(plat.x, plat.y - 3, plat.w, 3);
   }
-  const candles: [number, number][] = [
-    [140, 640],
-    [190, 640],
-    [250, 640],
-    [320, 640],
-    [390, 640],
-    [1280, 620],
-    [1360, 620],
-    [1500, 620],
-    [2180, 600],
-    [2280, 600],
-    [2860, 640],
-    [2940, 640],
-    [3040, 640],
-  ];
-  for (const [x, y] of candles) drawCandle(ctx, x, y, true, sim.t);
+  const candles = sim.level.beacons.map((bell) => bell.x + bell.w / 2);
+  for (const plat of sim.level.platforms) {
+    if (!plat.terrain) continue;
+    for (let x = plat.x + 48; x < plat.x + plat.w - 28; x += 84) {
+      if (candles.some((mark) => Math.abs(mark - x) < 46)) continue;
+      drawCandle(ctx, x, plat.y, true, sim.t);
+    }
+  }
+  ctx.fillStyle = "#070708";
+  ctx.beginPath();
+  ctx.moveTo(2900, 380);
+  ctx.lineTo(4520, 700);
+  ctx.lineTo(4520, 1100);
+  ctx.lineTo(2900, 1100);
+  ctx.fill();
+  ctx.fillStyle = "rgba(244,241,234,0.88)";
+  ctx.beginPath();
+  ctx.moveTo(2900, 378);
+  ctx.lineTo(4520, 698);
+  ctx.lineTo(4520, 702);
+  ctx.lineTo(2900, 382);
+  ctx.fill();
   if (reduced) return;
   ctx.fillStyle = "#f7f4ee";
   for (let i = 0; i < 90; i++) {
@@ -2139,6 +2145,27 @@ function drawYuleHill(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean)
     ctx.fillRect(x, y, i % 6 === 0 ? 2.4 : 1.3, i % 6 === 0 ? 2.4 : 1.3);
   }
   ctx.globalAlpha = 1;
+}
+
+function drawSled(ctx: CanvasRenderingContext2D, x: number, y: number) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.strokeStyle = "#f4f1ea";
+  ctx.lineWidth = 2;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(-34, 6);
+  ctx.quadraticCurveTo(-24, 16, 36, 14);
+  ctx.moveTo(-30, 10);
+  ctx.quadraticCurveTo(-20, 20, 34, 18);
+  ctx.moveTo(-16, 2);
+  ctx.lineTo(-16, 12);
+  ctx.moveTo(18, 2);
+  ctx.lineTo(18, 12);
+  ctx.stroke();
+  ctx.fillStyle = "#141418";
+  ctx.fillRect(-26, -6, 48, 10);
+  ctx.restore();
 }
 
 function drawRat(
@@ -3175,6 +3202,10 @@ export function renderFrame(
       false,
       cloth,
     );
+  }
+  if (sim.level.id === "yule" && sim.suck <= 0 && sim.dead <= 0) {
+    if (sim.cage > 0) drawSled(ctx, sim.x + PW / 2, sim.y + PH);
+    else drawSled(ctx, 3020, 380);
   }
   if (sim.dead > 0) {
     drawCageBones(ctx, sim.x + PW / 2, sim.y + PH, 3.4);

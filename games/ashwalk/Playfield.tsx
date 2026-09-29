@@ -245,6 +245,7 @@ export function Playfield({
   const pickRef = useRef("shore");
   const startRef = useRef<(id: string) => void>(() => {});
   const [phase, setPhase] = useState<Phase>("title");
+  const [guide, setGuide] = useState(false);
   const [family, setFamily] = useState("");
   const [spriteError, setSpriteError] = useState("");
   const [chapter, setChapter] = useState("The shore");
@@ -1399,11 +1400,9 @@ export function Playfield({
           <p>Your Friend is the small one. The fog is everything else.</p>
           <p>
             {payingAccount && (rareBalance ?? walletCoins) != null
-              ? `You have ${formatRareCoins(spendable(rareBalance ?? walletCoins, payingAccount) ?? 0n)} Rare coins. Those pay to continue and to buy a cape.`
+              ? `You have ${formatRareCoins(spendable(rareBalance ?? walletCoins, payingAccount) ?? 0n)} Rare coins.`
               : "Connect a wallet to buy boards with Rare coins."}
           </p>
-          <p>The shore is free. You start it with 2 coins. Coins you pick up only turn things on inside the stage. Rare coins pay to open the next fog and to buy a cape. Beat a fog, then the next one is 25 Rare coins. You cannot buy the next one until the one before it is beaten.</p>
-          <p>Every month a new map opens. A new cape opens each week, starting October 1. Capes are 15 Rare coins. The Halloween cape and the Christmas cape are 25. Only the red cape is open now. The hoist opens January 1st.</p>
           {stakeMsg && (
             <p className="ash-error" role="alert">
               {stakeMsg}
@@ -1439,13 +1438,27 @@ export function Playfield({
             >
               With friends
             </button>
+            <button
+              type="button"
+              className="ash-btn-ghost"
+              aria-expanded={guide}
+              onClick={() => setGuide((open) => !open)}
+            >
+              {guide ? "Hide guide" : "Guide"}
+            </button>
           </div>
-          <p className="ash-note">
-            A and D, or the left and right arrow keys, move. W, up, or space jumps. S drops through a thin plank. On the hoist, Use climbs up and Down climbs down.
-            E pulls, lights a bell, or buys a lantern. A lantern costs 1 coin you picked up in the stage and lasts 13 seconds. The flashlight costs 5 of those coins. On the moon that buy is a saber, not a flashlight. Stand on a plank too long and it falls.
-            It comes back after 4 seconds. Three lives to a board. After that, one more life is 10 Rare coins.
-            A death takes half the coins you picked up in the stage. Rare coins you spend are sent in one payment. Confirm it in your wallet.
-          </p>
+          {guide && (
+            <div className="ash-guide">
+              <p>The shore is free. You start it with 2 coins. Coins you pick up only turn things on inside the stage. Rare coins pay to open the next fog and to buy a cape. Beat a fog, then the next one is 25 Rare coins. You cannot buy the next one until the one before it is beaten.</p>
+              <p>Every month a new map opens. A new cape opens each week, starting October 1. Capes are 15 Rare coins. The Halloween cape and the Christmas cape are 25. Only the red cape is open now. The hoist opens January 1st. The eve is open to try.</p>
+              <p>
+                A and D, or the arrow keys, move. W, up, or space jumps. S drops through a thin plank. On the hoist, Use climbs up and Down climbs down.
+                E pulls, lights a bell, or buys a lantern. A lantern costs 1 coin you picked up in the stage and lasts 13 seconds. The flashlight costs 5 of those coins. On the moon that buy is a saber, not a flashlight. Stand on a plank too long and it falls.
+                It comes back after 4 seconds. Three lives to a board. After that, one more life is 10 Rare coins.
+                A death takes half the coins you picked up in the stage. Rare coins you spend are sent in one payment. Confirm it in your wallet.
+              </p>
+            </div>
+          )}
         </section>
       )}
       {phase === "clothes" && (
@@ -1986,6 +1999,10 @@ function musicScene(phase: Phase, sim: Sim): MusicScene {
 function promptFor(sim: Sim, phase: Phase) {
   if (phase !== "play" || sim.won || sim.dead > 0) return "";
   if (sim.level.id === "gale" && sim.cage > 0) return "Jump rises. Down drops. 8 seconds to the hole.";
+  if (sim.level.id === "yule" && sim.beacons.size < sim.level.beacons.length && sim.x > 2860 && sim.x < 3140 && sim.y < 420) {
+    return "Light the three candles. Then the sled.";
+  }
+  if (sim.level.id === "yule" && sim.cage > 0 && sim.cage < 1) return "Down the hill.";
   if (sim.level.id === "moon" && sim.cage > 0) return "Light speed. Eight seconds.";
   if (sim.climbing) return sim.climbDir > 0 ? "Down · climbing down" : "Use · climbing up";
   if (sim.nearLadder) return "Use climbs up. Down climbs down.";

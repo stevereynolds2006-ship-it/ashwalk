@@ -256,6 +256,12 @@
   margin-top: 8px;
 }
 
+.ash-guide {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(243, 240, 232, 0.18);
+}
+
 .ash-note,
 .ash-error {
   font-size: 13px;
