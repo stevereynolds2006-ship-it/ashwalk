@@ -4213,12 +4213,12 @@ export function renderFrame(
     drawCagedFriend(ctx, sprites, sim, reduced, cloth, {
       rope: sim.rope3,
       feast: 0,
-      startX: 7488,
-      landX: 7560,
+      startX: 8646,
+      landX: 8718,
       hangTop: 160,
       landTop: 380,
       floor: 480,
-      axleX: 7410,
+      axleX: 8568,
       wireY: 110,
       empty: sim.saved > 2,
     });

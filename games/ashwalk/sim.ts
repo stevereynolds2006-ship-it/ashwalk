@@ -1003,7 +1003,7 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
           const nearFly = Math.abs(sim.x - 4788) < 180 && sim.y < 520;
           if (sim.feast2 > 0 || nearFly) sim.feast2 += dt;
         }
-        const endCrank = { id: "rope-end", x: 7360, y: 350, w: 110, h: 140 };
+        const endCrank = { id: "rope-end", x: 8518, y: 350, w: 110, h: 140 };
         const atEnd = sim.rope3 < 1 && zoneHit(sim.x, sim.y, endCrank);
         if (atEnd) sim.nearRope = true;
         if (atEnd && input.interact) {
@@ -1014,12 +1014,12 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
           if (before < 1 && sim.rope3 === 1) events.rope = true;
         }
         if (sim.rope3 >= 1) {
-          const nearEnd = Math.abs(sim.x - 7600) < 160 && sim.y < 530;
+          const nearEnd = Math.abs(sim.x - 8758) < 160 && sim.y < 530;
           if (sim.saved > 0 || nearEnd) {
             const before = sim.saved;
             sim.saved += dt;
             if (before <= 2 && sim.saved > 2) {
-              sim.palX = 7588;
+              sim.palX = 8746;
               sim.palY = 480 - PH;
               sim.palFace = 1;
             }
