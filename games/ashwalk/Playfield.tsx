@@ -171,6 +171,8 @@ export function Playfield({
   const [walletCoins, setWalletCoins] = useState<bigint | null>(rareBalance ?? null);
   const [linkedAccount, setLinkedAccount] = useState<string | null>(account && isAddress(account) ? account : null);
   const [hudOpen, setHudOpen] = useState(false);
+  const hudOpenRef = useRef(false);
+  hudOpenRef.current = hudOpen;
   const purseRef = useRef(0);
   const [purse, setPurse] = useState(0);
   const livesRef = useRef(LIVES);
@@ -635,6 +637,10 @@ export function Playfield({
       } else {
         acc += dt;
         const held = sample();
+        if (hudOpenRef.current && (held.left || held.right || held.jumpHeld || held.down)) {
+          hudOpenRef.current = false;
+          setHudOpen(false);
+        }
         let jumpPressed = held.jumpHeld && !edgeRef.current.jump;
         let interactPressed = held.interact && !edgeRef.current.interact;
         edgeRef.current = { jump: held.jumpHeld, interact: held.interact };
@@ -1088,6 +1094,7 @@ export function Playfield({
       event.preventDefault();
       event.currentTarget.setPointerCapture(event.pointerId);
       holdsRef.current[key] = true;
+      if (key === "left" || key === "right" || key === "jump" || key === "down") setHudOpen(false);
     },
     onContextMenu: (event: ReactMouseEvent<HTMLButtonElement>) => {
       event.preventDefault();
