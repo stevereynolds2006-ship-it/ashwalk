@@ -273,6 +273,7 @@ function drawTerrain(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) 
   for (const plat of sim.level.platforms) {
     if (plat.kind === "ladder") drawLadder(ctx, plat);
   }
+  if (sim.level.id === "hoist") drawHoistHangs(ctx, sim);
   if (sim.level.id === "choir") {
     for (const rect of bodies) {
       if (rect.kind === "gate" || rect.id.startsWith("ceil")) continue;
@@ -822,6 +823,50 @@ function drawChoirMarks(ctx: CanvasRenderingContext2D) {
     ctx.font = "bold 26px sans-serif";
     ctx.fillText(String(digit), x, y);
     ctx.restore();
+  }
+}
+
+function drawHoistHangs(ctx: CanvasRenderingContext2D, sim: Sim) {
+  const hangs: { x: number; y: number; lamp: string }[] = [
+    { x: 240, y: 378, lamp: "l-arm" },
+    { x: 760, y: 378, lamp: "l-arm" },
+    { x: 180, y: 136, lamp: "l-high" },
+    { x: 640, y: 136, lamp: "l-high" },
+    { x: 1680, y: 218, lamp: "l-gantry" },
+    { x: 1980, y: 218, lamp: "l-gantry" },
+    { x: 2140, y: 496, lamp: "l-gantry" },
+    { x: 2480, y: 196, lamp: "l-crane" },
+    { x: 2700, y: 196, lamp: "l-crane" },
+    { x: 3220, y: 96, lamp: "l-crane" },
+    { x: 3580, y: 96, lamp: "l-crane" },
+    { x: 4360, y: 476, lamp: "l-nest" },
+    { x: 4520, y: 256, lamp: "l-nest" },
+    { x: 4920, y: 278, lamp: "l-lock" },
+    { x: 5180, y: 278, lamp: "l-lock" },
+  ];
+  for (const hang of hangs) {
+    const on = sim.altars.has(hang.lamp);
+    ctx.strokeStyle = "#141418";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(hang.x, hang.y);
+    ctx.lineTo(hang.x, hang.y + 16);
+    ctx.stroke();
+    if (on) {
+      const glow = ctx.createRadialGradient(hang.x, hang.y + 28, 2, hang.x, hang.y + 34, 78);
+      glow.addColorStop(0, "rgba(255,255,255,0.92)");
+      glow.addColorStop(0.45, "rgba(244,241,234,0.35)");
+      glow.addColorStop(1, "rgba(244,241,234,0)");
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(hang.x, hang.y + 34, 78, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#f7f4ee";
+    } else ctx.fillStyle = "#2c2c30";
+    ctx.beginPath();
+    ctx.arc(hang.x, hang.y + 22, 5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillRect(hang.x - 7, hang.y + 20, 14, 3);
   }
 }
 
@@ -2900,7 +2945,8 @@ export function renderFrame(
     drawShrine(ctx, zone.x + zone.w / 2 - 4, zone.y + zone.h - 8, sim.t);
   }
   for (const stand of sim.level.lamps ?? []) {
-    const lit = sim.level.id !== "moon" || sim.altars.has(stand.id);
+    const lit =
+      sim.level.id === "moon" || sim.level.id === "hoist" ? sim.altars.has(stand.id) : true;
     drawLantern(ctx, stand.x + stand.w / 2, stand.y + 18, sim.t, lit);
   }
   for (const bell of sim.level.beacons) {
