@@ -898,7 +898,7 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
         sim.hearthX = sim.x;
         sim.hearthY = sim.y;
       }
-      sim.x = 11680;
+      sim.x = 11540;
       sim.y = 640 - PH;
       sim.vx = 0;
       sim.vy = 0;
@@ -913,7 +913,7 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
         sim.vy = 0;
       }
     } else if (inRoom && input.interactPressed) {
-      const tree = sim.x > 11810 && sim.x < 12020 && sim.y + PH > 590;
+      const tree = sim.x > 11940 && sim.x < 12180 && sim.y + PH > 590;
       if (tree && sim.gifts < sim.moths.size) {
         sim.gifts += 1;
         sim.feast = 1.2;
@@ -1151,7 +1151,8 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
   stepPal(sim, dt);
   sim.doorLocked =
     (level.id === "shore" && (sim.rope < 1 || sim.rope2 < 1 || sim.saved <= 2)) ||
-    (level.beacons.length > 0 && sim.beacons.size < level.beacons.length && !(level.id === "yule" && sim.cage > 0.15)) ||
+    (level.id === "yule" && sim.gifts < level.moths.length) ||
+    (level.id !== "yule" && level.beacons.length > 0 && sim.beacons.size < level.beacons.length) ||
     (!!level.stalker && !sim.caged) ||
     (!!level.hunter && sim.wake < 1) ||
     !comboSet(sim);

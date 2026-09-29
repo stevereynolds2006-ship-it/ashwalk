@@ -2069,14 +2069,13 @@ function drawCandle(ctx: CanvasRenderingContext2D, x: number, ground: number, li
   ctx.fillRect(x - 2, ground - h, 4, h);
   const fy = ground - h - 4 + Math.sin(t * 8 + x) * 1.5;
   if (lit) {
-    const glow = ctx.createRadialGradient(x, fy, 2, x, fy, 78);
-    glow.addColorStop(0, "rgba(255,255,255,1)");
-    glow.addColorStop(0.2, "rgba(255,250,230,0.95)");
-    glow.addColorStop(0.55, "rgba(255,255,255,0.45)");
-    glow.addColorStop(1, "rgba(255,255,255,0)");
+    const glow = ctx.createRadialGradient(x, fy, 2, x, fy, 46);
+    glow.addColorStop(0, "rgba(255,236,200,0.7)");
+    glow.addColorStop(0.35, "rgba(255,220,160,0.28)");
+    glow.addColorStop(1, "rgba(255,220,160,0)");
     ctx.fillStyle = glow;
     ctx.beginPath();
-    ctx.arc(x, fy, 78, 0, Math.PI * 2);
+    ctx.arc(x, fy, 46, 0, Math.PI * 2);
     ctx.fill();
     ctx.fillStyle = "#fffef8";
     ctx.fillRect(x - 1.5, fy - 14, 3, 16);
@@ -2109,15 +2108,15 @@ function drawYuleSky(ctx: CanvasRenderingContext2D, camera: Camera, t: number, r
   }
   ctx.restore();
   ctx.save();
-  const bottom = camera.y + camera.h * 0.92;
-  const gap = Math.max(170, camera.w / 4.4);
-  const count = Math.ceil(camera.w / gap) + 3;
-  const shift = (camera.x * 0.22) % gap;
-  for (let i = 0; i < count; i++) {
-    const x = camera.x - gap + i * gap - shift;
-    const scale = 3.6 + (i % 3) * 0.45;
-    const ground = bottom + (i % 2) * 36;
-    drawPine(ctx, x, ground, scale, true, t);
+  const spacing = 280;
+  const layer = camera.x * 0.7;
+  const first = Math.floor((layer - 500) / spacing) * spacing;
+  const last = layer + camera.w + 500;
+  for (let x = first; x <= last; x += spacing) {
+    const n = Math.round(x / spacing);
+    const scale = 3.35 + (Math.abs(n) % 3) * 0.4;
+    const ground = camera.y + camera.h * 0.9 + (Math.abs(n) % 2) * 28;
+    drawPine(ctx, camera.x + (x - layer), ground, scale, true, t);
   }
   ctx.restore();
 }
@@ -2174,32 +2173,59 @@ function drawYuleHill(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean)
 
 function drawHearth(ctx: CanvasRenderingContext2D, sim: Sim) {
   if (sim.level.id !== "yule") return;
-  ctx.fillStyle = "#050506";
-  ctx.fillRect(11340, 0, 1200, 640);
-  ctx.fillStyle = "#101012";
-  ctx.fillRect(11480, 400, 160, 240);
-  ctx.fillStyle = "#1a1a1e";
-  ctx.fillRect(11510, 470, 100, 170);
-  ctx.fillStyle = "#f4f1ea";
-  ctx.fillRect(11490, 448, 140, 10);
-  const flick = Math.sin(sim.t * 9) * 8;
+  ctx.fillStyle = "#120e0c";
+  ctx.fillRect(11380, 160, 980, 480);
+  ctx.fillStyle = "#1c1612";
+  ctx.fillRect(11380, 160, 980, 70);
+  ctx.fillStyle = "#2a211c";
+  for (let y = 520; y < 640; y += 16) ctx.fillRect(11380, y, 980, 7);
+  ctx.fillStyle = "#3a2c24";
+  ctx.fillRect(11380, 628, 980, 12);
+  ctx.fillStyle = "#0c1016";
+  ctx.fillRect(11500, 230, 150, 110);
+  ctx.strokeStyle = "#d9d3c8";
+  ctx.lineWidth = 4;
+  ctx.strokeRect(11500, 230, 150, 110);
+  ctx.fillStyle = "rgba(247,244,238,0.7)";
+  for (let i = 0; i < 8; i++) ctx.fillRect(11516 + (i % 4) * 28, 250 + Math.floor(i / 4) * 36, 2, 2);
+  ctx.fillStyle = "#6a5a4c";
+  ctx.fillRect(11420, 500, 200, 140);
+  ctx.fillStyle = "#3a3028";
+  ctx.fillRect(11440, 530, 160, 70);
+  ctx.fillStyle = "#8a7058";
+  ctx.fillRect(11640, 400, 210, 16);
+  ctx.fillStyle = "#4a4038";
+  ctx.fillRect(11660, 416, 170, 224);
+  ctx.fillStyle = "#1a120e";
+  ctx.fillRect(11690, 470, 110, 170);
+  ctx.fillStyle = "#5a4636";
+  ctx.fillRect(11700, 600, 90, 12);
+  const flick = Math.sin(sim.t * 9) * 10;
+  const fire = ctx.createRadialGradient(11745, 560, 4, 11745, 580, 100);
+  fire.addColorStop(0, "rgba(255,210,120,0.9)");
+  fire.addColorStop(0.4, "rgba(255,90,30,0.4)");
+  fire.addColorStop(1, "rgba(255,60,20,0)");
+  ctx.fillStyle = fire;
+  ctx.beginPath();
+  ctx.arc(11745, 580, 100, 0, Math.PI * 2);
+  ctx.fill();
   ctx.fillStyle = "#ffd24a";
   ctx.beginPath();
-  ctx.moveTo(11560, 630);
-  ctx.quadraticCurveTo(11520, 540, 11560, 490 + flick);
-  ctx.quadraticCurveTo(11600, 540, 11560, 630);
+  ctx.moveTo(11745, 610);
+  ctx.quadraticCurveTo(11705, 540, 11745, 490 + flick);
+  ctx.quadraticCurveTo(11785, 540, 11745, 610);
   ctx.fill();
   ctx.fillStyle = "#ff3b3b";
   ctx.beginPath();
-  ctx.moveTo(11560, 630);
-  ctx.quadraticCurveTo(11540, 570, 11560, 540);
-  ctx.quadraticCurveTo(11580, 570, 11560, 630);
+  ctx.moveTo(11745, 608);
+  ctx.quadraticCurveTo(11725, 560, 11745, 530);
+  ctx.quadraticCurveTo(11765, 560, 11745, 608);
   ctx.fill();
-  drawPine(ctx, 11940, 640, 1.7, true, sim.t);
+  drawPine(ctx, 12080, 628, 1.35, true, sim.t);
   const wraps = ["#c43838", "#2f8f4e", "#e2b23a", "#3a6fd4"];
   for (let i = 0; i < sim.gifts; i++) {
-    const slotX = 11830 + i * 36;
-    const slotY = 618;
+    const slotX = 11970 + i * 34;
+    const slotY = 616;
     const settling = i === sim.gifts - 1 && sim.feast > 0;
     const u = settling ? Math.min(1, 1 - sim.feast / 1.2) : 1;
     const fromX = sim.x + PW / 2;
@@ -2259,14 +2285,14 @@ function drawPine(
     ];
     for (const [bx, by, color] of bulbs) {
       const glow = 0.55 + 0.45 * Math.abs(Math.sin(t * 3 + bx + by));
-      ctx.globalAlpha = glow;
+      ctx.globalAlpha = 0.28 * glow;
       ctx.fillStyle = color;
       ctx.beginPath();
-      ctx.arc(bx, by, 3.4, 0, Math.PI * 2);
+      ctx.arc(bx, by, 22, 0, Math.PI * 2);
       ctx.fill();
-      ctx.globalAlpha = glow * 0.35;
+      ctx.globalAlpha = glow;
       ctx.beginPath();
-      ctx.arc(bx, by, 8, 0, Math.PI * 2);
+      ctx.arc(bx, by, 3.2, 0, Math.PI * 2);
       ctx.fill();
     }
     ctx.globalAlpha = 1;

@@ -924,6 +924,11 @@ export function Playfield({
           : sim.wake >= 1
             ? "It is following you down. Do not stop."
             : "Run. The rock is waiting.";
+      } else if (sim.level.id === "yule") {
+        nextKicker =
+          sim.gifts >= sim.level.moths.length
+            ? "All 4 presents. The sled will go."
+            : `${Math.min(sim.moths.size, 4)} of 4 presents`;
       } else if (sim.level.beacons.length > 0) {
         nextKicker = `${sim.beacons.size} of ${sim.level.beacons.length} bells`;
       } else if (sim.level.wind?.mode === "tide" && phaseNow === "play") {
@@ -2008,7 +2013,7 @@ function promptFor(sim: Sim, phase: Phase) {
   if (sim.level.id === "gale" && sim.cage > 0) return "Jump rises. Down drops. 8 seconds to the hole.";
   if (sim.level.id === "yule" && sim.x > 11200 && sim.hearthLeave > 0) return "The tree keeps them.";
   if (sim.level.id === "yule" && sim.x > 11200 && sim.gifts < sim.level.moths.length) {
-    return sim.x > 11810 && sim.x < 12020
+    return sim.x > 11940 && sim.x < 12180
       ? `Use · set a present under the tree · ${sim.gifts} of ${sim.moths.size}`
       : "Carry them to the tree.";
   }
@@ -2042,6 +2047,7 @@ function promptFor(sim: Sim, phase: Phase) {
     if (sim.level.id === "shore" && sim.saved <= 2) return "Lower the last cage. They leave with you.";
     if (sim.level.combo && !comboSet(sim)) return "The lock is not the code";
     if (sim.level.hunter && sim.wake < 1) return "Reach him. Then the door opens behind you.";
+    if (sim.level.id === "yule") return "Get all 4 presents";
     return "The door wants every bell";
   }
   if (sim.nearTrap) return "Wait until it is inside";
