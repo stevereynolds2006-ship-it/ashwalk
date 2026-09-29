@@ -162,6 +162,8 @@ export type Sim = {
   /** Where the last present stood, so the room can send you back. */
   hearthX: number;
   hearthY: number;
+  /** Seconds left in the room after the last present. */
+  hearthLeave: number;
   slain: Set<number>;
 };
 
@@ -254,6 +256,7 @@ export function createSim(level: Level = SHORE): Sim {
     gifts: 0,
     hearthX: 0,
     hearthY: 0,
+    hearthLeave: 0,
   };
 }
 
@@ -900,15 +903,24 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
       sim.vx = 0;
       sim.vy = 0;
       sim.climbing = false;
-    } else if (inRoom && sim.gifts >= level.moths.length && sim.hearthX > 0) {
-      sim.x = sim.hearthX;
-      sim.y = sim.hearthY;
-      sim.vx = 0;
-      sim.vy = 0;
+    } else if (inRoom && sim.hearthLeave > 0) {
+      sim.hearthLeave -= dt;
+      if (sim.hearthLeave <= 0 && sim.hearthX > 0) {
+        sim.hearthLeave = 0;
+        sim.x = sim.hearthX;
+        sim.y = sim.hearthY;
+        sim.vx = 0;
+        sim.vy = 0;
+      }
     } else if (inRoom && input.interactPressed) {
       const tree = sim.x > 11810 && sim.x < 12020 && sim.y + PH > 590;
-      if (tree && sim.gifts < sim.moths.size) sim.gifts += 1;
+      if (tree && sim.gifts < sim.moths.size) {
+        sim.gifts += 1;
+        sim.feast = 0.55;
+        if (sim.gifts >= level.moths.length) sim.hearthLeave = 5;
+      }
     }
+    if (inRoom && sim.feast > 0) sim.feast = Math.max(0, sim.feast - dt);
   }
 
   for (let i = 0; i < level.checkpoints.length; i++) {

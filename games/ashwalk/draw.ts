@@ -2109,19 +2109,16 @@ function drawYuleSky(ctx: CanvasRenderingContext2D, camera: Camera, t: number, r
   }
   ctx.restore();
   ctx.save();
-  ctx.translate(camera.x * 0.42, camera.y * 0.15);
-  const pines: [number, number, number][] = [
-    [180, 700, 1.1],
-    [560, 730, 0.75],
-    [1040, 690, 1.3],
-    [1520, 760, 0.9],
-    [1980, 680, 1.15],
-    [2560, 720, 0.85],
-    [3180, 660, 1.2],
-    [3780, 740, 1],
-    [4380, 700, 1.25],
-  ];
-  for (const pine of pines) drawPine(ctx, pine[0], pine[1], pine[2], true, t);
+  const bottom = camera.y + camera.h * 0.92;
+  const gap = Math.max(170, camera.w / 4.4);
+  const count = Math.ceil(camera.w / gap) + 3;
+  const shift = (camera.x * 0.22) % gap;
+  for (let i = 0; i < count; i++) {
+    const x = camera.x - gap + i * gap - shift;
+    const scale = 3.6 + (i % 3) * 0.45;
+    const ground = bottom + (i % 2) * 36;
+    drawPine(ctx, x, ground, scale, true, t);
+  }
   ctx.restore();
 }
 
@@ -2199,7 +2196,15 @@ function drawHearth(ctx: CanvasRenderingContext2D, sim: Sim) {
   ctx.quadraticCurveTo(11580, 570, 11560, 630);
   ctx.fill();
   drawPine(ctx, 11940, 640, 1.7, true, sim.t);
-  for (let i = 0; i < sim.gifts; i++) drawPresent(ctx, 11820 + (i % 4) * 34, 628, sim.t + i);
+  for (let i = 0; i < sim.gifts; i++) {
+    const slotX = 11810 + i * 38;
+    const slotY = 612;
+    const settling = i === sim.gifts - 1 && sim.feast > 0;
+    const u = settling ? 1 - sim.feast / 0.55 : 1;
+    const x = settling ? sim.x + PW / 2 + (slotX - sim.x - PW / 2) * Math.min(1, u) : slotX;
+    const y = settling ? sim.y + 10 + (slotY - sim.y - 10) * Math.min(1, u) : slotY;
+    drawPresent(ctx, x, y, sim.t + i);
+  }
 }
 
 function drawPine(
@@ -2222,8 +2227,13 @@ function drawPine(
   ctx.fill();
   ctx.beginPath();
   ctx.moveTo(0, -108);
-  ctx.lineTo(58, 18);
-  ctx.lineTo(-58, 18);
+  ctx.lineTo(64, 8);
+  ctx.lineTo(-64, 8);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(0, -48);
+  ctx.lineTo(78, 70);
+  ctx.lineTo(-78, 70);
   ctx.fill();
   ctx.fillStyle = "rgba(247,244,238,0.9)";
   ctx.beginPath();

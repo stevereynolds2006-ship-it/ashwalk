@@ -2006,6 +2006,7 @@ function musicScene(phase: Phase, sim: Sim): MusicScene {
 function promptFor(sim: Sim, phase: Phase) {
   if (phase !== "play" || sim.won || sim.dead > 0) return "";
   if (sim.level.id === "gale" && sim.cage > 0) return "Jump rises. Down drops. 8 seconds to the hole.";
+  if (sim.level.id === "yule" && sim.x > 11200 && sim.hearthLeave > 0) return "The tree keeps them.";
   if (sim.level.id === "yule" && sim.x > 11200 && sim.gifts < sim.level.moths.length) {
     return sim.x > 11810 && sim.x < 12020
       ? `Use · set a present under the tree · ${sim.gifts} of ${sim.moths.size}`
