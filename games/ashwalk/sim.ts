@@ -1034,21 +1034,26 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
   }
 
   if (level.id === "yule" && !sim.won && sim.suck <= 0) {
+    const presents = sim.moths.size >= level.moths.length;
     const onCrest =
-      sim.x + PW > 3360 &&
-      sim.x < 3640 &&
-      sim.y + PH > 360 &&
-      sim.y + PH < 470;
+      presents &&
+      sim.x + PW > 5240 &&
+      sim.x < 5600 &&
+      sim.y + PH > 400 &&
+      sim.y + PH < 500;
     if (sim.cage > 0 || onCrest) {
       if (sim.cage <= 0) sim.cage = 0.04;
-      sim.cage = Math.min(1, sim.cage + dt / 5.5);
+      sim.cage = Math.min(1, sim.cage + dt / 8.5);
       const u = sim.cage;
       sim.vx = 0;
       sim.vy = 0;
       sim.climbing = false;
       sim.grounded = true;
-      sim.x = 3460 + u * 1180;
-      sim.y = 400 - PH + u * u * 270;
+      sim.x = 5360 + u * 3720;
+      sim.y = 440 - PH + u * u * 380;
+      sim.stalkX = sim.x - 170;
+      sim.stalkY = sim.y + PH;
+      sim.wake = 1;
     }
   }
 

@@ -1824,7 +1824,7 @@ export function Playfield({
             <button type="button" aria-label="Use" draggable={false} {...hold("use")}>
               Use
             </button>
-            {pickId === "hoist" && (
+            {(pickId === "hoist" || pickId === "yule") && (
               <button type="button" aria-label="Climb down" draggable={false} {...hold("down")}>
                 Down
               </button>
@@ -1999,12 +1999,12 @@ function musicScene(phase: Phase, sim: Sim): MusicScene {
 function promptFor(sim: Sim, phase: Phase) {
   if (phase !== "play" || sim.won || sim.dead > 0) return "";
   if (sim.level.id === "gale" && sim.cage > 0) return "Jump rises. Down drops. 8 seconds to the hole.";
-  if (sim.level.id === "yule" && sim.cage <= 0 && sim.x > 3320 && sim.x < 3640 && sim.y < 460) {
-    return sim.beacons.size < sim.level.beacons.length
-      ? "Light the three candles. Then the sled."
+  if (sim.level.id === "yule" && sim.cage <= 0 && sim.x > 5200 && sim.x < 5640 && sim.y < 500) {
+    return sim.moths.size < sim.level.moths.length
+      ? "Climb the trees. The presents open the sled."
       : "The sled takes the hill.";
   }
-  if (sim.level.id === "yule" && sim.cage > 0 && sim.cage < 1) return "Down the hill.";
+  if (sim.level.id === "yule" && sim.cage > 0 && sim.cage < 1) return "The snowball is behind you.";
   if (sim.level.id === "moon" && sim.cage > 0) return "Light speed. Eight seconds.";
   if (sim.climbing) return sim.climbDir > 0 ? "Down · climbing down" : "Use · climbing up";
   if (sim.nearLadder) return "Use climbs up. Down climbs down.";

@@ -2141,18 +2141,25 @@ function drawYuleHill(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean)
   }
   ctx.fillStyle = "#070708";
   ctx.beginPath();
-  ctx.moveTo(3640, 400);
-  ctx.lineTo(4860, 700);
-  ctx.lineTo(4860, 1200);
-  ctx.lineTo(3640, 1200);
+  ctx.moveTo(5600, 440);
+  ctx.lineTo(9400, 860);
+  ctx.lineTo(9400, 1600);
+  ctx.lineTo(5600, 1600);
   ctx.fill();
   ctx.fillStyle = "rgba(244,241,234,0.88)";
   ctx.beginPath();
-  ctx.moveTo(3640, 398);
-  ctx.lineTo(4860, 698);
-  ctx.lineTo(4860, 704);
-  ctx.lineTo(3640, 404);
+  ctx.moveTo(5600, 438);
+  ctx.lineTo(9400, 858);
+  ctx.lineTo(9400, 866);
+  ctx.lineTo(5600, 446);
   ctx.fill();
+  const trees: [number, number][] = [
+    [444, 760],
+    [1494, 860],
+    [3234, 700],
+    [4474, 760],
+  ];
+  for (const [x, ground] of trees) drawPine(ctx, x, ground, 1.35);
   if (reduced) return;
   ctx.fillStyle = "#f7f4ee";
   for (let i = 0; i < 90; i++) {
@@ -2189,28 +2196,67 @@ function drawPine(ctx: CanvasRenderingContext2D, x: number, ground: number, scal
   ctx.restore();
 }
 
-function drawSled(ctx: CanvasRenderingContext2D, x: number, y: number) {
+function drawSled(ctx: CanvasRenderingContext2D, x: number, y: number, deep = false) {
   ctx.save();
   ctx.translate(x, y);
+  const rim = deep ? -36 : -22;
   ctx.strokeStyle = "#f7f4ee";
   ctx.lineWidth = 2.4;
   ctx.lineCap = "round";
   ctx.beginPath();
-  ctx.moveTo(-38, -12);
-  ctx.quadraticCurveTo(-18, 0, 42, -1);
-  ctx.moveTo(-34, -14);
-  ctx.quadraticCurveTo(-14, 1, 38, 0);
-  ctx.moveTo(-16, -20);
-  ctx.lineTo(-16, -2);
-  ctx.moveTo(18, -20);
-  ctx.lineTo(18, -1);
+  ctx.moveTo(-46, -8);
+  ctx.quadraticCurveTo(-20, 2, 50, -1);
+  ctx.moveTo(-42, -10);
+  ctx.quadraticCurveTo(-16, 3, 46, 0);
+  ctx.moveTo(-18, rim + 8);
+  ctx.lineTo(-18, -2);
+  ctx.moveTo(22, rim + 8);
+  ctx.lineTo(22, -1);
   ctx.stroke();
   ctx.fillStyle = "#1c1c20";
   ctx.strokeStyle = "#f7f4ee";
-  ctx.lineWidth = 1.5;
+  ctx.lineWidth = 1.6;
   ctx.beginPath();
-  ctx.rect(-30, -28, 54, 12);
+  ctx.rect(-36, rim, 72, deep ? 32 : 14);
   ctx.fill();
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawSnowball(ctx: CanvasRenderingContext2D, x: number, y: number, t: number) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(t * 2.2);
+  ctx.fillStyle = "#f7f4ee";
+  ctx.beginPath();
+  ctx.arc(0, -78, 86, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = "rgba(7,7,8,0.35)";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.arc(0, -78, 86, 0.2, 1.4);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(0, -78, 48, 2.2, 4.2);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawPresent(ctx: CanvasRenderingContext2D, x: number, y: number, t: number) {
+  const bob = Math.sin(t * 3 + x) * 4;
+  ctx.save();
+  ctx.translate(x, y + bob);
+  ctx.fillStyle = "#f7f4ee";
+  ctx.fillRect(-9, -6, 18, 16);
+  ctx.strokeStyle = "#070708";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(0, -6);
+  ctx.lineTo(0, 10);
+  ctx.moveTo(-9, 1);
+  ctx.lineTo(9, 1);
+  ctx.moveTo(-5, -6);
+  ctx.quadraticCurveTo(0, -14, 5, -6);
   ctx.stroke();
   ctx.restore();
 }
@@ -3143,7 +3189,10 @@ export function renderFrame(
   }
 
   for (const moth of sim.level.moths) {
-    if (!sim.moths.has(moth.id)) drawCoin(ctx, moth.x, moth.y, sim.t, reduced);
+    if (!sim.moths.has(moth.id)) {
+      if (sim.level.id === "yule") drawPresent(ctx, moth.x, moth.y, sim.t);
+      else drawCoin(ctx, moth.x, moth.y, sim.t, reduced);
+    }
   }
 
   for (const zone of sim.level.shrines) {
@@ -3250,13 +3299,23 @@ export function renderFrame(
       cloth,
     );
   }
+  const sledding = sim.level.id === "yule" && sim.cage > 0 && sim.suck <= 0 && sim.dead <= 0;
   if (sim.level.id === "yule" && sim.suck <= 0 && sim.dead <= 0) {
-    if (sim.cage > 0) drawSled(ctx, sim.x + PW / 2, sim.y + PH);
-    else drawSled(ctx, 3520, 400);
+    if (sledding) drawSnowball(ctx, sim.stalkX, sim.stalkY, sim.t);
+    if (sim.cage > 0) drawSled(ctx, sim.x + PW / 2, sim.y + PH, true);
+    else drawSled(ctx, 5420, 440);
   }
   if (sim.dead > 0) {
     drawCageBones(ctx, sim.x + PW / 2, sim.y + PH, 3.4);
   } else {
+    const seated = sledding;
+    if (seated) {
+      const top = sim.y + PH - 48;
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(sim.x - 36, top - 8, 90, 16);
+      ctx.clip();
+    }
     drawFriend(
       ctx,
       sprites,
@@ -3276,6 +3335,7 @@ export function renderFrame(
       attract,
       cloth,
     );
+    if (seated) ctx.restore();
   }
   if (sim.saber && sim.suck <= 0 && sim.cage <= 0 && !attract) drawSaber(ctx, sim);
   if (sim.suck > 0) {
