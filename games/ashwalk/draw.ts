@@ -428,11 +428,13 @@ function drawTerrain(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) 
     else if (sim.level.platforms.find((item) => item.id === rect.id)?.gear) drawGearTooth(ctx, sim, rect);
     else if (rect.kind === "sway" || rect.kind === "rope") {
       drawCage(ctx, rect, sim.rope < 1 && rect.id === "cageC", sim.t * (rect.id === "cageC" ? 1.4 : 0.65));
-    } else {
+    } else if (rect.id.startsWith("glow")) drawLightPlank(ctx, sim, rect);
+    else {
       drawPlank(ctx, rect, rect.kind === "crumble" || (sim.crumbles[rect.id]?.timer ?? 0) > 0.9, sim.level.id === "choir" || sim.level.id === "shore");
-      if (sim.level.id === "shore" && (rect.kind === "crumble" || rect.kind === "oneway")) drawGrass(ctx, rect, 30, 2);
+      if (sim.level.id === "shore" && (rect.kind === "crumble" || rect.kind === "oneway") && !rect.id.startsWith("glow")) drawGrass(ctx, rect, 30, 2);
     }
   }
+  drawLightGaps(ctx, sim);
   for (const plat of sim.level.platforms) {
     if (plat.kind === "ladder") {
       if (plat.id.startsWith("line")) drawRopeLine(ctx, plat);
@@ -849,6 +851,33 @@ function drawGrass(ctx: CanvasRenderingContext2D, rect: RectLike, tall: number, 
     ctx.lineTo(x + wide, rect.y + 3);
     ctx.closePath();
     ctx.fill();
+  }
+}
+
+function drawLightPlank(ctx: CanvasRenderingContext2D, sim: Sim, rect: RectLike & { id: string }) {
+  const left = sim.bridgeLeft[rect.id] ?? 0;
+  const held = sim.bridgeHold[rect.id];
+  ctx.save();
+  ctx.fillStyle = "#f7f4ee";
+  ctx.shadowColor = "#f7f4ee";
+  ctx.shadowBlur = 16;
+  ctx.fillRect(rect.x, rect.y, rect.w, 8);
+  ctx.shadowBlur = 0;
+  if (!held && left > 0) {
+    ctx.fillStyle = "#c43838";
+    ctx.fillRect(rect.x, rect.y + 8, rect.w * Math.min(1, left / 13), 3);
+  }
+  ctx.restore();
+}
+
+function drawLightGaps(ctx: CanvasRenderingContext2D, sim: Sim) {
+  for (const plat of sim.level.platforms) {
+    if (!plat.bridge || (sim.bridgeLeft[plat.id] ?? 0) > 0) continue;
+    ctx.save();
+    ctx.globalAlpha = 0.16;
+    ctx.fillStyle = "#f7f4ee";
+    ctx.fillRect(plat.x, plat.y, plat.w, 6);
+    ctx.restore();
   }
 }
 

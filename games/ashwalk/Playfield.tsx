@@ -845,7 +845,23 @@ export function Playfield({
               setShopError(`${left} ${left === 1 ? "life" : "lives"} left. ${burnNote}`);
             }
           }
-          if (events.shrine) go("rite");
+          if (events.shrine) {
+            const span = sim.level.platforms.find((plat) => plat.bridge === events.shrine);
+            if (span) {
+              if (purseRef.current < LIGHT_PRICE) {
+                setShopError("The shrine wants 1 coin you picked up.");
+              } else {
+                purseRef.current -= LIGHT_PRICE;
+                setPurse(purseRef.current);
+                sim.bridgeLeft[span.id] = 999;
+                sim.bridgeHold[span.id] = true;
+                sim.bridgeStood[span.id] = false;
+                shoreGlowRef.current = LIGHT_SECONDS;
+                setShopError("The long plank is up. It falls once you step off.");
+                sound?.play("purchase");
+              }
+            } else go("rite");
+          }
           if (events.lamp) {
             if (purseRef.current < LIGHT_PRICE) {
               setShopError("A lantern wants 1 coin you picked up.");
@@ -853,6 +869,12 @@ export function Playfield({
               const next = purseRef.current - LIGHT_PRICE;
               purseRef.current = next;
               setPurse(next);
+              const span = sim.level.platforms.find((plat) => plat.bridge === events.lampId);
+              if (span) {
+                sim.bridgeLeft[span.id] = LIGHT_SECONDS;
+                sim.bridgeHold[span.id] = false;
+                sim.bridgeStood[span.id] = false;
+              }
               if ((sim.level.id === "moon" || sim.level.id === "hoist") && events.lampId) {
                 sim.altars.add(events.lampId);
                 sim.altarLeft[events.lampId] = sim.level.id === "hoist" ? LIGHT_SECONDS : 10;
@@ -861,6 +883,9 @@ export function Playfield({
                     ? "Spent 1 coin. The yard is brighter for 13 seconds."
                     : "Spent 1 coin. The moon stays bright for 10 seconds.",
                 );
+              } else if (span) {
+                shoreGlowRef.current = LIGHT_SECONDS;
+                setShopError("Spent 1 coin. The plank lasts 13 seconds.");
               } else {
                 shoreGlowRef.current = LIGHT_SECONDS;
                 setShopError("Spent 1 coin you picked up.");
@@ -2043,8 +2068,17 @@ function promptFor(sim: Sim, phase: Phase) {
   if (sim.plateAsleep && sim.level.id === "latch" && sim.rope < 1) return "Pull the pulley. Then the plate.";
   if (sim.plateAsleep) return "Light every bell. The plate is asleep.";
   if (sim.nearRope) return sim.level.id === "shore" ? "Hold E · crank them down" : "Hold E · wind the pulley";
-  if (sim.nearShrine) return "E · light a lantern";
+  if (sim.nearShrine) {
+    const span = sim.level.platforms.some((plat) => plat.bridge === sim.nearShrine);
+    return span ? "E · raise the long plank · 1 coin" : "E · light a lantern";
+  }
   if (sim.nearLamp) {
+    const span = sim.level.platforms.some((plat) => plat.bridge === sim.nearLampId);
+    if (span) {
+      const id = sim.level.platforms.find((plat) => plat.bridge === sim.nearLampId)?.id;
+      const left = id ? (sim.bridgeLeft[id] ?? 0) : 0;
+      return left > 0 ? `The plank falls in ${Math.ceil(left)}s` : "E · raise the plank · 1 coin · 13 seconds";
+    }
     return sim.level.id === "moon"
       ? "E · light the moon · 1 coin · 10 seconds"
       : sim.level.id === "hoist"

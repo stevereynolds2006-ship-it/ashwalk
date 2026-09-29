@@ -111,6 +111,7 @@ export type Sim = {
   anim: number;
   nearShrine: string | null;
   nearLamp: boolean;
+  nearLampId: string | null;
   nearRope: boolean;
   nearBeacon: string | null;
   nearGoal: boolean;
@@ -149,6 +150,10 @@ export type Sim = {
   altars: Set<string>;
   /** Seconds left on each moon lantern. */
   altarLeft: Record<string, number>;
+  /** Seconds a light-plank stays solid. */
+  bridgeLeft: Record<string, number>;
+  bridgeHold: Record<string, boolean>;
+  bridgeStood: Record<string, boolean>;
   /** Moon saber is in the hand. */
   saber: boolean;
   /** On a ladder. Use climbs. */
@@ -173,7 +178,7 @@ export function createSim(level: Level = SHORE): Sim {
   const latch: Record<string, number> = {};
   const gateLift: Record<string, number> = {};
   for (const plat of level.platforms) {
-    if (!plat.gear && (plat.kind === "crumble" || plat.kind === "oneway" || plat.kind === "sway" || plat.kind === "rope")) {
+    if (!plat.bridge && !plat.gear && (plat.kind === "crumble" || plat.kind === "oneway" || plat.kind === "sway" || plat.kind === "rope")) {
       crumbles[plat.id] = { timer: 0, fall: 0, gone: false, back: 0 };
     }
     if (plat.kind === "gate") gateLift[plat.id] = 0;
@@ -220,6 +225,7 @@ export function createSim(level: Level = SHORE): Sim {
     anim: 0,
     nearShrine: null,
     nearLamp: false,
+    nearLampId: null,
     nearRope: false,
     nearBeacon: null,
     nearGoal: false,
@@ -248,6 +254,9 @@ export function createSim(level: Level = SHORE): Sim {
     suck: 0,
     altars: new Set(),
     altarLeft: {},
+    bridgeLeft: {},
+    bridgeHold: {},
+    bridgeStood: {},
     saber: false,
     climbing: false,
     climbDir: -1,
@@ -387,6 +396,7 @@ export function rectsAt(sim: Sim, reduced: boolean): Rect[] {
       });
       continue;
     }
+    if (plat.bridge && (sim.bridgeLeft[plat.id] ?? 0) <= 0) continue;
     if (plat.id === "r5" && sim.crack > 0.55) continue;
     if (sim.level.hunter && sim.wake >= 1 && (plat.id === "c4" || plat.id === "c4b" || plat.id === "c5")) continue;
     const crackShake = plat.id === "r5" && sim.crack > 0 ? Math.sin(sim.t * 46) * 5 : 0;
@@ -569,6 +579,7 @@ function respawn(sim: Sim) {
   sim.climbing = false;
   sim.climbDir = -1;
   sim.nearLadder = false;
+  sim.bridgeStood = {};
   if (sim.level.id === "gale") sim.palY = 0;
   sim.lastRects = null;
   const stalk = sim.level.stalker;
@@ -1054,6 +1065,7 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
 
   sim.nearShrine = null;
   sim.nearLamp = false;
+  sim.nearLampId = null;
   if (!events.beacon) {
     for (const zone of level.shrines) {
       if (zoneHit(sim.x, sim.y, zone)) {
@@ -1066,12 +1078,26 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
     for (const lamp of level.lamps ?? []) {
       if (!zoneHit(sim.x, sim.y, lamp)) continue;
       sim.nearLamp = true;
+      sim.nearLampId = lamp.id;
       if (input.interactPressed) {
         events.lamp = true;
-        events.lampId = level.id === "moon" || level.id === "hoist" ? lamp.id : null;
+        events.lampId = lamp.id;
       }
       break;
     }
+  }
+  for (const plat of level.platforms) {
+    if (!plat.bridge) continue;
+    const left = sim.bridgeLeft[plat.id] ?? 0;
+    if (left <= 0) continue;
+    if (sim.bridgeHold[plat.id]) {
+      if (sim.groundId === plat.id) sim.bridgeStood[plat.id] = true;
+      else if (sim.bridgeStood[plat.id] && sim.grounded) {
+        sim.bridgeLeft[plat.id] = 0;
+        sim.bridgeHold[plat.id] = false;
+        sim.bridgeStood[plat.id] = false;
+      }
+    } else sim.bridgeLeft[plat.id] = Math.max(0, left - dt);
   }
 
   if (level.id === "moon" || level.id === "hoist") {

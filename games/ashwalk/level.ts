@@ -18,6 +18,10 @@ export type Platform = {
   openY?: number;
   /** A tooth on a turning gear. The platform rides the rim. */
   gear?: { cx: number; cy: number; r: number; speed: number; phase: number; teeth: number };
+  /** This plank exists only while that lantern or shrine is lit. */
+  bridge?: string;
+  /** Stays up until you land off it. */
+  bridgeHold?: boolean;
 };
 
 export type Rect = {
@@ -164,7 +168,7 @@ export const SHORE: Level = {
   id: "shore",
   title: "The shore",
   kicker: "Something hung in the fog.",
-  rule: "The shore is nearly black. A lantern costs 1 coin and lasts 13 seconds. Two friends hang in cages. Turn each crank and lower them. When you arrive, acid dumps and leaves a skeleton. At the end, one more hangs. Lower that cage and they leave with you.",
+  rule: "The shore is nearly black. A lantern costs 1 coin and lasts 13 seconds. After the cages, two planks appear only while that light is on. A shrine raises one long plank. It falls once you step off. Two friends hang in cages. Turn each crank and lower them. When you arrive, acid dumps and leaves a skeleton. At the end, one more hangs. Lower that cage and they leave with you.",
   together: "The rope, the coins, and the bells are shared. Either of you can pull.",
   clearKicker: "The white",
   clearTitle: "It kept your outline",
@@ -209,8 +213,7 @@ export const SHORE: Level = {
     { id: "mothstep", kind: "oneway", x: 2560, y: 292, w: 74, h: 10 },
     { id: "down", kind: "oneway", x: 2932, y: 440, w: 180, h: 12 },
     { id: "low", kind: "solid", terrain: true, x: 3140, y: 496, w: 180, h: 400 },
-    { id: "cr1", kind: "crumble", x: 3460, y: 454, w: 96, h: 12 },
-    { id: "cr2", kind: "crumble", x: 3660, y: 400, w: 96, h: 12 },
+    { id: "glowPit", kind: "oneway", x: 3340, y: 468, w: 500, h: 12, bridge: "shrine-pit", bridgeHold: true },
     { id: "safe", kind: "solid", terrain: true, x: 3860, y: 476, w: 200, h: 420 },
     { id: "wind1", kind: "oneway", x: 4140, y: 430, w: 80, h: 12 },
     { id: "wind2", kind: "crumble", x: 4300, y: 372, w: 78, h: 12 },
@@ -223,9 +226,9 @@ export const SHORE: Level = {
     { id: "s3", kind: "oneway", x: 5360, y: 448, w: 72, h: 12 },
     { id: "s4", kind: "crumble", x: 5540, y: 396, w: 64, h: 12 },
     { id: "midlong", kind: "solid", terrain: true, x: 5720, y: 468, w: 240, h: 420 },
-    { id: "s5", kind: "crumble", x: 6060, y: 428, w: 70, h: 12 },
-    { id: "s6", kind: "crumble", x: 6240, y: 376, w: 64, h: 12 },
-    { id: "s7", kind: "oneway", x: 6420, y: 440, w: 72, h: 12 },
+    { id: "glow1", kind: "oneway", x: 6000, y: 468, w: 210, h: 12, bridge: "l-span1" },
+    { id: "span", kind: "solid", terrain: true, x: 6220, y: 468, w: 120, h: 420 },
+    { id: "glow2", kind: "oneway", x: 6360, y: 468, w: 220, h: 12, bridge: "l-span2" },
     { id: "hall", kind: "solid", terrain: true, x: 6600, y: 480, w: 680, h: 420 },
     { id: "h1", kind: "oneway", x: 6850, y: 392, w: 110, h: 12 },
     { id: "h2", kind: "oneway", x: 7030, y: 278, w: 130, h: 12 },
@@ -253,11 +256,13 @@ export const SHORE: Level = {
     { id: "cliff", x: 2520, surface: 368 },
     { id: "safe", x: 3940, surface: 476 },
     { id: "midlong", x: 5820, surface: 468 },
+    { id: "span", x: 6260, surface: 468 },
     { id: "hall", x: 6680, surface: 480 },
   ],
   rope: { id: "rope", x: 1708, y: 348, w: 80, h: 120 },
   shrines: [
     { id: "shrine-cliff", x: 2688, y: 250, w: 86, h: 130 },
+    { id: "shrine-pit", x: 3188, y: 400, w: 86, h: 96 },
     { id: "shrine-end", x: 7650, y: 350, w: 90, h: 140 },
   ],
   lamps: [
@@ -267,6 +272,8 @@ export const SHORE: Level = {
     { id: "l-cliff", x: 2460, y: 278, w: 56, h: 92 },
     { id: "l-porch", x: 4740, y: 366, w: 56, h: 92 },
     { id: "l-safe", x: 3960, y: 386, w: 56, h: 92 },
+    { id: "l-span1", x: 5864, y: 376, w: 56, h: 92 },
+    { id: "l-span2", x: 6252, y: 376, w: 56, h: 92 },
     { id: "l-sanctum", x: 7470, y: 390, w: 56, h: 92 },
   ],
   beacons: [
@@ -362,7 +369,8 @@ export const SHORE: Level = {
   chapters: [
     { x: 0, id: "shore", title: "The shore", kicker: "A coin buys ten seconds of light." },
     { x: 1640, id: "cages", title: "The hanging wood", kicker: "The cages remember every name." },
-    { x: 3000, id: "white", title: "The white", kicker: "The planks fall. The spider drops." },
+    { x: 3000, id: "white", title: "The white", kicker: "The shrine raises the long plank." },
+    { x: 5720, id: "span", title: "The light", kicker: "The plank lasts as long as the lantern." },
     { x: 4680, id: "run", title: "The gate", kicker: "Hold the plate, then run." },
     { x: 6600, id: "lock", title: "The bells", kicker: "Three bells. Then the plate." },
   ],
