@@ -423,6 +423,7 @@ function drawTerrain(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) 
     if (rect.terrain) continue;
     if (rect.id.startsWith("ceil")) continue;
     if (rect.kind === "gate") drawGate(ctx, rect);
+    else if (rect.id.startsWith("trap")) drawTrapDoor(ctx, sim, rect);
     else if (sim.level.platforms.find((item) => item.id === rect.id)?.gear) drawGearTooth(ctx, sim, rect);
     else if (rect.kind === "sway" || rect.kind === "rope") {
       drawCage(ctx, rect, sim.rope < 1 && rect.id === "cageC");
@@ -2934,7 +2935,7 @@ function drawHallow(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) {
       ctx.fill();
     }
   }
-  const trees = [80, 420, 760, 1100, 1480, 1820, 2100, 2460, 4300, 4700, 5200, 5600, 6100, 6500];
+  const trees = [80, 420, 760, 1100, 1480, 1820, 2100, 2460, 2900, 5900, 6300, 6600];
   ctx.strokeStyle = "#6e6a64";
   ctx.lineWidth = 2.6;
   ctx.beginPath();
@@ -2966,18 +2967,7 @@ function drawHallow(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) {
     ctx.roundRect(x, y - h, 22, h, 8);
     ctx.fill();
   }
-  ctx.fillStyle = "#2a2830";
-  ctx.fillRect(3460, 80, 2100, 430);
-  ctx.beginPath();
-  ctx.moveTo(3380, 160);
-  ctx.lineTo(4200, -20);
-  ctx.lineTo(5560, 160);
-  ctx.closePath();
-  ctx.fill();
-  ctx.fillStyle = "rgba(255, 150, 50, 0.45)";
-  for (const win of [3720, 4020, 4480, 5120, 5340]) {
-    ctx.fillRect(win, 250, 46, 64);
-  }
+  drawHauntedHouse(ctx, sim.t);
   ctx.strokeStyle = "#6a6840";
   ctx.lineWidth = 2;
   for (const plat of sim.level.platforms) {
@@ -3022,6 +3012,129 @@ function drawPumpkins(ctx: CanvasRenderingContext2D, sim: Sim) {
     ctx.beginPath();
     ctx.arc(x, y - 14, lit ? 56 : 28, 0, Math.PI * 2);
     ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawTrapDoor(ctx: CanvasRenderingContext2D, sim: Sim, rect: { id: string; x: number; y: number; w: number }) {
+  const state = sim.crumbles[rect.id];
+  const warn = Math.min(1, (state?.timer ?? 0) / 1.45);
+  const open = state?.gone ? 1 : Math.min(1, (state?.fall ?? 0) / 150);
+  ctx.fillStyle = "#050506";
+  ctx.fillRect(rect.x + 2, rect.y + 4, rect.w - 4, 90);
+  ctx.save();
+  ctx.translate(rect.x, rect.y);
+  ctx.rotate(open * 1.2 + warn * 0.06);
+  ctx.fillStyle = warn > 0.35 ? "#6a3428" : "#4a4036";
+  ctx.fillRect(0, -7, rect.w, 9);
+  ctx.strokeStyle = "#1a1612";
+  ctx.lineWidth = 1;
+  for (let x = 10; x < rect.w; x += 16) {
+    ctx.beginPath();
+    ctx.moveTo(x, -7);
+    ctx.lineTo(x, 2);
+    ctx.stroke();
+  }
+  ctx.fillStyle = "#c8c4bc";
+  ctx.beginPath();
+  ctx.arc(4, -2, 3, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawHauntedHouse(ctx: CanvasRenderingContext2D, t: number) {
+  ctx.save();
+  ctx.fillStyle = "#14121a";
+  ctx.fillRect(3460, 170, 980, 330);
+  ctx.fillRect(4440, 210, 1080, 290);
+  ctx.fillStyle = "#0e0c12";
+  ctx.beginPath();
+  ctx.moveTo(3380, 190);
+  ctx.lineTo(3940, -70);
+  ctx.lineTo(4500, 190);
+  ctx.closePath();
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(4360, 230);
+  ctx.lineTo(4980, 20);
+  ctx.lineTo(5580, 220);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = "#100e14";
+  ctx.fillRect(5060, 20, 86, 480);
+  ctx.beginPath();
+  ctx.moveTo(5030, 30);
+  ctx.lineTo(5103, -80);
+  ctx.lineTo(5176, 30);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = "#3a3030";
+  ctx.fillRect(4180, -30, 26, 180);
+  ctx.fillRect(4168, -38, 50, 12);
+  ctx.strokeStyle = "rgba(90, 84, 96, 0.4)";
+  ctx.lineWidth = 1;
+  for (let y = 200; y < 490; y += 14) {
+    ctx.beginPath();
+    ctx.moveTo(3480, y);
+    ctx.lineTo(4420, y + 2);
+    ctx.stroke();
+  }
+  const windows: [number, number, number][] = [
+    [3580, 230, 0],
+    [3760, 250, 1],
+    [4020, 220, 2],
+    [4560, 270, 3],
+    [4780, 250, 4],
+    [5088, 140, 5],
+    [5088, 280, 6],
+  ];
+  for (const [x, y, i] of windows) {
+    const flick = 0.25 + 0.55 * Math.abs(Math.sin(t * 2.4 + i));
+    ctx.fillStyle = `rgba(255, 130, 30, ${flick})`;
+    ctx.fillRect(x, y, 34, 50);
+    ctx.strokeStyle = "#08080c";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x, y, 34, 50);
+    ctx.beginPath();
+    ctx.moveTo(x + 17, y);
+    ctx.lineTo(x + 17, y + 50);
+    ctx.moveTo(x, y + 25);
+    ctx.lineTo(x + 34, y + 25);
+    ctx.stroke();
+  }
+  ctx.strokeStyle = "#6a5840";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(4280, 300);
+  ctx.lineTo(4340, 360);
+  ctx.moveTo(4340, 300);
+  ctx.lineTo(4280, 360);
+  ctx.stroke();
+  ctx.fillStyle = "#07060a";
+  ctx.fillRect(3524, 380, 42, 120);
+  ctx.fillStyle = "#d4b05a";
+  ctx.fillRect(3554, 436, 4, 4);
+  ctx.fillStyle = "#24222a";
+  ctx.fillRect(3468, 300, 12, 170);
+  ctx.fillRect(3608, 300, 12, 170);
+  ctx.strokeStyle = "#3a4a32";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(3680, 160);
+  ctx.quadraticCurveTo(3620, 320, 3700, 500);
+  ctx.moveTo(4900, 80);
+  ctx.quadraticCurveTo(4840, 280, 4920, 500);
+  ctx.stroke();
+  ctx.strokeStyle = "#1a181c";
+  ctx.lineWidth = 2;
+  for (let x = 3280; x < 3480; x += 18) {
+    ctx.beginPath();
+    ctx.moveTo(x, 500);
+    ctx.lineTo(x + 4, 456);
+    ctx.lineTo(x + 9, 444);
+    ctx.lineTo(x + 14, 456);
+    ctx.lineTo(x + 18, 500);
+    ctx.stroke();
   }
   ctx.restore();
 }
