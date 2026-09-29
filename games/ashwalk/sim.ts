@@ -457,7 +457,7 @@ function zoneHit(x: number, y: number, z: { x: number; y: number; w: number; h: 
 
 function kill(sim: Sim, events: StepEvents) {
   if (sim.invuln > 0 || sim.dead > 0 || sim.won) return;
-  sim.dead = 0.55;
+  sim.dead = 1.05;
   sim.vx = 0;
   sim.vy = 0;
   sim.hurt = 0.45;

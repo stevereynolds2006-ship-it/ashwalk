@@ -973,6 +973,7 @@ const HOIST: Level = {
   poster: 400,
   introCrow: false,
   platforms: [
+    { id: "floorall", kind: "solid", terrain: true, x: 0, y: 700, w: 5600, h: 520 },
     { id: "yard", kind: "solid", terrain: true, x: 0, y: 700, w: 1060, h: 420 },
     { id: "step", kind: "solid", x: 360, y: 520, w: 240, h: 16 },
     { id: "l1b", kind: "ladder", x: 400, y: 520, w: 28, h: 180 },

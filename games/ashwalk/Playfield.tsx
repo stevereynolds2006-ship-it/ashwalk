@@ -1043,7 +1043,8 @@ export function Playfield({
             ? 0.58
             : 0.86
           : sim.level.id === "hoist"
-            ? Math.max(0.08, 0.84 - (sim.altars.size / Math.max(1, sim.level.lamps?.length ?? 1)) * 0.76)
+            ? Math.max(0.08, 0.84 - (sim.altars.size / Math.max(1, sim.level.lamps?.length ?? 1)) * 0.76) *
+              (sim.altars.size > 0 ? 0.5 : 1)
             : 0,
         clothRef.current,
       );
