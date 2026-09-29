@@ -981,7 +981,11 @@ function drawDrapedCape(
         ? { k: "#061433", n: "#1a6dff", d: "#0c3a8a", b: "#5aa6ff" }
         : cloth === "scarlet"
           ? { k: "#f7f7f7", n: "#d01218", d: "#8a0c12", b: "#ffffff" }
-          : cloth === "camo"
+        : cloth === "frost"
+          ? { k: "#0a2a55", n: "#7ec8f0", d: "#2f7ec4", b: "#f4fbff" }
+          : cloth === "gilded"
+            ? { k: "#e2b007", n: "#c01018", d: "#7a0a10", b: "#f0c014" }
+            : cloth === "camo"
           ? { k: "#14120e", n: "#6a4e28", d: "#2c2618", b: "#c4a56a" }
           : { k: "#240406", n: "#e10600", d: "#7a0906", b: "#ff5a42" };
   const stripes = ["#d01218", "#f7f7f7", "#1a3fbf"];
@@ -1001,6 +1005,12 @@ function drawDrapedCape(
         const colors = ["#f08a14", "#6a2ca8", "#f3d7b0", "#7a3cc0"];
         const shades = ["#c45a08", "#3d1468", "#d8c0a0", "#4a1878"];
         color = mark === "k" ? "#1a0a14" : mark === "d" ? shades[band]! : colors[band]!;
+      }
+      if (cloth === "yule") {
+        const band = Math.floor((x + y) / 4) % 3;
+        const colors = ["#d01218", "#0d7a32", "#f7f7f7"];
+        const shades = ["#8a0c12", "#064a1e", "#c8c8c8"];
+        color = mark === "k" ? "#062010" : mark === "d" ? shades[band]! : colors[band]!;
       }
       if (cloth === "stripes") {
         const band = Math.floor((x + y) / 5) % 3;
@@ -1061,7 +1071,7 @@ function drawOutfit(
     ctx.stroke();
   }
 
-  const draped = cloth === "cape" || cloth === "white" || cloth === "rainbow" || cloth === "camo" || cloth === "stripes" || cloth === "pink" || cloth === "halloween" || cloth === "black" || cloth === "gold" || cloth === "ember" || cloth === "scarlet" || cloth === "blue";
+  const draped = cloth === "cape" || cloth === "white" || cloth === "rainbow" || cloth === "camo" || cloth === "stripes" || cloth === "pink" || cloth === "halloween" || cloth === "black" || cloth === "gold" || cloth === "ember" || cloth === "scarlet" || cloth === "blue" || cloth === "yule" || cloth === "frost" || cloth === "gilded";
   if (layer === "back" && draped) {
     ctx.save();
     ctx.beginPath();

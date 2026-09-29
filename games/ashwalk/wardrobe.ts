@@ -21,6 +21,9 @@ export const CLOTHES: readonly Cloth[] = [
   { id: "ember", name: "Ember cape", cost: 15, rare: false, note: "Torn orange streaks." },
   { id: "scarlet", name: "Scarlet cape", cost: 15, rare: false, note: "Red with a white edge." },
   { id: "blue", name: "Blue cape", cost: 15, rare: false, note: "A bright blue cape." },
+  { id: "yule", name: "Yule cape", cost: 15, rare: false, note: "Red, green, and white." },
+  { id: "frost", name: "Frost cape", cost: 15, rare: false, note: "Ice blue and white." },
+  { id: "gilded", name: "Gilded cape", cost: 15, rare: false, note: "Red with a gold edge." },
 ];
 
 /** Locked capes open one per week, starting October 1. */
@@ -36,6 +39,9 @@ const CAPE_WEEKS: readonly { id: string; at: Date; label: string }[] = [
   { id: "ember", at: new Date(2026, 10, 19), label: "November 19" },
   { id: "scarlet", at: new Date(2026, 10, 26), label: "November 26" },
   { id: "blue", at: new Date(2026, 11, 3), label: "December 3" },
+  { id: "yule", at: new Date(2026, 11, 10), label: "December 10" },
+  { id: "frost", at: new Date(2026, 11, 17), label: "December 17" },
+  { id: "gilded", at: new Date(2026, 11, 24), label: "December 24" },
 ];
 
 /** Weekly dates are live. Set true only for a cape tryout. */
