@@ -53,7 +53,7 @@ export type Bird = {
   amp: number;
   speed: number;
   start?: number;
-  kind?: "crow" | "rat" | "turtle" | "gator" | "rocket" | "alien" | "ship" | "deer";
+  kind?: "crow" | "rat" | "turtle" | "gator" | "rocket" | "alien" | "ship" | "deer" | "eagle";
 };
 
 export type Wind = {

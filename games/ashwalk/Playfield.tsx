@@ -1040,7 +1040,9 @@ export function Playfield({
           phaseNow !== "lobby" &&
           shoreGlowRef.current <= 0
           ? sim.level.id === "choir"
-            ? 0.58
+            ? sim.y < -40
+              ? 0.22
+              : 0.58
             : sim.level.id === "shore"
               ? 0.72
               : sim.level.id === "roof"
@@ -1842,7 +1844,7 @@ export function Playfield({
             <button type="button" aria-label="Use" draggable={false} {...hold("use")}>
               Use
             </button>
-            {(pickId === "hoist" || pickId === "yule" || pickId === "antler" || pickId === "roof" || pickId === "tunnel") && (
+            {(pickId === "hoist" || pickId === "yule" || pickId === "antler" || pickId === "roof" || pickId === "tunnel" || pickId === "choir") && (
               <button type="button" aria-label="Climb down" draggable={false} {...hold("down")}>
                 Down
               </button>

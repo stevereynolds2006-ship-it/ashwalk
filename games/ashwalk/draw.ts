@@ -411,7 +411,10 @@ function drawTerrain(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) 
     } else drawPlank(ctx, rect, rect.kind === "crumble" || (sim.crumbles[rect.id]?.timer ?? 0) > 0.9, sim.level.id === "choir" || sim.level.id === "shore");
   }
   for (const plat of sim.level.platforms) {
-    if (plat.kind === "ladder") drawLadder(ctx, plat);
+    if (plat.kind === "ladder") {
+      if (plat.id.startsWith("line")) drawRopeLine(ctx, plat);
+      else drawLadder(ctx, plat);
+    }
   }
   if (sim.level.id === "hoist") drawHoistHangs(ctx, sim);
   if (sim.level.id === "choir") {
@@ -1033,7 +1036,7 @@ function drawHoistMarks(ctx: CanvasRenderingContext2D) {
 function drawChoirBalloon(ctx: CanvasRenderingContext2D, sim: Sim) {
   const flying = sim.cage > 0;
   const x = flying ? sim.x + PW / 2 : 2455;
-  const foot = flying ? sim.y + PH : -312;
+  const foot = flying ? sim.y + PH : -540;
   const basketTop = foot - 26;
   const y = basketTop - 36;
   ctx.save();
@@ -2750,6 +2753,53 @@ function drawBeast(
   ctx.restore();
 }
 
+function drawRopeLine(ctx: CanvasRenderingContext2D, plat: { x: number; y: number; w: number; h: number }) {
+  const x = plat.x + plat.w / 2;
+  ctx.save();
+  ctx.lineCap = "round";
+  ctx.strokeStyle = "#d7d3cb";
+  ctx.lineWidth = 5;
+  ctx.beginPath();
+  ctx.moveTo(x, plat.y - 8);
+  ctx.lineTo(x, plat.y + plat.h);
+  ctx.stroke();
+  ctx.strokeStyle = "#141416";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.fillStyle = "#f4f1ea";
+  for (let y = plat.y + 16; y < plat.y + plat.h - 4; y += 26) {
+    ctx.beginPath();
+    ctx.arc(x, y, 3.4, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawEagle(ctx: CanvasRenderingContext2D, x: number, y: number, flap: number, face: number) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(face < 0 ? -1.7 : 1.7, 1.7);
+  const wing = Math.sin(flap) * 14;
+  ctx.fillStyle = "#f4f1ea";
+  ctx.beginPath();
+  ctx.moveTo(2, 0);
+  ctx.quadraticCurveTo(-8, -22 - wing, -36, -4);
+  ctx.quadraticCurveTo(-18, -6, 2, 2);
+  ctx.fill();
+  ctx.fillStyle = "#1a1a1e";
+  ctx.beginPath();
+  ctx.ellipse(0, 2, 14, 6, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(10, 0);
+  ctx.lineTo(22, -2);
+  ctx.lineTo(10, 4);
+  ctx.fill();
+  ctx.fillStyle = "#f4f1ea";
+  ctx.fillRect(6, -2, 2, 2);
+  ctx.restore();
+}
+
 function drawCrow(ctx: CanvasRenderingContext2D, x: number, y: number, flap: number, face: number) {
   ctx.save();
   ctx.translate(x, y);
@@ -3564,6 +3614,7 @@ export function renderFrame(
     drawGaleStorm(ctx, camera, sim.t, reduced);
   } else if (sim.level.id === "choir") {
     drawChoirGear(ctx, camera, sim.t, reduced);
+    drawChoirSky(ctx);
   } else if (sim.level.id === "gear") {
     drawGearHall(ctx, camera, sim, reduced);
   } else if (sim.level.id === "hoist") {
@@ -3686,6 +3737,7 @@ export function renderFrame(
     else if (bird.kind === "rocket") drawRocket(ctx, bird.x, bird.y, bird.dir, sim.t, reduced);
     else if (bird.kind === "alien") drawAlien(ctx, bird.x, bird.y, bird.dir, sim.t);
     else if (bird.kind === "ship") drawShip(ctx, bird.x, bird.y, bird.dir);
+    else if (bird.kind === "eagle") drawEagle(ctx, bird.x, bird.y, sim.t * 8, bird.dir);
     else drawCrow(ctx, bird.x, bird.y, sim.t * 14, bird.dir);
   }
 
@@ -4475,6 +4527,32 @@ function drawPixelCrowd(ctx: CanvasRenderingContext2D, x: number, y: number, s: 
   ctx.fillRect(x + s * 2, y + s * 5, s, s * 2);
 }
 
+function drawChoirSky(ctx: CanvasRenderingContext2D) {
+  ctx.save();
+  ctx.fillStyle = "rgba(236,236,232,0.62)";
+  for (let i = 0; i < 9; i++) {
+    const x = -120 + i * 340;
+    const y = -16 + (i % 3) * 22;
+    ctx.beginPath();
+    ctx.ellipse(x, y, 170, 34, 0, 0, Math.PI * 2);
+    ctx.ellipse(x + 80, y + 12, 100, 26, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  const sun = ctx.createRadialGradient(2380, -620, 8, 2380, -620, 220);
+  sun.addColorStop(0, "rgba(255,250,232,0.98)");
+  sun.addColorStop(0.25, "rgba(255,244,214,0.55)");
+  sun.addColorStop(1, "rgba(255,244,214,0)");
+  ctx.fillStyle = sun;
+  ctx.beginPath();
+  ctx.arc(2380, -620, 220, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#fff6e4";
+  ctx.beginPath();
+  ctx.arc(2380, -620, 34, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
 function drawChoirGear(ctx: CanvasRenderingContext2D, camera: Camera, t: number, reduced: boolean) {
   ctx.save();
   ctx.translate(camera.x * 0.62, camera.y * 0.15);
@@ -4633,7 +4711,7 @@ export function frameCamera(
       y -= 36 * huntPull;
     }
   }
-  const yMin = sim.level.id === "moon" ? -1400 : sim.level.id === "choir" ? -820 : sim.level.id === "tunnel" ? -280 : sim.level.id === "mirror" ? -560 : -40;
+  const yMin = sim.level.id === "moon" ? -1400 : sim.level.id === "choir" ? -980 : sim.level.id === "tunnel" ? -280 : sim.level.id === "mirror" ? -560 : sim.level.id === "roof" ? -200 : -40;
   x = Math.max(0, Math.min(Math.max(0, sim.level.worldW - viewW), x));
   y = Math.max(yMin, Math.min(worldH - viewH, y));
   return { x, y, w: viewW, h: viewH };

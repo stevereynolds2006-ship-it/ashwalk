@@ -851,8 +851,8 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
       continue;
     }
     const deer = spec.kind === "deer";
-    const hitW = deer ? 72 : spec.kind === "gator" ? 86 : spec.kind === "ship" ? 52 : spec.kind === "alien" ? 26 : spec.kind === "rocket" ? 48 : spec.kind === "turtle" ? 34 : spec.kind === "rat" ? 28 : 22;
-    const hitH = deer ? 40 : spec.kind === "gator" ? 30 : spec.kind === "ship" ? 22 : spec.kind === "alien" ? 40 : spec.kind === "rocket" ? 18 : spec.kind === "turtle" ? 26 : spec.kind === "rat" ? 20 : 14;
+    const hitW = deer ? 72 : spec.kind === "gator" ? 86 : spec.kind === "eagle" ? 54 : spec.kind === "ship" ? 52 : spec.kind === "alien" ? 26 : spec.kind === "rocket" ? 48 : spec.kind === "turtle" ? 34 : spec.kind === "rat" ? 28 : 22;
+    const hitH = deer ? 40 : spec.kind === "gator" ? 30 : spec.kind === "eagle" ? 24 : spec.kind === "ship" ? 22 : spec.kind === "alien" ? 40 : spec.kind === "rocket" ? 18 : spec.kind === "turtle" ? 26 : spec.kind === "rat" ? 20 : 14;
     const top = deer ? birdY - hitH : birdY;
     const bot = deer ? birdY : birdY + hitH;
     if (
@@ -1139,7 +1139,7 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
   }
 
   if (level.id === "choir" && comboSet(sim) && sim.beacons.size >= level.beacons.length && !sim.won && sim.suck <= 0) {
-    const onCrown = sim.x > 2200 && sim.x < 2520 && sim.y < -220;
+    const onCrown = sim.x > 2200 && sim.x < 2540 && sim.y < -470;
     if (onCrown || sim.cage > 0) {
       sim.cage = Math.min(1, sim.cage + dt * 0.28);
       sim.vx = 0;
