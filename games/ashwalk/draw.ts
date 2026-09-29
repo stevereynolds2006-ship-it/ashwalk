@@ -2829,36 +2829,49 @@ function drawHoistFog(ctx: CanvasRenderingContext2D, camera: { x: number; y: num
 }
 
 function drawToxic(ctx: CanvasRenderingContext2D, sim: Sim, camera: Camera) {
-  const pools: [number, number, number][] = [
-    [80, 700, 280],
-    [520, 700, 200],
-    [1420, 700, 320],
-    [2140, 700, 180],
-    [3520, 700, 220],
-    [4240, 700, 360],
-    [4900, 700, 240],
-  ];
-  for (const [x, y, w] of pools) {
-    if (x > camera.x + camera.w + 40 || x + w < camera.x - 40) continue;
-    const glow = ctx.createRadialGradient(x + w / 2, y, 4, x + w / 2, y, w * 0.55);
-    glow.addColorStop(0, "rgba(170, 240, 70, 0.9)");
-    glow.addColorStop(0.45, "rgba(70, 170, 30, 0.55)");
-    glow.addColorStop(1, "rgba(30, 80, 16, 0)");
-    ctx.fillStyle = glow;
+  ctx.save();
+  ctx.lineCap = "round";
+  const drips: { x: number; y: number; len: number }[] = [];
+  for (const plat of sim.level.platforms) {
+    if (plat.kind === "ladder" || plat.kind === "gate" || plat.terrain) continue;
+    if (plat.y > 640) continue;
+    if (plat.x > camera.x + camera.w + 20 || plat.x + plat.w < camera.x - 20) continue;
+    const count = Math.max(2, Math.floor(plat.w / 70));
+    for (let i = 0; i < count; i++) {
+      drips.push({
+        x: plat.x + 14 + ((i * 61 + plat.x) % Math.max(8, plat.w - 20)),
+        y: plat.y + Math.max(10, plat.h),
+        len: 22 + ((i * 17) % 48),
+      });
+    }
+  }
+  for (let i = 0; i < 8; i++) {
+    drips.push({
+      x: camera.x + 30 + ((i * 97) % Math.max(40, camera.w - 40)),
+      y: camera.y + 8,
+      len: 36 + (i % 4) * 18,
+    });
+  }
+  for (const drip of drips) {
+    const cycle = ((sim.t * 0.45 + drip.x * 0.01) % 1 + 1) % 1;
+    const hang = drip.len * (0.35 + cycle * 0.45);
+    ctx.strokeStyle = "rgba(150, 220, 50, 0.9)";
+    ctx.lineWidth = 2.4;
     ctx.beginPath();
-    ctx.ellipse(x + w / 2, y + 8, w / 2, 22, 0, 0, Math.PI * 2);
+    ctx.moveTo(drip.x, drip.y);
+    ctx.lineTo(drip.x, drip.y + hang);
+    ctx.stroke();
+    ctx.fillStyle = "rgba(190, 255, 80, 0.95)";
+    ctx.beginPath();
+    ctx.arc(drip.x, drip.y + hang + 3, 3.2, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = "rgba(210, 255, 90, 0.8)";
-    ctx.fillRect(x, y - 1, w, 4);
-    ctx.fillStyle = "rgba(230, 255, 140, 0.75)";
-    for (let i = 0; i < 5; i++) {
-      const bx = x + ((i * 53 + sim.t * 24) % w);
-      const by = y - ((sim.t * 32 + i * 18) % 48);
+    if (cycle > 0.72) {
       ctx.beginPath();
-      ctx.arc(bx, by, 2 + (i % 2), 0, Math.PI * 2);
+      ctx.arc(drip.x, drip.y + hang + (cycle - 0.72) * 90, 2.2, 0, Math.PI * 2);
       ctx.fill();
     }
   }
+  ctx.restore();
 }
 
 function drawShrine(ctx: CanvasRenderingContext2D, x: number, y: number, t: number) {
@@ -3175,7 +3188,7 @@ function drawMirrorFog(
     {
       x: camera.x * 0.62 + sim.x * 0.38,
       y: sim.y - 30,
-      facing: sim.facing === 1 ? -1 : 1,
+      facing: sim.facing,
       walking: Math.abs(sim.vx) > 8,
       anim: sim.anim,
       hurt: 0,

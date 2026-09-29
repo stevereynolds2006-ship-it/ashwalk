@@ -472,6 +472,29 @@
   font-size: 18px;
 }
 
+.ash-touch-tunnel {
+  gap: 8px;
+  bottom: 22px;
+  padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+}
+
+.ash-touch-tunnel div {
+  gap: 5px;
+}
+
+.ash-touch-tunnel button {
+  min-width: 55px;
+  min-height: 44px;
+  padding: 0 10px;
+  font-size: 13px;
+}
+
+.ash-touch-tunnel button[aria-label="Jump"] {
+  min-width: 83px;
+  min-height: 62px;
+  font-size: 16px;
+}
+
 @media (pointer: coarse), (max-width: 800px) {
   .ash-touch {
     display: flex;
