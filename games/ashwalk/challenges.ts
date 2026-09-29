@@ -1098,7 +1098,7 @@ const YULE: Level = {
   id: "yule",
   title: "The eve",
   kicker: "The light is only on the hill.",
-  rule: "Snow falls through one shaft of light. The candles stand on the hills. Light the three tall ones. The reindeer run the ground. Stand by the sled and press Use. It takes the hill to the exit.",
+  rule: "Snow falls through one shaft of light. The candles stand on the hills. Light the three tall ones. The reindeer run the ground. Step onto the sled. It takes the hill to the exit.",
   together: "The candles stay lit for everyone. The reindeer do not.",
   clearKicker: "The eve",
   clearTitle: "The hill kept the light",

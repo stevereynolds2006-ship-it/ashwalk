@@ -1035,7 +1035,7 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
 
   if (level.id === "yule" && !sim.won && sim.suck <= 0 && sim.beacons.size >= level.beacons.length) {
     const crest = sim.x > 3380 && sim.x < 3620 && sim.y + PH > 378 && sim.y + PH < 430;
-    if (sim.cage > 0 || (crest && input.interactPressed)) {
+    if (sim.cage > 0 || crest) {
       if (sim.cage <= 0) sim.cage = 0.02;
       sim.cage = Math.min(1, sim.cage + dt / 6);
       const u = sim.cage;

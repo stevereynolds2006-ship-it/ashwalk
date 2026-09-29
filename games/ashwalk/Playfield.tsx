@@ -2001,8 +2001,8 @@ function promptFor(sim: Sim, phase: Phase) {
   if (sim.level.id === "gale" && sim.cage > 0) return "Jump rises. Down drops. 8 seconds to the hole.";
   if (sim.level.id === "yule" && sim.cage <= 0 && sim.x > 3320 && sim.x < 3640 && sim.y < 460) {
     return sim.beacons.size < sim.level.beacons.length
-      ? "Light the three candles. Then Use."
-      : "Use · get in the sled";
+      ? "Light the three candles. Then the sled."
+      : "The sled takes the hill.";
   }
   if (sim.level.id === "yule" && sim.cage > 0 && sim.cage < 1) return "Down the hill.";
   if (sim.level.id === "moon" && sim.cage > 0) return "Light speed. Eight seconds.";
