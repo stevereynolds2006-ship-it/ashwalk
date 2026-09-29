@@ -157,6 +157,11 @@ export type Sim = {
   climbDir: number;
   nearLadder: boolean;
   /** Bird indexes the saber has cut. */
+  /** Presents set under the eve tree. */
+  gifts: number;
+  /** Where the last present stood, so the room can send you back. */
+  hearthX: number;
+  hearthY: number;
   slain: Set<number>;
 };
 
@@ -246,6 +251,9 @@ export function createSim(level: Level = SHORE): Sim {
     climbDir: -1,
     nearLadder: false,
     slain: new Set(),
+    gifts: 0,
+    hearthX: 0,
+    hearthY: 0,
   };
 }
 
@@ -879,6 +887,30 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
     }
   }
 
+  if (level.id === "yule" && sim.dead <= 0 && sim.cage <= 0 && sim.suck <= 0) {
+    const needRoom = sim.moths.has("p4") && sim.gifts < level.moths.length;
+    const inRoom = sim.x > 11200;
+    if (needRoom && !inRoom) {
+      if (sim.hearthX === 0) {
+        sim.hearthX = sim.x;
+        sim.hearthY = sim.y;
+      }
+      sim.x = 11680;
+      sim.y = 640 - PH;
+      sim.vx = 0;
+      sim.vy = 0;
+      sim.climbing = false;
+    } else if (inRoom && sim.gifts >= level.moths.length && sim.hearthX > 0) {
+      sim.x = sim.hearthX;
+      sim.y = sim.hearthY;
+      sim.vx = 0;
+      sim.vy = 0;
+    } else if (inRoom && input.interactPressed) {
+      const tree = sim.x > 11810 && sim.x < 12020 && sim.y + PH > 590;
+      if (tree && sim.gifts < sim.moths.size) sim.gifts += 1;
+    }
+  }
+
   for (let i = 0; i < level.checkpoints.length; i++) {
     const cp = level.checkpoints[i]!;
     if (i <= sim.checkpoint) continue;
@@ -1034,7 +1066,7 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
   }
 
   if (level.id === "yule" && !sim.won && sim.suck <= 0) {
-    const presents = sim.moths.size >= level.moths.length;
+    const presents = sim.moths.size >= level.moths.length && sim.gifts >= level.moths.length;
     const onCrest =
       presents &&
       sim.x + PW > 5240 &&
@@ -1049,9 +1081,11 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
       sim.vy = 0;
       sim.climbing = false;
       sim.grounded = true;
-      sim.x = 5360 + u * 3720;
-      sim.y = 440 - PH + u * u * 380;
-      sim.stalkX = sim.x - 170;
+      const rideX = 5360 + u * 3720;
+      const slope = rideX < 5600 ? 440 : 440 + ((rideX - 5600) / 3800) * 420;
+      sim.x = rideX;
+      sim.y = slope - PH;
+      sim.stalkX = sim.x - 260;
       sim.stalkY = sim.y + PH;
       sim.wake = 1;
     }

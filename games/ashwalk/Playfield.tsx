@@ -984,11 +984,13 @@ export function Playfield({
       const caught = Boolean(sim.level.stalker && sim.caged && sim.cage >= 1);
       const boulderHot = Boolean(sim.level.boulder && sim.wake > 0 && !sim.caged);
       const inLatchPit = sim.level.id === "latch" && sim.y > 680 && sim.x > 1900 && sim.x < 2520;
+      const sledding = sim.level.id === "yule" && sim.cage > 0 && sim.suck <= 0;
       if ((sim.level.stalker || sim.level.hunter) && sim.wake > 0 && !caught) huntZoomRef.current = 1;
       else if (boulderHot) huntZoomRef.current = 1;
       else if (inLatchPit) huntZoomRef.current = 1;
+      else if (sledding) huntZoomRef.current = 1;
       else huntZoomRef.current = Math.max(0, huntZoomRef.current - dt * 0.35);
-      const pull = inLatchPit ? 0.62 : sim.level.hunter ? 0.5 : sim.level.boulder ? 0.28 : 0.75;
+      const pull = sledding ? 0.38 : inLatchPit ? 0.62 : sim.level.hunter ? 0.5 : sim.level.boulder ? 0.28 : 0.75;
       const zoom = 1 + pull * huntZoomRef.current;
       const follow = phaseNow === "play" || phaseNow === "pause" || phaseNow === "lives" || phaseNow === "rite" || phaseNow === "clear";
       const camera = frameCamera(
@@ -2004,9 +2006,14 @@ function musicScene(phase: Phase, sim: Sim): MusicScene {
 function promptFor(sim: Sim, phase: Phase) {
   if (phase !== "play" || sim.won || sim.dead > 0) return "";
   if (sim.level.id === "gale" && sim.cage > 0) return "Jump rises. Down drops. 8 seconds to the hole.";
+  if (sim.level.id === "yule" && sim.x > 11200 && sim.gifts < sim.level.moths.length) {
+    return sim.x > 11810 && sim.x < 12020
+      ? `Use · set a present under the tree · ${sim.gifts} of ${sim.moths.size}`
+      : "Carry them to the tree.";
+  }
   if (sim.level.id === "yule" && sim.cage <= 0 && sim.x > 5200 && sim.x < 5640 && sim.y < 500) {
-    return sim.moths.size < sim.level.moths.length
-      ? "Climb the trees. The presents open the sled."
+    return sim.moths.size < sim.level.moths.length || sim.gifts < sim.level.moths.length
+      ? "Climb the trees. The last present opens the room."
       : "The sled takes the hill.";
   }
   if (sim.level.id === "yule" && sim.cage > 0 && sim.cage < 1) return "The snowball is behind you.";

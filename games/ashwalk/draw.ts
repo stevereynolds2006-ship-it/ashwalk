@@ -2133,7 +2133,7 @@ function drawYuleHill(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean)
   }
   const candles = sim.level.beacons.map((bell) => bell.x + bell.w / 2);
   for (const plat of sim.level.platforms) {
-    if (!plat.terrain) continue;
+    if (!plat.terrain || plat.id === "hearth") continue;
     for (let x = plat.x + 48; x < plat.x + plat.w - 28; x += 84) {
       if (candles.some((mark) => Math.abs(mark - x) < 46)) continue;
       drawCandle(ctx, x, plat.y, true, sim.t);
@@ -2163,6 +2163,7 @@ function drawYuleHill(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean)
   for (const plat of sim.level.platforms) {
     if (plat.kind === "ladder") drawLadder(ctx, plat, sim.level.id === "yule");
   }
+  drawHearth(ctx, sim);
   if (reduced) return;
   ctx.fillStyle = "#f7f4ee";
   for (let i = 0; i < 90; i++) {
@@ -2172,6 +2173,33 @@ function drawYuleHill(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean)
     ctx.fillRect(x, y, i % 6 === 0 ? 2.4 : 1.3, i % 6 === 0 ? 2.4 : 1.3);
   }
   ctx.globalAlpha = 1;
+}
+
+function drawHearth(ctx: CanvasRenderingContext2D, sim: Sim) {
+  if (sim.level.id !== "yule") return;
+  ctx.fillStyle = "#050506";
+  ctx.fillRect(11340, 0, 1200, 640);
+  ctx.fillStyle = "#101012";
+  ctx.fillRect(11480, 400, 160, 240);
+  ctx.fillStyle = "#1a1a1e";
+  ctx.fillRect(11510, 470, 100, 170);
+  ctx.fillStyle = "#f4f1ea";
+  ctx.fillRect(11490, 448, 140, 10);
+  const flick = Math.sin(sim.t * 9) * 8;
+  ctx.fillStyle = "#ffd24a";
+  ctx.beginPath();
+  ctx.moveTo(11560, 630);
+  ctx.quadraticCurveTo(11520, 540, 11560, 490 + flick);
+  ctx.quadraticCurveTo(11600, 540, 11560, 630);
+  ctx.fill();
+  ctx.fillStyle = "#ff3b3b";
+  ctx.beginPath();
+  ctx.moveTo(11560, 630);
+  ctx.quadraticCurveTo(11540, 570, 11560, 540);
+  ctx.quadraticCurveTo(11580, 570, 11560, 630);
+  ctx.fill();
+  drawPine(ctx, 11940, 640, 1.7, true, sim.t);
+  for (let i = 0; i < sim.gifts; i++) drawPresent(ctx, 11820 + (i % 4) * 34, 628, sim.t + i);
 }
 
 function drawPine(
@@ -2236,25 +2264,25 @@ function drawPine(
 function drawSled(ctx: CanvasRenderingContext2D, x: number, y: number, deep = false) {
   ctx.save();
   ctx.translate(x, y);
-  const rim = deep ? -36 : -22;
+  const rim = deep ? -30 : -18;
   ctx.strokeStyle = "#f7f4ee";
   ctx.lineWidth = 2.4;
   ctx.lineCap = "round";
   ctx.beginPath();
-  ctx.moveTo(-46, -8);
-  ctx.quadraticCurveTo(-20, 2, 50, -1);
-  ctx.moveTo(-42, -10);
-  ctx.quadraticCurveTo(-16, 3, 46, 0);
-  ctx.moveTo(-18, rim + 8);
-  ctx.lineTo(-18, -2);
-  ctx.moveTo(22, rim + 8);
-  ctx.lineTo(22, -1);
+  ctx.moveTo(-46, 2);
+  ctx.quadraticCurveTo(-20, 10, 50, 4);
+  ctx.moveTo(-42, 4);
+  ctx.quadraticCurveTo(-16, 12, 46, 6);
+  ctx.moveTo(-18, rim + 10);
+  ctx.lineTo(-18, 6);
+  ctx.moveTo(22, rim + 10);
+  ctx.lineTo(22, 6);
   ctx.stroke();
   ctx.fillStyle = "#1c1c20";
   ctx.strokeStyle = "#f7f4ee";
   ctx.lineWidth = 1.6;
   ctx.beginPath();
-  ctx.rect(-36, rim, 72, deep ? 32 : 14);
+  ctx.rect(-40, rim, 80, deep ? 24 : 14);
   ctx.fill();
   ctx.stroke();
   ctx.restore();
