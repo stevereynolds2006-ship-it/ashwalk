@@ -961,6 +961,13 @@ const CAPE_DRAPE = [
   ".k..................................",
 ];
 
+const CAPE_RIDGE: number[] = [];
+CAPE_DRAPE.forEach((row, y) => {
+  for (let x = 0; x < row.length; x++) {
+    if ((row[x] ?? ".") !== "." && CAPE_RIDGE[x] === undefined) CAPE_RIDGE[x] = y;
+  }
+});
+
 function drawDrapedCape(
   ctx: CanvasRenderingContext2D,
   cloth: string,
@@ -1011,6 +1018,12 @@ function drawDrapedCape(
         const colors = ["#d01218", "#0d7a32", "#f7f7f7"];
         const shades = ["#8a0c12", "#064a1e", "#c8c8c8"];
         color = mark === "k" ? "#062010" : mark === "d" ? shades[band]! : colors[band]!;
+      }
+      if (cloth === "christmas") {
+        const top = CAPE_RIDGE[x] ?? y;
+        const snow = y <= top + 2;
+        const flake = (x * 13 + y * 7) % 17 === 0;
+        color = snow || flake ? (mark === "d" ? "#d0d0d4" : "#f7f7f7") : mark === "k" ? "#3a0608" : mark === "d" ? "#8a0c12" : "#e10600";
       }
       if (cloth === "stripes") {
         const band = Math.floor((x + y) / 5) % 3;
@@ -1071,7 +1084,7 @@ function drawOutfit(
     ctx.stroke();
   }
 
-  const draped = cloth === "cape" || cloth === "white" || cloth === "rainbow" || cloth === "camo" || cloth === "stripes" || cloth === "pink" || cloth === "halloween" || cloth === "black" || cloth === "gold" || cloth === "ember" || cloth === "scarlet" || cloth === "blue" || cloth === "yule" || cloth === "frost" || cloth === "gilded";
+  const draped = cloth === "cape" || cloth === "white" || cloth === "rainbow" || cloth === "camo" || cloth === "stripes" || cloth === "pink" || cloth === "halloween" || cloth === "black" || cloth === "gold" || cloth === "ember" || cloth === "scarlet" || cloth === "blue" || cloth === "yule" || cloth === "frost" || cloth === "gilded" || cloth === "christmas";
   if (layer === "back" && draped) {
     ctx.save();
     ctx.beginPath();
