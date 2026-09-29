@@ -1365,7 +1365,7 @@ function drawTwin(
 function drawFriend(
   ctx: CanvasRenderingContext2D,
   sprites: GenerationSprites | null,
-  pose: { x: number; y: number; facing: 1 | -1; walking: boolean; anim: number; hurt: number; vx?: number; vy?: number },
+  pose: { x: number; y: number; facing: 1 | -1; walking: boolean; anim: number; hurt: number; vx?: number; vy?: number; climbing?: boolean },
   t: number,
   reduced: boolean,
   attract: boolean,
@@ -1382,12 +1382,20 @@ function drawFriend(
     ctx.strokeRect(center - 8, bottom - 28, 16, 28);
     return;
   }
-  const facing = body.facing === -1 ? "left" : "right";
-  const frame = reduced || attract ? 0 : Math.floor(body.anim / 0.11) % 8;
-  const rows = spriteFrame(sprites, facing, body.walking, frame, facing).frame.rows;
+  const facing = body.climbing ? "right" : body.facing === -1 ? "left" : "right";
+  const frame = reduced || attract ? 0 : Math.floor(body.anim / (body.climbing ? 0.08 : 0.11)) % 8;
+  const rows = spriteFrame(sprites, facing, body.walking || Boolean(body.climbing && Math.abs(body.vy ?? 0) > 8), frame, facing).frame.rows;
   const left = Math.round(center - (16 * scale) / 2);
   const top = Math.round(bottom - 16 * scale);
-  if (cloth) drawOutfit(ctx, cloth, center, bottom, body.facing, "back", t, body.vx ?? 0, body.vy ?? 0);
+  const turned = Boolean(body.climbing);
+  if (turned) {
+    ctx.save();
+    ctx.translate(center, bottom - 22);
+    ctx.scale(0.58, 1);
+    ctx.rotate(Math.sin(body.anim * 14) * 0.16);
+    ctx.translate(-center, -(bottom - 22));
+  }
+  if (cloth) drawOutfit(ctx, cloth, center, bottom, turned ? 1 : body.facing, "back", t, body.vx ?? 0, body.vy ?? 0);
   ctx.save();
   if (body.hurt > 0 && Math.floor(t * 24) % 2 === 0) ctx.globalAlpha = 0.35;
   const pixels: [number, number][] = [];
@@ -1403,7 +1411,19 @@ function drawFriend(
     ctx.fillRect(left + px * scale, top + py * scale, scale, scale);
   }
   ctx.restore();
-  if (cloth) drawOutfit(ctx, cloth, center, bottom, body.facing, "front", t, body.vx ?? 0, body.vy ?? 0);
+  if (cloth) drawOutfit(ctx, cloth, center, bottom, turned ? 1 : body.facing, "front", t, body.vx ?? 0, body.vy ?? 0);
+  if (turned) {
+    ctx.strokeStyle = "#070708";
+    ctx.lineWidth = 2;
+    const grip = Math.sin(body.anim * 14);
+    ctx.beginPath();
+    ctx.moveTo(center - 6, bottom - 28);
+    ctx.lineTo(center - 16, bottom - 34 - grip * 4);
+    ctx.moveTo(center + 6, bottom - 24);
+    ctx.lineTo(center + 16, bottom - 30 + grip * 4);
+    ctx.stroke();
+    ctx.restore();
+  }
 }
 
 const COIN = [
@@ -2879,6 +2899,7 @@ export function renderFrame(
       hurt: sim.hurt,
       vx: sim.vx,
       vy: sim.vy,
+      climbing: sim.climbing,
     },
     sim.t,
     reduced,

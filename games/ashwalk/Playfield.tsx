@@ -1442,7 +1442,7 @@ export function Playfield({
             </button>
           </div>
           <p className="ash-note">
-            A and D, or the left and right arrow keys, move. W, up, or space climbs a ladder and jumps. S climbs down and drops through a cage.
+            A and D, or the left and right arrow keys, move. W, up, or space jumps. E or Use climbs a ladder. Press Use again to climb down.
             E pulls, lights a bell, or buys a lantern. A lantern costs 1 coin you picked up in the stage and lasts 13 seconds. The flashlight costs 5 of those coins. On the moon that buy is a saber, not a flashlight. Stand on a plank too long and it falls.
             It comes back after 4 seconds. Three lives to a board. After that, one more life is 10 Rare coins.
             A death burns half the coins you picked up in the stage. Rare coins you spend are split. Half is sent, then half is burned. Confirm both.
@@ -1993,7 +1993,8 @@ function promptFor(sim: Sim, phase: Phase) {
   if (phase !== "play" || sim.won || sim.dead > 0) return "";
   if (sim.level.id === "gale" && sim.cage > 0) return "Jump rises. Down drops. 8 seconds to the hole.";
   if (sim.level.id === "moon" && sim.cage > 0) return "Light speed. Eight seconds.";
-  if (sim.climbing) return "Up climbs. Down climbs. Step off the side.";
+  if (sim.climbing) return sim.climbDir < 0 ? "Hold Use · climbing up. Press Use to go down." : "Hold Use · climbing down. Press Use to go up.";
+  if (sim.nearLadder) return "Use · turn to the ladder";
   if (sim.plateAsleep && sim.level.id === "latch" && sim.rope < 1) return "Pull the pulley. Then the plate.";
   if (sim.plateAsleep) return "Light every bell. The plate is asleep.";
   if (sim.nearRope) return sim.level.id === "shore" ? "Hold E · crank them down" : "Hold E · wind the pulley";

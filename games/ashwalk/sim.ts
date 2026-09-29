@@ -151,8 +151,11 @@ export type Sim = {
   altarLeft: Record<string, number>;
   /** Moon saber is in the hand. */
   saber: boolean;
-  /** On a ladder. Up climbs. Down climbs. */
+  /** On a ladder. Use climbs. */
   climbing: boolean;
+  /** -1 up, 1 down. Each Use press flips it. */
+  climbDir: number;
+  nearLadder: boolean;
   /** Bird indexes the saber has cut. */
   slain: Set<number>;
 };
@@ -240,6 +243,8 @@ export function createSim(level: Level = SHORE): Sim {
     altarLeft: {},
     saber: false,
     climbing: false,
+    climbDir: -1,
+    nearLadder: false,
     slain: new Set(),
   };
 }
@@ -524,6 +529,8 @@ function respawn(sim: Sim) {
   sim.cage = 0;
   sim.suck = 0;
   sim.climbing = false;
+  sim.climbDir = -1;
+  sim.nearLadder = false;
   if (sim.level.id === "gale") sim.palY = 0;
   sim.lastRects = null;
   const stalk = sim.level.stalker;
@@ -709,16 +716,28 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
   let gravity = sim.vy < 0 ? GRAV_UP : GRAV_DOWN;
   if (Math.abs(sim.vy) < APEX) gravity = GRAV_APEX;
   const shaft = ladderHit(sim);
-  if (shaft && (input.jumpHeld || input.down)) sim.climbing = true;
+  sim.nearLadder = shaft != null;
+  if (shaft && input.interactPressed) {
+    if (!sim.climbing) {
+      sim.climbing = true;
+      sim.climbDir = -1;
+    } else sim.climbDir = sim.climbDir < 0 ? 1 : -1;
+  }
   if (!shaft) sim.climbing = false;
+  if (sim.climbing && shaft && (input.left || input.right) && !input.interact) sim.climbing = false;
+  if (sim.climbing && input.jumpPressed) sim.climbing = false;
   if (sim.climbing && shaft) {
-    sim.vx *= 0.35;
-    if (input.down && !input.jumpHeld) sim.vy = 128;
-    else if (input.jumpHeld) sim.vy = -128;
-    else sim.vy = 0;
+    sim.x = shaft.x + shaft.w / 2 - PW / 2;
+    sim.vx = 0;
+    sim.facing = 1;
+    if (input.interact) {
+      sim.vy = (sim.climbDir < 0 ? -1 : 1) * 120;
+      sim.anim += dt;
+    } else sim.vy = 0;
     sim.grounded = false;
     sim.groundId = null;
     sim.groundKind = null;
+    input.interactPressed = false;
   } else {
     sim.vy = Math.min(MAX_FALL, sim.vy + gravity * dt);
   }

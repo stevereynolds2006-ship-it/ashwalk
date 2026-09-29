@@ -964,7 +964,7 @@ const HOIST: Level = {
   id: "hoist",
   title: "The hoist",
   kicker: "The ladder is the only way.",
-  rule: "Hold up to climb. Hold down to climb down. Step off the side to let go. Spiders use the rungs. Rats keep the floor.",
+  rule: "Use grabs the ladder and turns you to it. Hold Use to climb. Press Use again to climb down. Left or right steps off. Rats keep the floor. Spiders keep the beams.",
   together: "The ladders are shared. So are the spiders.",
   clearKicker: "The hoist",
   clearTitle: "You came back down",
@@ -1029,12 +1029,11 @@ const HOIST: Level = {
     { id: "arm", mode: "crawl", x0: 280, x1: 860, y: 342, ceil: 0, speed: 42, reach: 0, period: 1, phase: 0.2 },
     { id: "high", mode: "crawl", x0: 180, x1: 680, y: 102, ceil: 0, speed: 48, reach: 0, period: 1, phase: 0.6 },
     { id: "mid", mode: "crawl", kind: "scorpion", x0: 740, x1: 1000, y: 382, ceil: 0, speed: 36, reach: 0, period: 1, phase: 0.3 },
-    { id: "rung", mode: "hang", x0: 1534, x1: 1534, y: 230, ceil: 180, speed: 0, reach: 430, period: 4.6, phase: 0.4 },
   ],
   chapters: [
     { x: 0, id: "hoist", title: "The hoist", kicker: "Up the ladder." },
     { x: 700, id: "beam", title: "The arm", kicker: "Down, then higher." },
-    { x: 1380, id: "last", title: "The last rung", kicker: "Wait for the spider." },
+    { x: 1380, id: "last", title: "The last rung", kicker: "Use climbs." },
   ],
   light: { x: 640, y: 80 },
 };
