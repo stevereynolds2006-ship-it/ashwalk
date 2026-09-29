@@ -522,10 +522,6 @@ function drawCagedFriend(
   const turn = spec.rope * Math.PI * 6 + sim.t * 0.4;
   drawSheave(ctx, spec.axleX, spec.wireY, 10, turn);
   drawSheave(ctx, hookX, spec.wireY, 10, -turn);
-  ctx.save();
-  ctx.translate(hookX, top);
-  ctx.rotate(reduced ? 0 : sim.t * 0.7);
-  ctx.translate(-hookX, -top);
   if (melt < 1 && !spec.empty) {
     ctx.save();
     ctx.beginPath();
@@ -565,14 +561,13 @@ function drawCagedFriend(
     ctx.lineTo(x + 28, y);
     ctx.stroke();
   }
-  ctx.restore();
   if (free && back === 0 && spec.feast > 3 && spec.feast < 4.7) {
     drawAcidDump(ctx, landX + cageW / 2, landTop, sim.t, Math.min(1, (spec.feast - 3) / 0.35));
   }
 
   const axleX = spec.axleX;
   const axleY = floor - 46;
-  const spin = spec.rope * Math.PI * 6 + (reduced ? 0 : sim.t * 0.9);
+  const spin = spec.rope * Math.PI * 6;
   const r = 26;
   ctx.strokeStyle = "#c8c6c0";
   ctx.lineWidth = 3;
@@ -894,10 +889,6 @@ function drawCage(ctx: CanvasRenderingContext2D, rect: RectLike, occupied: boole
   ctx.stroke();
   drawSheave(ctx, left, axleY, 9, spin);
   drawSheave(ctx, right, axleY, 9, -spin);
-  ctx.save();
-  ctx.translate(x + w / 2, y);
-  ctx.rotate(spin * 0.45);
-  ctx.translate(-(x + w / 2), -y);
   ctx.strokeStyle = "#0a0a0b";
   ctx.lineWidth = 2;
   ctx.fillStyle = "#070708";
@@ -914,7 +905,6 @@ function drawCage(ctx: CanvasRenderingContext2D, rect: RectLike, occupied: boole
     ctx.fill();
     ctx.fillRect(x + w / 2 - 5, y + 54, 10, 18);
   }
-  ctx.restore();
 }
 
 function drawGate(ctx: CanvasRenderingContext2D, rect: RectLike) {
