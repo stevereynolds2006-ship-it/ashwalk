@@ -810,7 +810,7 @@ export function Playfield({
           if (events.beacon) beaconId = events.beacon;
           if (events.pull) pulled = true;
           const sound = soundRef.current;
-          if (events.jump) sound?.play("action-start");
+          if (events.jump) musicRef.current?.jump();
           if (events.land && sim.run > 0.35) {
             sound?.play("impact");
             burst(sim.x, sim.y + 36, 5);

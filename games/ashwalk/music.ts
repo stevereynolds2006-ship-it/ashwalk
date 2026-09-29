@@ -165,6 +165,7 @@ type Drone = { osc: OscillatorNode; gain: GainNode };
 export type AshMusic = {
   unlock(): Promise<boolean>;
   sync(options: { scene: MusicScene; reduced: boolean; paused: boolean; hidden: boolean }): void;
+  jump(): void;
   setMuted(muted: boolean): void;
   dispose(): void;
 };
@@ -423,6 +424,23 @@ export function createAshMusic(): AshMusic {
     }
   }
 
+  function jump() {
+    if (!ctx || !master || !unlocked || muted || hidden || ctx.state !== "running") return;
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "square";
+    osc.frequency.setValueAtTime(196, now);
+    osc.frequency.exponentialRampToValueAtTime(784, now + 0.08);
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.28, now + 0.012);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.13);
+    osc.connect(gain);
+    gain.connect(master);
+    osc.start(now);
+    osc.stop(now + 0.16);
+  }
+
   function setMuted(next: boolean) {
     muted = next;
     if (!ctx) return;
@@ -454,5 +472,5 @@ export function createAshMusic(): AshMusic {
     }
   }
 
-  return { unlock, sync, setMuted, dispose };
+  return { unlock, sync, jump, setMuted, dispose };
 }
