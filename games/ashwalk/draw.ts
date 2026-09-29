@@ -102,6 +102,8 @@ function drawLowerFill(ctx: CanvasRenderingContext2D, camera: Camera, id: string
       ctx.lineTo(worldX + 160, g + 180);
       ctx.lineTo(worldX - 160, g + 180);
       ctx.fill();
+    } else if (id === "shore") {
+      drawRealTree(ctx, { x: worldX, ground: g, scale: 1.7 + (n % 3) * 0.28, seed: 40 + n * 11 }, 0.86);
     } else {
       drawTree(ctx, { x: worldX, ground: g, scale: 2.6 + (n % 3) * 0.5, seed: 90 + n * 13 }, 0.78);
     }
@@ -132,6 +134,83 @@ function drawTree(ctx: CanvasRenderingContext2D, tree: Tree, alpha: number) {
     ctx.beginPath();
     ctx.moveTo(0, y);
     ctx.quadraticCurveTo(dir * len * 0.4, y - 20 - rand() * 24, dir * len, y - 8 + rand() * 20);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawRealTree(ctx: CanvasRenderingContext2D, tree: Tree, alpha: number) {
+  const rand = rng(tree.seed);
+  ctx.save();
+  ctx.translate(tree.x, tree.ground);
+  ctx.scale(tree.scale, tree.scale);
+  const ink = `rgba(8,8,9,${alpha})`;
+  const leaf = `rgba(10,12,10,${Math.min(1, alpha)})`;
+  ctx.fillStyle = ink;
+  ctx.strokeStyle = ink;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  ctx.lineWidth = 6;
+  ctx.beginPath();
+  ctx.moveTo(-8, -4);
+  ctx.quadraticCurveTo(-34, 6, -52, 14);
+  ctx.moveTo(6, -4);
+  ctx.quadraticCurveTo(32, 8, 50, 14);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(-12, 12);
+  ctx.quadraticCurveTo(-9, -70, -5, -128);
+  ctx.lineTo(6, -126);
+  ctx.quadraticCurveTo(10, -62, 13, 12);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = `rgba(244,241,234,${alpha * 0.16})`;
+  ctx.lineWidth = 1.1;
+  ctx.beginPath();
+  ctx.moveTo(-1, -16);
+  ctx.quadraticCurveTo(2, -60, -1, -110);
+  ctx.stroke();
+  ctx.strokeStyle = ink;
+  const tips: { x: number; y: number }[] = [];
+  for (let i = 0; i < 6; i++) {
+    const y0 = -48 - i * 14;
+    const dir = i % 2 === 0 ? 1 : -1;
+    const len = 46 + rand() * 62;
+    const y2 = y0 - 28 - rand() * 42;
+    const x2 = dir * len;
+    ctx.lineWidth = Math.max(1.6, 5.2 - i * 0.6);
+    ctx.beginPath();
+    ctx.moveTo(dir * 2, y0);
+    ctx.quadraticCurveTo(dir * len * 0.45, y0 - 8, x2, y2);
+    ctx.stroke();
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(x2 * 0.62, (y0 + y2) * 0.5);
+    ctx.quadraticCurveTo(x2 * 0.85, y2 - 12, x2 + dir * 10, y2 - 26);
+    ctx.stroke();
+    tips.push({ x: x2, y: y2 });
+  }
+  ctx.fillStyle = leaf;
+  for (const tip of tips) {
+    ctx.beginPath();
+    ctx.ellipse(tip.x, tip.y - 8, 26 + rand() * 16, 16 + rand() * 10, (rand() - 0.5) * 0.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(tip.x * 0.72, tip.y - 18, 16 + rand() * 8, 11 + rand() * 6, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.beginPath();
+  ctx.ellipse(0, -158, 34, 20, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = ink;
+  ctx.lineWidth = 1.15;
+  for (let i = 0; i < 5; i++) {
+    const tip = tips[i % tips.length]!;
+    const drop = 36 + rand() * 64;
+    const sway = (rand() - 0.5) * 14;
+    ctx.beginPath();
+    ctx.moveTo(tip.x, tip.y);
+    ctx.quadraticCurveTo(tip.x + sway, tip.y + drop * 0.55, tip.x + sway * 0.4, tip.y + drop);
     ctx.stroke();
   }
   ctx.restore();
@@ -3249,12 +3328,12 @@ export function renderFrame(
   } else if (sim.level.id === "shore" || sim.level.id === "antler") {
     ctx.save();
     ctx.translate(camera.x * 0.72, camera.y * 0.4);
-    for (const tree of SHORE_FAR) drawDeadwood(ctx, tree, 0.42);
+    for (const tree of SHORE_FAR) drawRealTree(ctx, tree, 0.55);
     ctx.restore();
     drawBranch(ctx);
     ctx.save();
     ctx.translate(camera.x * 0.4, camera.y * 0.15);
-    for (const tree of SHORE_NEAR) drawDeadwood(ctx, tree, 0.88);
+    for (const tree of SHORE_NEAR) drawRealTree(ctx, tree, 0.92);
     ctx.restore();
   } else if (sim.level.id === "moon") {
     drawMoonFog(
