@@ -417,7 +417,8 @@ function drawTerrain(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) 
       ctx.fillStyle = "rgba(255,255,255,0.92)";
       ctx.fillRect(rect.x, rect.y, rect.w, 2);
     }
-    if (sim.level.id !== "roof" && sim.level.id !== "gale" && sim.level.id !== "choir" && sim.level.id !== "gear" && sim.level.id !== "hoist" && sim.level.id !== "hallow") drawGrass(ctx, rect, 26);
+    if (sim.level.id === "shore") drawGrass(ctx, rect, 44, 2);
+    else if (sim.level.id !== "roof" && sim.level.id !== "gale" && sim.level.id !== "choir" && sim.level.id !== "gear" && sim.level.id !== "hoist" && sim.level.id !== "hallow") drawGrass(ctx, rect, 26);
   }
   for (const rect of bodies) {
     if (rect.terrain) continue;
@@ -426,8 +427,11 @@ function drawTerrain(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) 
     else if (rect.id.startsWith("trap")) drawTrapDoor(ctx, sim, rect);
     else if (sim.level.platforms.find((item) => item.id === rect.id)?.gear) drawGearTooth(ctx, sim, rect);
     else if (rect.kind === "sway" || rect.kind === "rope") {
-      drawCage(ctx, rect, sim.rope < 1 && rect.id === "cageC");
-    } else drawPlank(ctx, rect, rect.kind === "crumble" || (sim.crumbles[rect.id]?.timer ?? 0) > 0.9, sim.level.id === "choir" || sim.level.id === "shore");
+      drawCage(ctx, rect, sim.rope < 1 && rect.id === "cageC", sim.t * (rect.id === "cageC" ? 1.4 : 0.65));
+    } else {
+      drawPlank(ctx, rect, rect.kind === "crumble" || (sim.crumbles[rect.id]?.timer ?? 0) > 0.9, sim.level.id === "choir" || sim.level.id === "shore");
+      if (sim.level.id === "shore" && (rect.kind === "crumble" || rect.kind === "oneway")) drawGrass(ctx, rect, 30, 2);
+    }
   }
   for (const plat of sim.level.platforms) {
     if (plat.kind === "ladder") {
@@ -827,13 +831,13 @@ function drawDrainTrash(ctx: CanvasRenderingContext2D, t: number, reduced: boole
   ctx.restore();
 }
 
-function drawGrass(ctx: CanvasRenderingContext2D, rect: RectLike, tall: number) {
+function drawGrass(ctx: CanvasRenderingContext2D, rect: RectLike, tall: number, dense = 1) {
   const rand = rng((Math.floor(rect.x) * 13 + Math.floor(rect.y)) >>> 0);
   ctx.fillStyle = "#070708";
-  const blades = Math.max(4, Math.floor(rect.w / 6));
+  const blades = Math.max(6, Math.floor(rect.w / (dense > 1 ? 3 : 6)));
   for (let i = 0; i < blades; i++) {
     const x = rect.x + ((i + rand() * 0.6) / blades) * rect.w;
-    const h = 5 + rand() * tall;
+    const h = 6 + rand() * tall;
     const lean = (rand() - 0.45) * h * 0.45;
     const wide = rand() > 0.82 ? 3.4 : 1.6;
     ctx.beginPath();
@@ -858,17 +862,28 @@ function drawPlank(ctx: CanvasRenderingContext2D, rect: RectLike, rotten: boolea
 
 type RectLike = { x: number; y: number; w: number; h: number };
 
-function drawCage(ctx: CanvasRenderingContext2D, rect: RectLike, occupied: boolean) {
+function drawCage(ctx: CanvasRenderingContext2D, rect: RectLike, occupied: boolean, spin = 0) {
   const x = rect.x;
   const y = rect.y;
   const w = rect.w;
   const h = 86;
-  ctx.strokeStyle = "#0a0a0b";
+  const axleX = x + w / 2;
+  const axleY = y - 168;
+  ctx.strokeStyle = "#c8c4bc";
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(x + w / 2, y);
-  ctx.lineTo(x + w / 2, y - 150);
+  ctx.moveTo(axleX, y);
+  ctx.lineTo(axleX, axleY);
   ctx.stroke();
+  ctx.strokeStyle = "#1a1c20";
+  ctx.lineWidth = 6;
+  ctx.beginPath();
+  ctx.moveTo(axleX - 26, axleY);
+  ctx.lineTo(axleX + 26, axleY);
+  ctx.stroke();
+  drawSheave(ctx, axleX, axleY, 16, spin);
+  ctx.strokeStyle = "#0a0a0b";
+  ctx.lineWidth = 2;
   ctx.fillStyle = "#070708";
   ctx.fillRect(x, y, w, 8);
   ctx.fillRect(x, y + h, w, 7);
