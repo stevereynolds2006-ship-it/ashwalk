@@ -1826,7 +1826,7 @@ export function Playfield({
       {phase === "play" && (
         <div
           className={
-            pickId === "hoist" ? "ash-touch ash-touch-hoist" : pickId === "yule" ? "ash-touch ash-touch-eve" : pickId === "tunnel" ? "ash-touch ash-touch-tunnel" : "ash-touch"
+            pickId === "hoist" ? "ash-touch ash-touch-hoist" : pickId === "yule" ? "ash-touch ash-touch-eve" : pickId === "tunnel" ? "ash-touch ash-touch-tunnel" : pickId === "roof" ? "ash-touch ash-touch-sign" : "ash-touch"
           }
           ref={bindTouch}
         >
