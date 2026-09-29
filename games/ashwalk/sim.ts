@@ -908,10 +908,12 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
       sim.hearthLeave -= dt;
       if (sim.hearthLeave <= 0 && sim.hearthX > 0) {
         sim.hearthLeave = 0;
-        sim.x = 5072;
-        sim.y = 220 - PH;
+        sim.cage = 0.04;
+        sim.x = 5360;
+        sim.y = 440 - PH;
         sim.vx = 0;
         sim.vy = 0;
+        sim.climbing = false;
       }
     } else if (inRoom && input.interactPressed) {
       const tree = sim.x > 11940 && sim.x < 12180 && sim.y + PH > 590;
@@ -1122,7 +1124,7 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
   }
 
   if (level.id === "gale" && !sim.won && sim.suck <= 0) {
-    const lip = sim.grounded && sim.x > 4480 && sim.x < 4700 && sim.y > 400 && sim.y < 510;
+    const lip = sim.grounded && sim.x > 4160 && sim.x < 4400 && sim.y < -350 && sim.y > -480;
     if (sim.cage > 0 || lip) {
       if (sim.cage <= 0) sim.palY = 0;
       sim.cage = Math.min(1, sim.cage + dt / 8);
@@ -1133,8 +1135,8 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
       const steer = sim.palY * (1 - u * u);
       sim.vx = 0;
       sim.vy = 0;
-      sim.x = 4520 + u * 1000;
-      sim.y = 430 + u * 220 + Math.sin(u * Math.PI) * -30 + steer;
+      sim.x = 4240 + u * 1280;
+      sim.y = -436 + u * 1070 + Math.sin(u * Math.PI) * -40 + steer;
     }
   }
 

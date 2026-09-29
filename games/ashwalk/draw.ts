@@ -2298,7 +2298,6 @@ function drawYuleHill(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean)
     [4474, 760, 2.8],
   ];
   for (const [x, ground, scale] of trees) drawPine(ctx, x, ground, scale, true, sim.t);
-  drawChimney(ctx);
   for (const plat of sim.level.platforms) {
     if (plat.kind === "ladder") drawLadder(ctx, plat, sim.level.id === "yule");
   }
@@ -2312,26 +2311,6 @@ function drawYuleHill(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean)
     ctx.fillRect(x, y, i % 6 === 0 ? 2.4 : 1.3, i % 6 === 0 ? 2.4 : 1.3);
   }
   ctx.globalAlpha = 1;
-}
-
-function drawChimney(ctx: CanvasRenderingContext2D) {
-  ctx.save();
-  ctx.fillStyle = "#2a2420";
-  ctx.fillRect(4980, 456, 280, 320);
-  ctx.fillStyle = "#3a322c";
-  ctx.beginPath();
-  ctx.moveTo(4940, 456);
-  ctx.lineTo(5120, 360);
-  ctx.lineTo(5300, 456);
-  ctx.closePath();
-  ctx.fill();
-  ctx.fillStyle = "#6a4038";
-  ctx.fillRect(5056, 234, 46, 200);
-  ctx.fillStyle = "#8a5648";
-  for (let y = 248; y < 420; y += 16) ctx.fillRect(5056, y, 46, 3);
-  ctx.fillStyle = "#1a1614";
-  ctx.fillRect(5068, 300, 22, 28);
-  ctx.restore();
 }
 
 function drawHearth(ctx: CanvasRenderingContext2D, sim: Sim) {
@@ -3877,7 +3856,7 @@ export function renderFrame(
   if (sim.level.id === "choir" && sim.suck <= 0) drawChoirBalloon(ctx, sim);
   if (sim.level.id === "gale" && sim.suck <= 0) {
     if (sim.cage > 0) drawGlider(ctx, sim.x + PW / 2, sim.y - 6, sim.t);
-    else drawGlider(ctx, 4620, 448, sim.t);
+    else drawGlider(ctx, 4320, -430, sim.t);
   }
   if (sim.level.id === "moon" && sim.suck <= 0 && sim.cage <= 0) drawBoost(ctx, 1560, -684, sim.t, 0);
   if (sim.level.id === "latch") drawExitSnare(ctx, sim);
