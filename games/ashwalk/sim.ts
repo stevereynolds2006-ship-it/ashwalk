@@ -727,7 +727,7 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
     sim.facing = 1;
     if (input.down) {
       sim.climbDir = 1;
-      sim.vy = 120;
+      sim.vy = 150;
       sim.anim += dt;
     } else if (input.interact) {
       sim.climbDir = -1;
@@ -1187,7 +1187,7 @@ function ladderHit(sim: Sim) {
   for (const plat of sim.level.platforms) {
     if (plat.kind !== "ladder") continue;
     if (cx < plat.x + 2 || cx > plat.x + plat.w - 2) continue;
-    if (sim.y + PH < plat.y || sim.y > plat.y + plat.h) continue;
+    if (sim.y + PH < plat.y - 10 || sim.y > plat.y + plat.h) continue;
     return plat;
   }
   return null;
@@ -1227,6 +1227,7 @@ function resolveY(sim: Sim, prevX: number, prevY: number, bodies: Rect[]) {
   sim.groundId = null;
   sim.groundKind = null;
   for (const plat of bodies) {
+    if (sim.climbing) continue;
     if (choirSafeDrop(sim, plat.id, plat.y - (sim.crumbles[plat.id]?.fall ?? 0), plat.x, plat.w)) continue;
     if (!overlaps(sim.x, sim.y, PW, PH, plat, 0)) continue;
     const topOnly = plat.kind !== "solid" && plat.kind !== "gate";
