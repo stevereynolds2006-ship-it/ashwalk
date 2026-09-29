@@ -265,7 +265,7 @@ export const ROAD_COST = 10;
 export function grantFog(account: string, id: string, cost: number) {
   const ledger = readLedger(account);
   if (!ledger.opened.includes(id)) ledger.opened = [...ledger.opened, id];
-  ledger.burned += cost;
+  ledger.burned += cost / 2;
   writeLedger(account, ledger);
   return true;
 }
@@ -276,7 +276,7 @@ export function grantCloth(account: string, id: string, cost: number, now = new 
   const ledger = readLedger(account);
   if (!ledger.owned.includes(id)) ledger.owned = [...ledger.owned, id];
   ledger.equipped = id;
-  ledger.burned += cost;
+  ledger.burned += cost / 2;
   writeLedger(account, ledger);
   return true;
 }
@@ -284,7 +284,7 @@ export function grantCloth(account: string, id: string, cost: number, now = new 
 export function grantAllFogs(account: string, cost: number) {
   const ledger = readLedger(account);
   ledger.allFogs = true;
-  ledger.burned += cost;
+  ledger.burned += cost / 2;
   writeLedger(account, ledger);
   return true;
 }

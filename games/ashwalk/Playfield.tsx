@@ -40,6 +40,7 @@ type WalletProvider = { request: (args: { method: string; params?: unknown[] }) 
 const RARE_TOKEN = "0x0779369854d3EcdEA927206718FFD7730C67B71f";
 const RARE_CHAIN = 4663;
 const BURN_ADDRESS = "0x000000000000000000000000000000000000dEaD";
+const PAYOUT_ADDRESS = "0xa93399a2965672dd315a1bd8816fa94c50ef4dd5";
 const RARE_ABI = [
   {
     type: "function",
@@ -115,10 +116,11 @@ async function onRareChain(eth: WalletProvider) {
   }
 }
 
-async function sendRare(eth: WalletProvider, from: string, amount: bigint) {
+async function sendRare(eth: WalletProvider, from: string, to: string, amount: bigint) {
+  if (amount <= 0n) return;
   const hash = await eth.request({
     method: "eth_sendTransaction",
-    params: [{ from, to: RARE_TOKEN, data: encodeTransfer(BURN_ADDRESS, amount), value: "0x0" }],
+    params: [{ from, to: RARE_TOKEN, data: encodeTransfer(to, amount), value: "0x0" }],
   });
   if (typeof hash !== "string" || !hash.startsWith("0x")) throw new Error("The wallet did not return a transaction.");
   const receipt = await createFriendPublicClient().waitForTransactionReceipt({ hash: hash as `0x${string}` });
@@ -342,18 +344,24 @@ export function Playfield({
     if (!(await ensureWallet())) return false;
     const who = accountRef.current;
     if (!who || !isAddress(who)) return false;
-    setStakeMsg("Confirm the burn in your wallet.");
+    setStakeMsg("Confirm sending half in your wallet.");
+    let sent = false;
     try {
       await onRareChain(eth);
       const balance = await readRareBalance(who);
       const cost = BigInt(whole) * 10n ** 18n;
+      const share = cost / 2n;
+      const burn = cost - share;
       rareRef.current = balance;
       setWalletCoins(balance);
       if (balance < cost) {
         setStakeMsg(`You need ${whole} Rare coins.`);
         return false;
       }
-      await sendRare(eth, who, cost);
+      await sendRare(eth, who, PAYOUT_ADDRESS, share);
+      sent = true;
+      setStakeMsg("Confirm burning the other half.");
+      await sendRare(eth, who, BURN_ADDRESS, burn);
       const next = await readRareBalance(who);
       rareRef.current = next;
       setWalletCoins(next);
@@ -361,7 +369,13 @@ export function Playfield({
       return true;
     } catch (error) {
       const code = error && typeof error === "object" && "code" in error ? error.code : undefined;
-      setStakeMsg(code === 4001 ? "The wallet declined the transaction." : "The Rare coin transaction did not finish.");
+      setStakeMsg(
+        sent
+          ? "Half was sent, but the burn did not finish. Check your wallet before trying again."
+          : code === 4001
+            ? "The wallet declined the transaction."
+            : "The Rare coin transaction did not finish.",
+      );
       return false;
     }
   }
@@ -1364,7 +1378,7 @@ export function Playfield({
             A and D, or the left and right arrow keys, move. W, up, or space jumps. S drops through a cage.
             E pulls, lights a bell, or buys a lantern. A lantern costs 1 coin you picked up in the stage and lasts 13 seconds. The flashlight costs 5 of those coins. On the moon that buy is a saber, not a flashlight. Stand on a plank too long and it falls.
             It comes back after 4 seconds. Three lives to a board. After that, one more life is 10 Rare coins.
-            A death burns half the coins you picked up in the stage. Rare coins you spend are burned from your wallet. Confirm the transaction.
+            A death burns half the coins you picked up in the stage. Rare coins you spend are split. Half is sent, then half is burned. Confirm both.
           </p>
         </section>
       )}
@@ -1556,7 +1570,7 @@ export function Playfield({
         <section className="ash-panel" aria-label="Buy a life">
           <p className="ash-kicker">No lives left</p>
           <h2>Buy one more</h2>
-          <p>Three lives are gone. One more is {LIFE_PRICE} Rare coins. The wallet burns them.</p>
+          <p>Three lives are gone. One more is {LIFE_PRICE} Rare coins. Half is sent. Half is burned.</p>
           {stakeMsg && (
             <p className="ash-error" role="alert">
               {stakeMsg}
