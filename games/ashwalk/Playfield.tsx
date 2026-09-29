@@ -1146,17 +1146,21 @@ export function Playfield({
             {shopError && <p className="ash-sub">{shopError}</p>}
           </div>
           <div className="ash-hud-actions">
+            {hudOpen && (
+              <button type="button" className="ash-pop-back" aria-label="Close menu" onClick={() => setHudOpen(false)} />
+            )}
             <button
               type="button"
               className="ash-icon"
               aria-expanded={hudOpen}
+              aria-haspopup="menu"
               aria-controls="ash-hud-menu"
               onClick={() => setHudOpen((open) => !open)}
             >
               {hudOpen ? "Close" : "Menu"}
             </button>
             {hudOpen && (
-              <div className="ash-drop" id="ash-hud-menu">
+              <div className="ash-drop" id="ash-hud-menu" role="menu">
                 {session && (
                   <span className="ash-count">
                     {linked + 1} in the fog
