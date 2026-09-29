@@ -825,6 +825,27 @@ function drawChoirMarks(ctx: CanvasRenderingContext2D) {
   }
 }
 
+function drawHoistMarks(ctx: CanvasRenderingContext2D) {
+  const marks: [number, number, number][] = [
+    [6, 420, 78],
+    [1, 160, 518],
+    [9, 3360, 38],
+  ];
+  ctx.textAlign = "center";
+  for (const [digit, x, y] of marks) {
+    ctx.save();
+    ctx.shadowColor = "#f7f4ee";
+    ctx.shadowBlur = 16;
+    ctx.fillStyle = "#f7f4ee";
+    ctx.fillRect(x - 16, y - 30, 32, 38);
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = "#111114";
+    ctx.font = "bold 26px sans-serif";
+    ctx.fillText(String(digit), x, y);
+    ctx.restore();
+  }
+}
+
 function drawChoirBalloon(ctx: CanvasRenderingContext2D, sim: Sim) {
   const flying = sim.cage > 0;
   const x = flying ? sim.x + PW / 2 : 2455;
@@ -2852,6 +2873,7 @@ export function renderFrame(
   if (sim.level.id === "roof") drawDrainTrash(ctx, sim.t, reduced);
   if (sim.level.combo) drawLatchLock(ctx, sim);
   if (sim.level.id === "choir") drawChoirMarks(ctx);
+  if (sim.level.id === "hoist") drawHoistMarks(ctx);
 
   for (const plate of sim.level.plates) {
     const hot = (sim.latch[plate.id] ?? 0) > 0;
