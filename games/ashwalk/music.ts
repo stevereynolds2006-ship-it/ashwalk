@@ -78,13 +78,14 @@ const SCENES: Record<MusicScene, SceneScore> = {
     noise: 0,
   },
   gale: {
-    step: 0.74,
-    drones: [35, 42],
-    pluck: 59,
-    wave: "triangle",
-    gain: 0.12,
-    steps: [[0], [], [7], [], [-1], [], [5], []],
-    noise: 0.07,
+    step: 1.8,
+    drones: [31, 38],
+    pluck: 50,
+    wave: "sine",
+    gain: 0.02,
+    sustain: 2.6,
+    steps: [[], [], [], [0], [], [], [], []],
+    noise: 0.18,
   },
   choir: {
     step: 0.98,
@@ -172,14 +173,14 @@ const SCENES: Record<MusicScene, SceneScore> = {
     noise: 0.05,
   },
   moon: {
-    step: 1.15,
-    drones: [48, 55, 60],
-    pluck: 72,
+    step: 2.2,
+    drones: [32, 44, 56, 80],
+    pluck: 88,
     wave: "sine",
-    gain: 0.1,
-    sustain: 1.8,
-    steps: [[0, 7], [], [3], [10], [7], [], [12], [3]],
-    noise: 0,
+    gain: 0.04,
+    sustain: 4.2,
+    steps: [[0], [], [], [], [], [7], [], [], [], [12], [], [], [], [19], [], []],
+    noise: 0.02,
   },
   mirror: {
     step: 1.4,
@@ -248,6 +249,7 @@ export function createAshMusic(): AshMusic {
   let stepIndex = 0;
   let drones: Drone[] = [];
   let noiseGain: GainNode | null = null;
+  let noiseFilter: BiquadFilterNode | null = null;
   let lfoGain: GainNode | null = null;
   let masterLevel = -1;
 
@@ -331,6 +333,7 @@ export function createAshMusic(): AshMusic {
     const filter = ctx.createBiquadFilter();
     filter.type = "lowpass";
     filter.frequency.value = 420;
+    noiseFilter = filter;
     noiseGain = ctx.createGain();
     noiseGain.gain.value = 0.0001;
     source.connect(filter);
@@ -343,6 +346,20 @@ export function createAshMusic(): AshMusic {
     if (!ctx || !noiseGain) return;
     const level = reduced ? 0.0001 : Math.max(0.0001, SCENES[scene].noise);
     noiseGain.gain.setTargetAtTime(level, ctx.currentTime, 0.4);
+    if (!noiseFilter) return;
+    if (scene === "gale") {
+      noiseFilter.type = "bandpass";
+      noiseFilter.frequency.setTargetAtTime(520, ctx.currentTime, 0.3);
+      noiseFilter.Q.setTargetAtTime(0.55, ctx.currentTime, 0.3);
+    } else if (scene === "moon") {
+      noiseFilter.type = "highpass";
+      noiseFilter.frequency.setTargetAtTime(1800, ctx.currentTime, 0.3);
+      noiseFilter.Q.setTargetAtTime(0.45, ctx.currentTime, 0.3);
+    } else {
+      noiseFilter.type = "lowpass";
+      noiseFilter.frequency.setTargetAtTime(420, ctx.currentTime, 0.3);
+      noiseFilter.Q.setTargetAtTime(0.7, ctx.currentTime, 0.3);
+    }
   }
 
   function pluck(when: number, midi: number, wave: OscillatorType, level: number, dur: number) {
@@ -381,6 +398,20 @@ export function createAshMusic(): AshMusic {
       }
       nextAt += score.step;
       stepIndex += 1;
+    }
+    if (ctx && noiseGain && noiseFilter && !reduced) {
+      const t = ctx.currentTime;
+      if (scene === "gale") {
+        const gust = 0.5 + 0.5 * Math.sin(t * 0.32);
+        const burst = Math.pow(Math.max(0, Math.sin(t * 0.85 + Math.sin(t * 0.19))), 2);
+        noiseGain.gain.setTargetAtTime(0.05 + gust * 0.08 + burst * 0.2, t, 0.07);
+        noiseFilter.frequency.setTargetAtTime(160 + gust * 780 + burst * 1600, t, 0.08);
+      } else if (scene === "moon") {
+        noiseGain.gain.setTargetAtTime(0.012 + Math.sin(t * 0.11) * 0.006, t, 0.4);
+        noiseFilter.frequency.setTargetAtTime(1500 + Math.sin(t * 0.17) * 500, t, 0.4);
+        const high = drones[drones.length - 1];
+        if (high) high.osc.frequency.setTargetAtTime(hz(80) + Math.sin(t * 0.12) * 8, t, 0.6);
+      }
     }
   }
 
