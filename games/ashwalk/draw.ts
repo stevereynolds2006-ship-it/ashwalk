@@ -2867,35 +2867,51 @@ function drawToxic(ctx: CanvasRenderingContext2D, sim: Sim, camera: Camera) {
   ctx.restore();
 }
 
-function drawZip(ctx: CanvasRenderingContext2D, sim: Sim) {
-  ctx.save();
-  ctx.strokeStyle = "rgba(244,241,234,0.85)";
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(2120, 148);
-  ctx.lineTo(180, 430);
-  ctx.stroke();
+function drawZip(ctx: CanvasRenderingContext2D, sim: Sim, over = false) {
   const riding = sim.cage > 0 && sim.suck <= 0;
-  const x = riding ? sim.x + PW / 2 : 2060;
-  const y = riding ? sim.y + 8 : 168;
-  if (!riding && sim.wake < 1) {
+  if (!over) {
+    ctx.save();
+    ctx.strokeStyle = "rgba(244,241,234,0.85)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(2120, -168);
+    ctx.lineTo(180, 430);
+    ctx.stroke();
     ctx.restore();
-    return;
-  }
+    if (riding || sim.wake < 1) return;
+  } else if (!riding) return;
+  const x = riding ? sim.x + PW / 2 : 2060;
+  const rim = riding ? sim.y + 14 : -152;
+  ctx.save();
+  ctx.translate(x, rim);
   ctx.strokeStyle = "#f4f1ea";
-  ctx.lineWidth = 2;
+  ctx.fillStyle = "#121418";
+  ctx.lineWidth = 2.5;
+  ctx.lineJoin = "round";
   ctx.beginPath();
-  ctx.moveTo(x, y - 22);
-  ctx.lineTo(x, y - 4);
+  ctx.moveTo(0, -34);
+  ctx.lineTo(0, -12);
   ctx.stroke();
   ctx.beginPath();
-  ctx.moveTo(x - 16, y - 4);
-  ctx.lineTo(x - 11, y + 18);
-  ctx.lineTo(x + 11, y + 18);
-  ctx.lineTo(x + 16, y - 4);
+  ctx.arc(0, 2, 20, Math.PI * 1.05, -0.05 * Math.PI, true);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(-22, 6);
+  ctx.lineTo(-16, 36);
+  ctx.quadraticCurveTo(0, 44, 16, 36);
+  ctx.lineTo(22, 6);
   ctx.closePath();
+  ctx.fill();
   ctx.stroke();
-  if (!riding) ctx.globalAlpha = 0.45 + Math.sin(sim.t * 3) * 0.15;
+  ctx.beginPath();
+  ctx.ellipse(0, 6, 22, 7, 0, 0, Math.PI * 2);
+  ctx.fillStyle = "#2a2e34";
+  ctx.fill();
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(-18, 20);
+  ctx.quadraticCurveTo(0, 24, 18, 20);
+  ctx.stroke();
   ctx.restore();
 }
 
@@ -3760,6 +3776,7 @@ export function renderFrame(
     );
     if (seated) ctx.restore();
   }
+  if (sim.level.id === "mirror") drawZip(ctx, sim, true);
   if (sim.saber && sim.suck <= 0 && sim.cage <= 0 && !attract) drawSaber(ctx, sim);
   if (sim.suck > 0) {
     ctx.restore();
@@ -4596,7 +4613,7 @@ export function frameCamera(
       y -= 36 * huntPull;
     }
   }
-  const yMin = sim.level.id === "moon" ? -1400 : sim.level.id === "choir" ? -820 : sim.level.id === "tunnel" ? -280 : -40;
+  const yMin = sim.level.id === "moon" ? -1400 : sim.level.id === "choir" ? -820 : sim.level.id === "tunnel" ? -280 : sim.level.id === "mirror" ? -560 : -40;
   x = Math.max(0, Math.min(Math.max(0, sim.level.worldW - viewW), x));
   y = Math.max(yMin, Math.min(worldH - viewH, y));
   return { x, y, w: viewW, h: viewH };

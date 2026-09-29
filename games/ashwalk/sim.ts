@@ -1060,7 +1060,7 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
   stepBoulder(sim, dt, events);
 
   if (level.id === "mirror" && sim.wake >= 1 && !sim.won && sim.suck <= 0 && sim.dead <= 0) {
-    const inBucket = sim.x > 1980 && sim.x < 2160 && sim.y < 190 && sim.y + PH > 120;
+    const inBucket = sim.x > 1980 && sim.x < 2160 && sim.y < -90 && sim.y + PH > -170;
     if (sim.cage > 0 || inBucket) {
       if (sim.cage <= 0) sim.cage = 0.02;
       sim.cage = Math.min(1, sim.cage + dt / 4.5);
@@ -1069,7 +1069,7 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
       sim.vy = 0;
       sim.climbing = false;
       sim.x = 2040 + (120 - 2040) * u;
-      sim.y = 160 - PH + (468 - 160) * u;
+      sim.y = -140 - PH + (468 - -140) * u;
     }
   }
 
@@ -1292,7 +1292,7 @@ function stepHunter(sim: Sim, dt: number, events: StepEvents) {
   if (sim.stalkY < 40) sim.stalkY = spec.surface;
   const speed = 148;
   const ladderX = 2154;
-  const top = 196;
+  const top = -140;
   const onClimb = sim.y + PH < spec.surface - 24 && sim.x > 1900 && sim.x < 2400;
   const followUp = sim.cage > 0 || onClimb || sim.stalkY < spec.surface - 16;
   if (followUp && (sim.x < 2500 || sim.cage > 0 || sim.stalkY < spec.surface - 16)) {
