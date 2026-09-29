@@ -1122,7 +1122,7 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
   }
 
   if (level.id === "gale" && !sim.won && sim.suck <= 0) {
-    const lip = sim.x > 4240 && sim.y > 360 && sim.y < 520;
+    const lip = sim.grounded && sim.x > 4480 && sim.x < 4700 && sim.y > 400 && sim.y < 510;
     if (sim.cage > 0 || lip) {
       if (sim.cage <= 0) sim.palY = 0;
       sim.cage = Math.min(1, sim.cage + dt / 8);
@@ -1133,13 +1133,13 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
       const steer = sim.palY * (1 - u * u);
       sim.vx = 0;
       sim.vy = 0;
-      sim.x = 4320 + u * 1200;
-      sim.y = 400 + u * 240 + Math.sin(u * Math.PI) * -30 + steer;
+      sim.x = 4520 + u * 1000;
+      sim.y = 430 + u * 220 + Math.sin(u * Math.PI) * -30 + steer;
     }
   }
 
   if (level.id === "choir" && comboSet(sim) && sim.beacons.size >= level.beacons.length && !sim.won && sim.suck <= 0) {
-    const onCrown = sim.x > 2200 && sim.x < 2540 && sim.y < -470;
+    const onCrown = sim.x > 2200 && sim.x < 2520 && sim.y < -220;
     if (onCrown || sim.cage > 0) {
       sim.cage = Math.min(1, sim.cage + dt * 0.28);
       sim.vx = 0;

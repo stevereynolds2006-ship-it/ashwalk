@@ -1036,7 +1036,7 @@ function drawHoistMarks(ctx: CanvasRenderingContext2D) {
 function drawChoirBalloon(ctx: CanvasRenderingContext2D, sim: Sim) {
   const flying = sim.cage > 0;
   const x = flying ? sim.x + PW / 2 : 2455;
-  const foot = flying ? sim.y + PH : -540;
+  const foot = flying ? sim.y + PH : -312;
   const basketTop = foot - 26;
   const y = basketTop - 36;
   ctx.save();
@@ -3612,9 +3612,9 @@ export function renderFrame(
     drawLatchFog(ctx, camera, sim.t, reduced);
   } else if (sim.level.id === "gale") {
     drawGaleStorm(ctx, camera, sim.t, reduced);
+    drawGaleSky(ctx);
   } else if (sim.level.id === "choir") {
     drawChoirGear(ctx, camera, sim.t, reduced);
-    drawChoirSky(ctx);
   } else if (sim.level.id === "gear") {
     drawGearHall(ctx, camera, sim, reduced);
   } else if (sim.level.id === "hoist") {
@@ -3856,7 +3856,7 @@ export function renderFrame(
   if (sim.level.id === "choir" && sim.suck <= 0) drawChoirBalloon(ctx, sim);
   if (sim.level.id === "gale" && sim.suck <= 0) {
     if (sim.cage > 0) drawGlider(ctx, sim.x + PW / 2, sim.y - 6, sim.t);
-    else drawGlider(ctx, 4210, 400, sim.t);
+    else drawGlider(ctx, 4620, 448, sim.t);
   }
   if (sim.level.id === "moon" && sim.suck <= 0 && sim.cage <= 0) drawBoost(ctx, 1560, -684, sim.t, 0);
   if (sim.level.id === "latch") drawExitSnare(ctx, sim);
@@ -4527,28 +4527,28 @@ function drawPixelCrowd(ctx: CanvasRenderingContext2D, x: number, y: number, s: 
   ctx.fillRect(x + s * 2, y + s * 5, s, s * 2);
 }
 
-function drawChoirSky(ctx: CanvasRenderingContext2D) {
+function drawGaleSky(ctx: CanvasRenderingContext2D) {
   ctx.save();
   ctx.fillStyle = "rgba(236,236,232,0.62)";
-  for (let i = 0; i < 9; i++) {
-    const x = -120 + i * 340;
-    const y = -16 + (i % 3) * 22;
+  for (let i = 0; i < 10; i++) {
+    const x = 2800 + i * 280;
+    const y = -10 + (i % 3) * 20;
     ctx.beginPath();
-    ctx.ellipse(x, y, 170, 34, 0, 0, Math.PI * 2);
-    ctx.ellipse(x + 80, y + 12, 100, 26, 0, 0, Math.PI * 2);
+    ctx.ellipse(x, y, 150, 32, 0, 0, Math.PI * 2);
+    ctx.ellipse(x + 70, y + 10, 90, 24, 0, 0, Math.PI * 2);
     ctx.fill();
   }
-  const sun = ctx.createRadialGradient(2380, -620, 8, 2380, -620, 220);
+  const sun = ctx.createRadialGradient(4260, -520, 8, 4260, -520, 200);
   sun.addColorStop(0, "rgba(255,250,232,0.98)");
   sun.addColorStop(0.25, "rgba(255,244,214,0.55)");
   sun.addColorStop(1, "rgba(255,244,214,0)");
   ctx.fillStyle = sun;
   ctx.beginPath();
-  ctx.arc(2380, -620, 220, 0, Math.PI * 2);
+  ctx.arc(4260, -520, 200, 0, Math.PI * 2);
   ctx.fill();
   ctx.fillStyle = "#fff6e4";
   ctx.beginPath();
-  ctx.arc(2380, -620, 34, 0, Math.PI * 2);
+  ctx.arc(4260, -520, 32, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
 }
@@ -4711,7 +4711,7 @@ export function frameCamera(
       y -= 36 * huntPull;
     }
   }
-  const yMin = sim.level.id === "moon" ? -1400 : sim.level.id === "choir" ? -980 : sim.level.id === "tunnel" ? -280 : sim.level.id === "mirror" ? -560 : sim.level.id === "roof" ? -200 : -40;
+  const yMin = sim.level.id === "moon" ? -1400 : sim.level.id === "choir" ? -820 : sim.level.id === "tunnel" ? -280 : sim.level.id === "mirror" ? -560 : sim.level.id === "roof" ? -200 : sim.level.id === "gale" ? -760 : -40;
   x = Math.max(0, Math.min(Math.max(0, sim.level.worldW - viewW), x));
   y = Math.max(yMin, Math.min(worldH - viewH, y));
   return { x, y, w: viewW, h: viewH };
