@@ -1158,7 +1158,6 @@ const YULE: Level = {
   wind: null,
   birds: [
     { x0: 40, x1: 380, y: 760, amp: 0, speed: 62, start: 200, kind: "deer" },
-    { x0: 1320, x1: 1440, y: 860, amp: 0, speed: 52, start: 1360, kind: "deer" },
     { x0: 2000, x1: 2480, y: 720, amp: 0, speed: 74, start: 2200, kind: "deer" },
     { x0: 3340, x1: 3540, y: 700, amp: 0, speed: 68, start: 3400, kind: "deer" },
     { x0: 4140, x1: 4380, y: 760, amp: 0, speed: 64, start: 4220, kind: "deer" },
