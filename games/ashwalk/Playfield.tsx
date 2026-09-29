@@ -584,7 +584,7 @@ export function Playfield({
           : id === "tunnel"
             ? "The tunnel opens December 1. Coming soon."
             : id === "hoist"
-              ? "The hoist opens January 1. Coming soon."
+              ? "The hoist opens January 1st. Coming soon."
               : "The moon opens October 1. Coming soon.",
       );
       return;
@@ -1411,7 +1411,7 @@ export function Playfield({
               : "Connect a wallet to buy boards with Rare coins."}
           </p>
           <p>The shore is free. You start it with 2 coins. Coins you pick up only turn things on inside the stage. Rare coins pay to open the next fog and to buy a cape. Beat a fog, then the next one is 25 Rare coins. You cannot buy the next one until the one before it is beaten.</p>
-          <p>Every month a new map opens. A new cape opens each week, starting October 1. Capes are 15 Rare coins. The Halloween cape and the Christmas cape are 25. Only the red cape is open now. The hoist is the January map. It is open to try.</p>
+          <p>Every month a new map opens. A new cape opens each week, starting October 1. Capes are 15 Rare coins. The Halloween cape and the Christmas cape are 25. Only the red cape is open now. The hoist opens January 1st.</p>
           {stakeMsg && (
             <p className="ash-error" role="alert">
               {stakeMsg}
@@ -1527,7 +1527,7 @@ export function Playfield({
               : "Connect a wallet to buy a board with Rare coins."}
           </p>
           <p className="ash-note">
-            The shore is free. Beat a fog before you can buy the next one. Every board after the shore is 25 Rare coins. The moon opens October 1, the mirror November 1, the tunnel December 1, and the hoist January 1.
+            The shore is free. Beat a fog before you can buy the next one. Every board after the shore is 25 Rare coins. The moon opens October 1, the mirror November 1, the tunnel December 1, and the hoist January 1st.
           </p>
           <LevelList
             current={pickId}
@@ -1851,7 +1851,7 @@ function LevelList({
     <div className="ash-levels">
       {LEVELS.map((level) => {
         const opens =
-          level.id === "moon" ? "October 1" : level.id === "mirror" ? "November 1" : level.id === "tunnel" ? "December 1" : level.id === "hoist" ? "January 1" : null;
+          level.id === "moon" ? "October 1" : level.id === "mirror" ? "November 1" : level.id === "tunnel" ? "December 1" : level.id === "hoist" ? "January 1st" : null;
         const soon = !TRY_ALL && opens != null && !fogReleased(level.id);
         const price = fogPrice(level.id);
         const prev = previousFog(level.id);
@@ -1860,7 +1860,7 @@ function LevelList({
         const open = TRY_ALL || level.id === "shore" || fogTry(level.id) || (!soon && bought && beaten);
         const canBuy = !open && !soon && beaten && !bought;
         const note = soon
-          ? `Coming soon. Opens ${opens}. ${price} Rare coins.`
+          ? `Coming ${opens}. ${price} Rare coins.`
           : open
             ? level.rule
             : canBuy
@@ -1878,7 +1878,7 @@ function LevelList({
             onClick={() => onPick(level.id)}
           >
             <span>
-              {soon ? `${level.title} · coming soon` : canBuy ? `${level.title} · ${price} Rare coins` : open ? level.title : `${level.title} · locked`}
+              {soon ? `${level.title} · coming ${opens}` : canBuy ? `${level.title} · ${price} Rare coins` : open ? level.title : `${level.title} · locked`}
             </span>
             <small>{note}</small>
           </button>

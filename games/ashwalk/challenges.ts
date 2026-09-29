@@ -1107,8 +1107,8 @@ export const TRY_ALL = false;
 export const TRY_TUNNEL = false;
 /** Lets the choir be played before the road is open. */
 export const TRY_CHOIR = false;
-/** The hoist is open to try. Set false to hold it until January 1. */
-export const TRY_HOIST = true;
+/** The hoist stays shut until January 1. */
+export const TRY_HOIST = false;
 
 export function fogTry(id: string) {
   return (id === "tunnel" && TRY_TUNNEL) || (id === "choir" && TRY_CHOIR) || (id === "hoist" && TRY_HOIST);
