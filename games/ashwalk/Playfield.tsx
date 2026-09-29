@@ -14,20 +14,20 @@ import { comboSet, createSim, step, type Actions, type Sim } from "./sim";
 import { burst, frameCamera, renderFrame, viewSize } from "./draw";
 import { createAshMusic, type AshMusic, type MusicScene } from "./music";
 import {
+  ALL_FOGS_COST,
   buyCloth,
-  burnedHalf,
+  CAPES_TRY,
   clothById,
   clothOpens,
   clothReleased,
   equipCloth,
   formatRareCoins,
+  grantAllFogs,
+  grantCloth,
+  grantFog,
   outfitList,
-  buyFog,
-  CAPES_TRY,
   readLedger,
-  spendWhole,
   spendable,
-  unlockAllFogs,
   type Ledger,
 } from "./wardrobe";
 import "./ashwalk.css";
@@ -38,6 +38,8 @@ type Session = { code: string; host: boolean };
 type WalletProvider = { request: (args: { method: string; params?: unknown[] }) => Promise<unknown> };
 
 const RARE_TOKEN = "0x0779369854d3EcdEA927206718FFD7730C67B71f";
+const RARE_CHAIN = 4663;
+const BURN_ADDRESS = "0x000000000000000000000000000000000000dEaD";
 const RARE_ABI = [
   {
     type: "function",
@@ -80,6 +82,47 @@ async function readRareBalance(account: string) {
     functionName: "balanceOf",
     args: [account as `0x${string}`],
   });
+}
+
+function encodeTransfer(to: string, amount: bigint) {
+  const addr = to.toLowerCase().replace(/^0x/, "").padStart(64, "0");
+  const value = amount.toString(16).padStart(64, "0");
+  return `0xa9059cbb${addr}${value}`;
+}
+
+async function onRareChain(eth: WalletProvider) {
+  const chainId = `0x${RARE_CHAIN.toString(16)}`;
+  const current = await eth.request({ method: "eth_chainId" });
+  if (typeof current === "string" && Number.parseInt(current, 16) === RARE_CHAIN) return;
+  try {
+    await eth.request({ method: "wallet_switchEthereumChain", params: [{ chainId }] });
+  } catch (error) {
+    const code = error && typeof error === "object" && "code" in error ? error.code : undefined;
+    if (code !== 4902) throw error;
+    await eth.request({
+      method: "wallet_addEthereumChain",
+      params: [
+        {
+          chainId,
+          chainName: "Robinhood Chain",
+          nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+          rpcUrls: ["https://rpc.mainnet.chain.robinhood.com"],
+          blockExplorerUrls: ["https://robinhoodchain.blockscout.com"],
+        },
+      ],
+    });
+    await eth.request({ method: "wallet_switchEthereumChain", params: [{ chainId }] });
+  }
+}
+
+async function sendRare(eth: WalletProvider, from: string, amount: bigint) {
+  const hash = await eth.request({
+    method: "eth_sendTransaction",
+    params: [{ from, to: RARE_TOKEN, data: encodeTransfer(BURN_ADDRESS, amount), value: "0x0" }],
+  });
+  if (typeof hash !== "string" || !hash.startsWith("0x")) throw new Error("The wallet did not return a transaction.");
+  const receipt = await createFriendPublicClient().waitForTransactionReceipt({ hash: hash as `0x${string}` });
+  if (receipt.status !== "success") throw new Error("The Rare coin transaction failed.");
 }
 
 const LAMP_PRICE = 5;
@@ -289,7 +332,41 @@ export function Playfield({
     return connectRareWallet();
   }
 
-  function payFog(id: string) {
+  async function chargeRare(whole: number) {
+    if (whole <= 0) return true;
+    const eth = walletProvider();
+    if (!eth) {
+      setStakeMsg("Connect a wallet. This spend is a transaction.");
+      return false;
+    }
+    if (!(await ensureWallet())) return false;
+    const who = accountRef.current;
+    if (!who || !isAddress(who)) return false;
+    setStakeMsg("Confirm the burn in your wallet.");
+    try {
+      await onRareChain(eth);
+      const balance = await readRareBalance(who);
+      const cost = BigInt(whole) * 10n ** 18n;
+      rareRef.current = balance;
+      setWalletCoins(balance);
+      if (balance < cost) {
+        setStakeMsg(`You need ${whole} Rare coins.`);
+        return false;
+      }
+      await sendRare(eth, who, cost);
+      const next = await readRareBalance(who);
+      rareRef.current = next;
+      setWalletCoins(next);
+      setStakeMsg("");
+      return true;
+    } catch (error) {
+      const code = error && typeof error === "object" && "code" in error ? error.code : undefined;
+      setStakeMsg(code === 4001 ? "The wallet declined the transaction." : "The Rare coin transaction did not finish.");
+      return false;
+    }
+  }
+
+  async function payFog(id: string) {
     const who = accountRef.current;
     const balance = rareRef.current;
     const price = fogPrice(id);
@@ -298,14 +375,12 @@ export function Playfield({
       return false;
     }
     if (openedRef.current.has(id)) return true;
-    if (!buyFog(who, balance, id, price)) {
-      setStakeMsg(`You need ${price} Rare coins to open this fog.`);
-      return false;
-    }
+    if (!(await chargeRare(price))) return false;
+    grantFog(who, id, price);
     openedRef.current.add(id);
     refreshLedger(who);
     onWardrobe?.();
-    setShopError(`Burned ${burnedHalf(price)} Rare coins.`);
+    setShopError(`Burned ${price} Rare coins.`);
     return true;
   }
 
@@ -344,11 +419,22 @@ export function Playfield({
       setStakeMsg("Connect a wallet. The red cape is 15 Rare coins.");
       return;
     }
+    if (cloth && cloth.cost > 0 && !readLedger(who).owned.includes(id)) {
+      if (!(await chargeRare(cloth.cost))) return;
+      if (!grantCloth(who, id, cloth.cost)) {
+        setStakeMsg("The cape was paid, but this browser could not save it.");
+        return;
+      }
+      setStakeMsg(`Burned ${cloth.cost} Rare coins.`);
+      refreshLedger(who);
+      onWardrobe?.();
+      return;
+    }
     if (!buyCloth(who, balance, id)) {
       setStakeMsg(cloth && cloth.cost > 0 ? `${cloth.name} wants ${cloth.cost} Rare coins.` : "That cape stayed shut.");
       return;
     }
-    setStakeMsg(cloth && cloth.cost > 0 ? `Burned ${burnedHalf(cloth.cost)} Rare coins.` : "");
+    setStakeMsg(cloth ? `${cloth.name} is on.` : "");
     refreshLedger(who);
     onWardrobe?.();
   }
@@ -361,16 +447,13 @@ export function Playfield({
       setStakeMsg("Connect a wallet. A life is 10 Rare coins.");
       return;
     }
-    if (!spendWhole(who, balance, LIFE_PRICE)) {
-      setStakeMsg("You need 10 Rare coins for a life.");
-      return;
-    }
+    if (!(await chargeRare(LIFE_PRICE))) return;
     refreshLedger(who);
     onWardrobe?.();
     livesRef.current = 1;
     setLives(1);
     setStakeMsg("");
-    setShopError(`Burned ${burnedHalf(LIFE_PRICE)} Rare coins.`);
+    setShopError(`Burned ${LIFE_PRICE} Rare coins.`);
     go("play");
   }
 
@@ -390,10 +473,8 @@ export function Playfield({
       setStakeMsg("Connect a wallet. Every fog costs 20 Rare coins.");
       return;
     }
-    if (!unlockAllFogs(who, balance)) {
-      setStakeMsg("You need 20 Rare coins.");
-      return;
-    }
+    if (!(await chargeRare(ALL_FOGS_COST))) return;
+    grantAllFogs(who, ALL_FOGS_COST);
     setStakeMsg("");
     refreshLedger(who);
     onWardrobe?.();
@@ -436,31 +517,15 @@ export function Playfield({
       }
       if (!openedRef.current.has(id)) {
         if (!(await ensureWallet())) return;
-        if (!payFog(id)) return;
+        if (!(await payFog(id))) return;
       }
-    }
-    const fee = 0;
-    if (fee > 0) {
-      const who = accountRef.current;
-      const balance = rareRef.current;
-      if (!who || balance == null) {
-        setStakeMsg("Connect a wallet. A walk costs 5 Rare coins.");
-        return;
-      }
-      if (!spendWhole(who, balance, fee)) {
-        setStakeMsg("You need 5 Rare coins to start.");
-        return;
-      }
-      refreshLedger(who);
-      onWardrobe?.();
-      setShopError(`Burned ${burnedHalf(fee)} Rare coins.`);
     }
     livesRef.current = LIVES;
     setLives(LIVES);
     purseRef.current = id === "shore" ? SHORE_COINS : 0;
     setPurse(id === "shore" ? SHORE_COINS : 0);
     setStakeMsg("");
-    if (fee === 0) setShopError("");
+    if (id === "shore") setShopError("");
     const level = getLevel(id);
     const sim = createSim(level);
     sim.linked = (apiRef.current?.peerCount() ?? 0) > 0;
@@ -1299,7 +1364,7 @@ export function Playfield({
             A and D, or the left and right arrow keys, move. W, up, or space jumps. S drops through a cage.
             E pulls, lights a bell, or buys a lantern. A lantern costs 1 coin you picked up in the stage and lasts 13 seconds. The flashlight costs 5 of those coins. On the moon that buy is a saber, not a flashlight. Stand on a plank too long and it falls.
             It comes back after 4 seconds. Three lives to a board. After that, one more life is 10 Rare coins.
-            A death burns half the coins you picked up in the stage. Half of every Rare coin you spend is burned.
+            A death burns half the coins you picked up in the stage. Rare coins you spend are burned from your wallet. Confirm the transaction.
           </p>
         </section>
       )}
@@ -1491,7 +1556,7 @@ export function Playfield({
         <section className="ash-panel" aria-label="Buy a life">
           <p className="ash-kicker">No lives left</p>
           <h2>Buy one more</h2>
-          <p>Three lives are gone. One more is {LIFE_PRICE} Rare coins. Half of that spend is burned.</p>
+          <p>Three lives are gone. One more is {LIFE_PRICE} Rare coins. The wallet burns them.</p>
           {stakeMsg && (
             <p className="ash-error" role="alert">
               {stakeMsg}

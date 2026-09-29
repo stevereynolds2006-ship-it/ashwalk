@@ -262,13 +262,30 @@ export function equipCloth(account: string, id: string | null) {
 
 export const ROAD_COST = 10;
 
-export function buyFog(account: string, balance: bigint, id: string, cost = ROAD_COST) {
+export function grantFog(account: string, id: string, cost: number) {
   const ledger = readLedger(account);
-  if (ledger.opened.includes(id)) return true;
-  if (!pay(account, balance, cost)) return false;
-  const next = readLedger(account);
-  next.opened = [...next.opened, id];
-  writeLedger(account, next);
+  if (!ledger.opened.includes(id)) ledger.opened = [...ledger.opened, id];
+  ledger.burned += cost;
+  writeLedger(account, ledger);
+  return true;
+}
+
+export function grantCloth(account: string, id: string, cost: number, now = new Date()) {
+  const cloth = clothById(id);
+  if (!cloth || !clothReleased(id, now)) return false;
+  const ledger = readLedger(account);
+  if (!ledger.owned.includes(id)) ledger.owned = [...ledger.owned, id];
+  ledger.equipped = id;
+  ledger.burned += cost;
+  writeLedger(account, ledger);
+  return true;
+}
+
+export function grantAllFogs(account: string, cost: number) {
+  const ledger = readLedger(account);
+  ledger.allFogs = true;
+  ledger.burned += cost;
+  writeLedger(account, ledger);
   return true;
 }
 
