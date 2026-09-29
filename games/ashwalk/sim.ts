@@ -1068,8 +1068,10 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
       sim.vx = 0;
       sim.vy = 0;
       sim.climbing = false;
-      sim.x = 2040 + (120 - 2040) * u;
-      sim.y = -140 - PH + (468 - -140) * u;
+      sim.x = 2040 + (100 - 2040) * u;
+      const along = (2140 - sim.x) / (2140 - 160);
+      const cable = -250 + along * 630;
+      sim.y = cable + 64;
     }
   }
 
