@@ -977,7 +977,11 @@ function drawDrapedCape(
       ? { k: "#1a1a1c", n: "#f4f4f4", d: "#8e8e94", b: "#ffffff" }
       : cloth === "pink"
         ? { k: "#3a0418", n: "#ff3d9a", d: "#c21868", b: "#ff8ec6" }
-        : cloth === "camo"
+        : cloth === "blue"
+        ? { k: "#061433", n: "#1a6dff", d: "#0c3a8a", b: "#5aa6ff" }
+        : cloth === "scarlet"
+          ? { k: "#f7f7f7", n: "#d01218", d: "#8a0c12", b: "#ffffff" }
+          : cloth === "camo"
           ? { k: "#14120e", n: "#6a4e28", d: "#2c2618", b: "#c4a56a" }
           : { k: "#240406", n: "#e10600", d: "#7a0906", b: "#ff5a42" };
   const stripes = ["#d01218", "#f7f7f7", "#1a3fbf"];
@@ -1051,7 +1055,7 @@ function drawOutfit(
     ctx.stroke();
   }
 
-  const draped = cloth === "cape" || cloth === "white" || cloth === "rainbow" || cloth === "camo" || cloth === "stripes" || cloth === "pink" || cloth === "black" || cloth === "gold" || cloth === "ember";
+  const draped = cloth === "cape" || cloth === "white" || cloth === "rainbow" || cloth === "camo" || cloth === "stripes" || cloth === "pink" || cloth === "black" || cloth === "gold" || cloth === "ember" || cloth === "scarlet" || cloth === "blue";
   if (layer === "back" && draped) {
     ctx.save();
     ctx.beginPath();
