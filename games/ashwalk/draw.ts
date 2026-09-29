@@ -1382,20 +1382,17 @@ function drawFriend(
     ctx.strokeRect(center - 8, bottom - 28, 16, 28);
     return;
   }
-  const facing = body.climbing ? "right" : body.facing === -1 ? "left" : "right";
-  const frame = reduced || attract ? 0 : Math.floor(body.anim / (body.climbing ? 0.08 : 0.11)) % 8;
-  const rows = spriteFrame(sprites, facing, body.walking || Boolean(body.climbing && Math.abs(body.vy ?? 0) > 8), frame, facing).frame.rows;
+  if (body.climbing) {
+    if (cloth) drawOutfit(ctx, cloth, center, bottom, 1, "back", t, 0, body.vy ?? 0);
+    drawClimber(ctx, center, bottom, body.anim, body.vy ?? 0, body.hurt, t);
+    return;
+  }
+  const facing = body.facing === -1 ? "left" : "right";
+  const frame = reduced || attract ? 0 : Math.floor(body.anim / 0.11) % 8;
+  const rows = spriteFrame(sprites, facing, body.walking, frame, facing).frame.rows;
   const left = Math.round(center - (16 * scale) / 2);
   const top = Math.round(bottom - 16 * scale);
-  const turned = Boolean(body.climbing);
-  if (turned) {
-    ctx.save();
-    ctx.translate(center, bottom - 22);
-    ctx.scale(0.58, 1);
-    ctx.rotate(Math.sin(body.anim * 14) * 0.16);
-    ctx.translate(-center, -(bottom - 22));
-  }
-  if (cloth) drawOutfit(ctx, cloth, center, bottom, turned ? 1 : body.facing, "back", t, body.vx ?? 0, body.vy ?? 0);
+  if (cloth) drawOutfit(ctx, cloth, center, bottom, body.facing, "back", t, body.vx ?? 0, body.vy ?? 0);
   ctx.save();
   if (body.hurt > 0 && Math.floor(t * 24) % 2 === 0) ctx.globalAlpha = 0.35;
   const pixels: [number, number][] = [];
@@ -1411,19 +1408,109 @@ function drawFriend(
     ctx.fillRect(left + px * scale, top + py * scale, scale, scale);
   }
   ctx.restore();
-  if (cloth) drawOutfit(ctx, cloth, center, bottom, turned ? 1 : body.facing, "front", t, body.vx ?? 0, body.vy ?? 0);
-  if (turned) {
-    ctx.strokeStyle = "#070708";
-    ctx.lineWidth = 2;
-    const grip = Math.sin(body.anim * 14);
-    ctx.beginPath();
-    ctx.moveTo(center - 6, bottom - 28);
-    ctx.lineTo(center - 16, bottom - 34 - grip * 4);
-    ctx.moveTo(center + 6, bottom - 24);
-    ctx.lineTo(center + 16, bottom - 30 + grip * 4);
-    ctx.stroke();
-    ctx.restore();
-  }
+  if (cloth) drawOutfit(ctx, cloth, center, bottom, body.facing, "front", t, body.vx ?? 0, body.vy ?? 0);
+}
+
+const CLIMB_STILL = [
+  "..####....####..",
+  ".##############.",
+  ".##############.",
+  ".##############.",
+  ".##############.",
+  "..############..",
+  "....########....",
+  "....########....",
+  "...##########...",
+  "..############..",
+  ".#.##########.#.",
+  ".##.########.##.",
+  ".##.########.##.",
+  "..#.########.#..",
+  "....###..###....",
+  "....###..###....",
+  "....##....##....",
+  "...###....###...",
+  "...###....###...",
+];
+
+const CLIMB_LEFT = [
+  "..####....####..",
+  ".##############.",
+  ".##############.",
+  ".##############.",
+  ".##############.",
+  "..############..",
+  "....########....",
+  "#...########....",
+  "#...########....",
+  "#..##########...",
+  "....##########..",
+  "....########.#..",
+  "....########.##.",
+  "....########..#.",
+  ".....###..###...",
+  "....###..###....",
+  "....##....##....",
+  "...###....##....",
+  "...###....###...",
+];
+
+const CLIMB_RIGHT = [
+  "..####....####..",
+  ".##############.",
+  ".##############.",
+  ".##############.",
+  ".##############.",
+  "..############..",
+  "....########....",
+  "....########...#",
+  "....########...#",
+  "...##########..#",
+  "..##########....",
+  "..#.########....",
+  ".##.########....",
+  ".#..########....",
+  "...###..###.....",
+  "....###..###....",
+  "....##....##....",
+  "....##....###...",
+  "...###....###...",
+];
+
+function drawClimber(
+  ctx: CanvasRenderingContext2D,
+  center: number,
+  bottom: number,
+  anim: number,
+  vy: number,
+  hurt: number,
+  t: number,
+) {
+  const moving = Math.abs(vy) > 8;
+  const step = moving ? Math.floor(anim * 8) % 2 : 0;
+  const rows = !moving ? CLIMB_STILL : step === 0 ? CLIMB_LEFT : CLIMB_RIGHT;
+  const scale = 2;
+  const width = rows[0]!.length * scale;
+  const height = rows.length * scale;
+  const left = Math.round(center - width / 2);
+  const top = Math.round(bottom - height);
+  ctx.save();
+  if (hurt > 0 && Math.floor(t * 24) % 2 === 0) ctx.globalAlpha = 0.35;
+  ctx.fillStyle = "#f4f1ea";
+  rows.forEach((row, py) => {
+    for (let px = 0; px < row.length; px++) {
+      if (row[px] !== "#") continue;
+      ctx.fillRect(left + px * scale - 1, top + py * scale - 1, scale + 2, scale + 2);
+    }
+  });
+  ctx.fillStyle = "#070708";
+  rows.forEach((row, py) => {
+    for (let px = 0; px < row.length; px++) {
+      if (row[px] !== "#") continue;
+      ctx.fillRect(left + px * scale, top + py * scale, scale, scale);
+    }
+  });
+  ctx.restore();
 }
 
 const COIN = [

@@ -1799,7 +1799,7 @@ export function Playfield({
         </section>
       )}
       {phase === "play" && (
-        <div className="ash-touch" ref={bindTouch}>
+        <div className={pickId === "hoist" ? "ash-touch ash-touch-hoist" : "ash-touch"} ref={bindTouch}>
           <div>
             <button type="button" aria-label="Move left" draggable={false} {...hold("left")}>
               Left
