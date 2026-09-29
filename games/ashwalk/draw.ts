@@ -2069,15 +2069,17 @@ function drawCandle(ctx: CanvasRenderingContext2D, x: number, ground: number, li
   ctx.fillRect(x - 2, ground - h, 4, h);
   const fy = ground - h - 4 + Math.sin(t * 8 + x) * 1.5;
   if (lit) {
-    const glow = ctx.createRadialGradient(x, fy, 1, x, fy, 22);
-    glow.addColorStop(0, "rgba(255,255,255,0.95)");
+    const glow = ctx.createRadialGradient(x, fy, 2, x, fy, 78);
+    glow.addColorStop(0, "rgba(255,255,255,1)");
+    glow.addColorStop(0.2, "rgba(255,250,230,0.95)");
+    glow.addColorStop(0.55, "rgba(255,255,255,0.45)");
     glow.addColorStop(1, "rgba(255,255,255,0)");
     ctx.fillStyle = glow;
     ctx.beginPath();
-    ctx.arc(x, fy, 22, 0, Math.PI * 2);
+    ctx.arc(x, fy, 78, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = "#f7f4ee";
-    ctx.fillRect(x - 1, fy - 8, 2, 8);
+    ctx.fillStyle = "#fffef8";
+    ctx.fillRect(x - 1.5, fy - 14, 3, 16);
   } else {
     ctx.fillStyle = "#3a3a3e";
     ctx.fillRect(x - 1, fy - 4, 2, 5);
@@ -2106,6 +2108,21 @@ function drawYuleSky(ctx: CanvasRenderingContext2D, camera: Camera, t: number, r
     }
   }
   ctx.restore();
+  ctx.save();
+  ctx.translate(camera.x * 0.42, camera.y * 0.15);
+  const pines: [number, number, number][] = [
+    [180, 700, 1.1],
+    [560, 730, 0.75],
+    [1040, 690, 1.3],
+    [1520, 760, 0.9],
+    [1980, 680, 1.15],
+    [2560, 720, 0.85],
+    [3180, 660, 1.2],
+    [3780, 740, 1],
+    [4380, 700, 1.25],
+  ];
+  for (const pine of pines) drawPine(ctx, pine[0], pine[1], pine[2]);
+  ctx.restore();
 }
 
 function drawYuleHill(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) {
@@ -2124,17 +2141,17 @@ function drawYuleHill(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean)
   }
   ctx.fillStyle = "#070708";
   ctx.beginPath();
-  ctx.moveTo(2900, 380);
-  ctx.lineTo(4520, 700);
-  ctx.lineTo(4520, 1100);
-  ctx.lineTo(2900, 1100);
+  ctx.moveTo(3640, 400);
+  ctx.lineTo(4860, 700);
+  ctx.lineTo(4860, 1200);
+  ctx.lineTo(3640, 1200);
   ctx.fill();
   ctx.fillStyle = "rgba(244,241,234,0.88)";
   ctx.beginPath();
-  ctx.moveTo(2900, 378);
-  ctx.lineTo(4520, 698);
-  ctx.lineTo(4520, 702);
-  ctx.lineTo(2900, 382);
+  ctx.moveTo(3640, 398);
+  ctx.lineTo(4860, 698);
+  ctx.lineTo(4860, 704);
+  ctx.lineTo(3640, 404);
   ctx.fill();
   if (reduced) return;
   ctx.fillStyle = "#f7f4ee";
@@ -2147,24 +2164,54 @@ function drawYuleHill(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean)
   ctx.globalAlpha = 1;
 }
 
+function drawPine(ctx: CanvasRenderingContext2D, x: number, ground: number, scale: number) {
+  ctx.save();
+  ctx.translate(x, ground);
+  ctx.scale(scale, scale);
+  ctx.fillStyle = "#070708";
+  ctx.fillRect(-6, 8, 12, 28);
+  ctx.beginPath();
+  ctx.moveTo(0, -168);
+  ctx.lineTo(42, -36);
+  ctx.lineTo(-42, -36);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(0, -108);
+  ctx.lineTo(58, 18);
+  ctx.lineTo(-58, 18);
+  ctx.fill();
+  ctx.fillStyle = "rgba(247,244,238,0.9)";
+  ctx.beginPath();
+  ctx.moveTo(0, -168);
+  ctx.lineTo(12, -142);
+  ctx.lineTo(-10, -146);
+  ctx.fill();
+  ctx.restore();
+}
+
 function drawSled(ctx: CanvasRenderingContext2D, x: number, y: number) {
   ctx.save();
   ctx.translate(x, y);
-  ctx.strokeStyle = "#f4f1ea";
-  ctx.lineWidth = 2;
+  ctx.strokeStyle = "#f7f4ee";
+  ctx.lineWidth = 2.4;
   ctx.lineCap = "round";
   ctx.beginPath();
-  ctx.moveTo(-34, 6);
-  ctx.quadraticCurveTo(-24, 16, 36, 14);
-  ctx.moveTo(-30, 10);
-  ctx.quadraticCurveTo(-20, 20, 34, 18);
-  ctx.moveTo(-16, 2);
-  ctx.lineTo(-16, 12);
-  ctx.moveTo(18, 2);
-  ctx.lineTo(18, 12);
+  ctx.moveTo(-38, -12);
+  ctx.quadraticCurveTo(-18, 0, 42, -1);
+  ctx.moveTo(-34, -14);
+  ctx.quadraticCurveTo(-14, 1, 38, 0);
+  ctx.moveTo(-16, -20);
+  ctx.lineTo(-16, -2);
+  ctx.moveTo(18, -20);
+  ctx.lineTo(18, -1);
   ctx.stroke();
-  ctx.fillStyle = "#141418";
-  ctx.fillRect(-26, -6, 48, 10);
+  ctx.fillStyle = "#1c1c20";
+  ctx.strokeStyle = "#f7f4ee";
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.rect(-30, -28, 54, 12);
+  ctx.fill();
+  ctx.stroke();
   ctx.restore();
 }
 
@@ -3205,7 +3252,7 @@ export function renderFrame(
   }
   if (sim.level.id === "yule" && sim.suck <= 0 && sim.dead <= 0) {
     if (sim.cage > 0) drawSled(ctx, sim.x + PW / 2, sim.y + PH);
-    else drawSled(ctx, 3020, 380);
+    else drawSled(ctx, 3520, 400);
   }
   if (sim.dead > 0) {
     drawCageBones(ctx, sim.x + PW / 2, sim.y + PH, 3.4);
