@@ -519,6 +519,9 @@ function drawCagedFriend(
   ctx.lineTo(hookX, spec.wireY);
   ctx.lineTo(hookX, top);
   ctx.stroke();
+  const turn = spec.rope * Math.PI * 6 + sim.t * 0.4;
+  drawSheave(ctx, spec.axleX, spec.wireY, 10, turn);
+  drawSheave(ctx, hookX, spec.wireY, 10, -turn);
   if (melt < 1 && !spec.empty) {
     ctx.save();
     ctx.beginPath();
