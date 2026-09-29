@@ -144,8 +144,8 @@ function drawRealTree(ctx: CanvasRenderingContext2D, tree: Tree, alpha: number) 
   ctx.save();
   ctx.translate(tree.x, tree.ground);
   ctx.scale(tree.scale, tree.scale);
-  const ink = `rgba(8,8,9,${alpha})`;
-  const leaf = `rgba(10,12,10,${Math.min(1, alpha)})`;
+  const ink = `rgba(108,110,106,${Math.min(0.78, alpha * 0.7)})`;
+  const leaf = `rgba(132,136,128,${Math.min(0.62, alpha * 0.55)})`;
   ctx.fillStyle = ink;
   ctx.strokeStyle = ink;
   ctx.lineCap = "round";
@@ -164,7 +164,7 @@ function drawRealTree(ctx: CanvasRenderingContext2D, tree: Tree, alpha: number) 
   ctx.quadraticCurveTo(10, -62, 13, 12);
   ctx.closePath();
   ctx.fill();
-  ctx.strokeStyle = `rgba(244,241,234,${alpha * 0.16})`;
+  ctx.strokeStyle = `rgba(244,241,234,${Math.min(0.7, alpha * 0.55)})`;
   ctx.lineWidth = 1.1;
   ctx.beginPath();
   ctx.moveTo(-1, -16);
@@ -202,6 +202,12 @@ function drawRealTree(ctx: CanvasRenderingContext2D, tree: Tree, alpha: number) 
   ctx.beginPath();
   ctx.ellipse(0, -158, 34, 20, 0, 0, Math.PI * 2);
   ctx.fill();
+  ctx.fillStyle = `rgba(244,241,234,${Math.min(0.45, alpha * 0.32)})`;
+  for (const tip of tips) {
+    ctx.beginPath();
+    ctx.ellipse(tip.x - 8, tip.y - 16, 10, 6, -0.4, 0, Math.PI * 2);
+    ctx.fill();
+  }
   ctx.strokeStyle = ink;
   ctx.lineWidth = 1.15;
   for (let i = 0; i < 5; i++) {
@@ -376,6 +382,15 @@ function drawTerrain(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) 
     ctx.lineTo(rect.x - 40, rect.y + drop);
     ctx.closePath();
     ctx.fill();
+    if (sim.level.id === "shore") {
+      const lip = ctx.createLinearGradient(rect.x, rect.y - 16, rect.x, rect.y + 4);
+      lip.addColorStop(0, "rgba(255,255,255,0)");
+      lip.addColorStop(1, "rgba(244,241,234,0.55)");
+      ctx.fillStyle = lip;
+      ctx.fillRect(rect.x, rect.y - 14, rect.w, 16);
+      ctx.fillStyle = "rgba(255,255,255,0.92)";
+      ctx.fillRect(rect.x, rect.y, rect.w, 2);
+    }
     if (sim.level.id !== "roof" && sim.level.id !== "gale" && sim.level.id !== "choir" && sim.level.id !== "gear" && sim.level.id !== "hoist") drawGrass(ctx, rect, 26);
   }
   for (const rect of bodies) {
@@ -385,7 +400,7 @@ function drawTerrain(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) 
     else if (sim.level.platforms.find((item) => item.id === rect.id)?.gear) drawGearTooth(ctx, sim, rect);
     else if (rect.kind === "sway" || rect.kind === "rope") {
       drawCage(ctx, rect, sim.rope < 1 && rect.id === "cageC");
-    } else drawPlank(ctx, rect, rect.kind === "crumble" || (sim.crumbles[rect.id]?.timer ?? 0) > 0.9, sim.level.id === "choir");
+    } else drawPlank(ctx, rect, rect.kind === "crumble" || (sim.crumbles[rect.id]?.timer ?? 0) > 0.9, sim.level.id === "choir" || sim.level.id === "shore");
   }
   for (const plat of sim.level.platforms) {
     if (plat.kind === "ladder") drawLadder(ctx, plat);
