@@ -959,7 +959,87 @@ const TUNNEL: Level = {
   light: { x: 900, y: 80 },
 };
 
-export const LEVELS: readonly Level[] = [SHORE, LATCH, GALE, CHOIR, GEAR, ROOF, ANTLER, MOON, MIRROR, TUNNEL];
+/** Fog, a crane, and ladders. Climb up. Climb down. */
+const HOIST: Level = {
+  id: "hoist",
+  title: "The hoist",
+  kicker: "The ladder is the only way.",
+  rule: "Hold up to climb. Hold down to climb down. Step off the side to let go. Spiders use the rungs. Rats keep the floor.",
+  together: "The ladders are shared. So are the spiders.",
+  clearKicker: "The hoist",
+  clearTitle: "You came back down",
+  worldW: 2300,
+  killY: 980,
+  poster: 400,
+  introCrow: false,
+  platforms: [
+    { id: "yard", kind: "solid", terrain: true, x: 0, y: 700, w: 1060, h: 420 },
+    { id: "l1", kind: "ladder", x: 980, y: 360, w: 28, h: 340 },
+    { id: "arm", kind: "solid", x: 180, y: 360, w: 860, h: 18 },
+    { id: "l2", kind: "ladder", x: 220, y: 360, w: 28, h: 200 },
+    { id: "cat", kind: "solid", x: 40, y: 560, w: 280, h: 16 },
+    { id: "l3", kind: "ladder", x: 80, y: 120, w: 28, h: 440 },
+    { id: "high", kind: "solid", x: 60, y: 120, w: 760, h: 16 },
+    { id: "l4", kind: "ladder", x: 760, y: 120, w: 28, h: 280 },
+    { id: "mid", kind: "solid", x: 700, y: 400, w: 500, h: 16 },
+    { id: "l5", kind: "ladder", x: 1160, y: 400, w: 28, h: 300 },
+    { id: "isle", kind: "solid", terrain: true, x: 1120, y: 700, w: 150, h: 420 },
+    { id: "l6", kind: "ladder", x: 1520, y: 200, w: 28, h: 500 },
+    { id: "yard2", kind: "solid", terrain: true, x: 1360, y: 700, w: 740, h: 420 },
+    { id: "exit", kind: "solid", x: 1480, y: 200, w: 640, h: 18 },
+  ],
+  moths: [
+    { id: "m1", x: 240, y: 640 },
+    { id: "m2", x: 520, y: 300 },
+    { id: "m3", x: 160, y: 500 },
+    { id: "m4", x: 420, y: 70 },
+    { id: "m5", x: 860, y: 340 },
+    { id: "m6", x: 1180, y: 640 },
+    { id: "m7", x: 1680, y: 140 },
+  ],
+  checkpoints: [
+    { id: "yard", x: 120, surface: 700 },
+    { id: "arm", x: 640, surface: 360 },
+    { id: "cat", x: 160, surface: 560 },
+    { id: "high", x: 360, surface: 120 },
+    { id: "mid", x: 860, surface: 400 },
+    { id: "isle", x: 1160, surface: 700 },
+    { id: "yard2", x: 1600, surface: 700 },
+    { id: "exit", x: 1680, surface: 200 },
+  ],
+  rope: null,
+  shrines: [{ id: "shrine-end", x: 1760, y: 70, w: 80, h: 130 }],
+  lamps: [
+    { id: "l-yard", x: 180, y: 610, w: 56, h: 92 },
+    { id: "l-arm", x: 520, y: 270, w: 56, h: 92 },
+    { id: "l-high", x: 400, y: 30, w: 56, h: 92 },
+    { id: "l-exit", x: 1600, y: 110, w: 56, h: 92 },
+  ],
+  beacons: [],
+  plates: [],
+  goal: { id: "goal", x: 1920, y: 30, w: 90, h: 170 },
+  pit: null,
+  wind: null,
+  birds: [
+    { x0: 180, x1: 860, y: 678, amp: 0, speed: 46, start: 420, kind: "rat" },
+    { x0: 1040, x1: 1400, y: 678, amp: 0, speed: 46, start: 1200, kind: "rat" },
+    { x0: 1500, x1: 1980, y: 678, amp: 0, speed: 52, start: 1680, kind: "rat" },
+  ],
+  spiders: [
+    { id: "arm", mode: "crawl", x0: 280, x1: 860, y: 342, ceil: 0, speed: 42, reach: 0, period: 1, phase: 0.2 },
+    { id: "high", mode: "crawl", x0: 180, x1: 680, y: 102, ceil: 0, speed: 48, reach: 0, period: 1, phase: 0.6 },
+    { id: "mid", mode: "crawl", kind: "scorpion", x0: 740, x1: 1000, y: 382, ceil: 0, speed: 36, reach: 0, period: 1, phase: 0.3 },
+    { id: "rung", mode: "hang", x0: 1534, x1: 1534, y: 230, ceil: 180, speed: 0, reach: 430, period: 4.6, phase: 0.4 },
+  ],
+  chapters: [
+    { x: 0, id: "hoist", title: "The hoist", kicker: "Up the ladder." },
+    { x: 700, id: "beam", title: "The arm", kicker: "Down, then higher." },
+    { x: 1380, id: "last", title: "The last rung", kicker: "Wait for the spider." },
+  ],
+  light: { x: 640, y: 80 },
+};
+
+export const LEVELS: readonly Level[] = [SHORE, LATCH, GALE, CHOIR, GEAR, ROOF, ANTLER, MOON, MIRROR, TUNNEL, HOIST];
 
 export function previousFog(id: string): string | null {
   const index = LEVELS.findIndex((level) => level.id === id);
@@ -973,9 +1053,11 @@ export const TRY_ALL = false;
 export const TRY_TUNNEL = false;
 /** Lets the choir be played before the road is open. */
 export const TRY_CHOIR = false;
+/** The hoist is open to try. Set false to hold it until January 1. */
+export const TRY_HOIST = true;
 
 export function fogTry(id: string) {
-  return (id === "tunnel" && TRY_TUNNEL) || (id === "choir" && TRY_CHOIR);
+  return (id === "tunnel" && TRY_TUNNEL) || (id === "choir" && TRY_CHOIR) || (id === "hoist" && TRY_HOIST);
 }
 
 export function fogPrice(_id: string) {
@@ -985,9 +1067,11 @@ export function fogPrice(_id: string) {
 export function fogReleased(id: string, now = new Date()) {
   if (TRY_ALL) return true;
   if (id === "tunnel" && TRY_TUNNEL) return true;
+  if (id === "hoist" && TRY_HOIST) return true;
   if (id === "moon") return now >= new Date(2026, 9, 1);
   if (id === "mirror") return now >= new Date(2026, 10, 1);
   if (id === "tunnel") return now >= new Date(2026, 11, 1);
+  if (id === "hoist") return now >= new Date(2027, 0, 1);
   return true;
 }
 

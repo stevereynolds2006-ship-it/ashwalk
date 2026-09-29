@@ -583,7 +583,9 @@ export function Playfield({
           ? "The mirror opens November 1. Coming soon."
           : id === "tunnel"
             ? "The tunnel opens December 1. Coming soon."
-            : "The moon opens October 1. Coming soon.",
+            : id === "hoist"
+              ? "The hoist opens January 1. Coming soon."
+              : "The moon opens October 1. Coming soon.",
       );
       return;
     }
@@ -1402,7 +1404,7 @@ export function Playfield({
               : "Connect a wallet to buy boards with Rare coins."}
           </p>
           <p>The shore is free. You start it with 2 coins. Coins you pick up only turn things on inside the stage. Rare coins pay to open the next fog and to buy a cape. Beat a fog, then the next one is 25 Rare coins. You cannot buy the next one until the one before it is beaten.</p>
-          <p>Every month a new map opens. A new cape opens each week, starting October 1. Capes are 15 Rare coins. The Halloween cape and the Christmas cape are 25. Only the red cape is open now.</p>
+          <p>Every month a new map opens. A new cape opens each week, starting October 1. Capes are 15 Rare coins. The Halloween cape and the Christmas cape are 25. Only the red cape is open now. The hoist is the January map. It is open to try.</p>
           {stakeMsg && (
             <p className="ash-error" role="alert">
               {stakeMsg}
@@ -1440,7 +1442,7 @@ export function Playfield({
             </button>
           </div>
           <p className="ash-note">
-            A and D, or the left and right arrow keys, move. W, up, or space jumps. S drops through a cage.
+            A and D, or the left and right arrow keys, move. W, up, or space climbs a ladder and jumps. S climbs down and drops through a cage.
             E pulls, lights a bell, or buys a lantern. A lantern costs 1 coin you picked up in the stage and lasts 13 seconds. The flashlight costs 5 of those coins. On the moon that buy is a saber, not a flashlight. Stand on a plank too long and it falls.
             It comes back after 4 seconds. Three lives to a board. After that, one more life is 10 Rare coins.
             A death burns half the coins you picked up in the stage. Rare coins you spend are split. Half is sent, then half is burned. Confirm both.
@@ -1518,7 +1520,7 @@ export function Playfield({
               : "Connect a wallet to buy a board with Rare coins."}
           </p>
           <p className="ash-note">
-            The shore is free. Beat a fog before you can buy the next one. Every board after the shore is 25 Rare coins. The moon opens October 1, the mirror November 1, and the tunnel December 1.
+            The shore is free. Beat a fog before you can buy the next one. Every board after the shore is 25 Rare coins. The moon opens October 1, the mirror November 1, the tunnel December 1, and the hoist January 1.
           </p>
           <LevelList
             current={pickId}
@@ -1837,7 +1839,7 @@ function LevelList({
     <div className="ash-levels">
       {LEVELS.map((level) => {
         const opens =
-          level.id === "moon" ? "October 1" : level.id === "mirror" ? "November 1" : level.id === "tunnel" ? "December 1" : null;
+          level.id === "moon" ? "October 1" : level.id === "mirror" ? "November 1" : level.id === "tunnel" ? "December 1" : level.id === "hoist" ? "January 1" : null;
         const soon = !TRY_ALL && opens != null && !fogReleased(level.id);
         const price = fogPrice(level.id);
         const prev = previousFog(level.id);
@@ -1963,6 +1965,7 @@ function musicScene(phase: Phase, sim: Sim): MusicScene {
   if (phase === "rite") return "rite";
   if (phase === "clear") return "clear";
   if (phase === "title" || phase === "levels" || phase === "lobby" || phase === "clothes") return "title";
+  if (sim.level.id === "hoist") return "works";
   if (sim.level.id === "tunnel") return "gale";
   if (sim.level.id === "mirror") return "mirror";
   if (sim.level.id === "moon") return "moon";
@@ -1990,7 +1993,7 @@ function promptFor(sim: Sim, phase: Phase) {
   if (phase !== "play" || sim.won || sim.dead > 0) return "";
   if (sim.level.id === "gale" && sim.cage > 0) return "Jump rises. Down drops. 8 seconds to the hole.";
   if (sim.level.id === "moon" && sim.cage > 0) return "Light speed. Eight seconds.";
-  if (sim.nearBeacon) return "E · light the bell";
+  if (sim.climbing) return "Up climbs. Down climbs. Step off the side.";
   if (sim.plateAsleep && sim.level.id === "latch" && sim.rope < 1) return "Pull the pulley. Then the plate.";
   if (sim.plateAsleep) return "Light every bell. The plate is asleep.";
   if (sim.nearRope) return sim.level.id === "shore" ? "Hold E · crank them down" : "Hold E · wind the pulley";

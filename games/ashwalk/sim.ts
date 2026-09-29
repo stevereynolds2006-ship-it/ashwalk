@@ -151,6 +151,8 @@ export type Sim = {
   altarLeft: Record<string, number>;
   /** Moon saber is in the hand. */
   saber: boolean;
+  /** On a ladder. Up climbs. Down climbs. */
+  climbing: boolean;
   /** Bird indexes the saber has cut. */
   slain: Set<number>;
 };
@@ -237,6 +239,7 @@ export function createSim(level: Level = SHORE): Sim {
     altars: new Set(),
     altarLeft: {},
     saber: false,
+    climbing: false,
     slain: new Set(),
   };
 }
@@ -388,6 +391,7 @@ export function rectsAt(sim: Sim, reduced: boolean): Rect[] {
       });
       continue;
     }
+    if (plat.kind === "ladder") continue;
     if (plat.kind === "rope") {
       const y0 = plat.y0 ?? plat.y;
       const y1 = plat.y1 ?? plat.y;
@@ -519,6 +523,7 @@ function respawn(sim: Sim) {
   sim.drop = 0;
   sim.cage = 0;
   sim.suck = 0;
+  sim.climbing = false;
   if (sim.level.id === "gale") sim.palY = 0;
   sim.lastRects = null;
   const stalk = sim.level.stalker;
@@ -703,12 +708,26 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
 
   let gravity = sim.vy < 0 ? GRAV_UP : GRAV_DOWN;
   if (Math.abs(sim.vy) < APEX) gravity = GRAV_APEX;
-  sim.vy = Math.min(MAX_FALL, sim.vy + gravity * dt);
+  const shaft = ladderHit(sim);
+  if (shaft && (input.jumpHeld || input.down)) sim.climbing = true;
+  if (!shaft) sim.climbing = false;
+  if (sim.climbing && shaft) {
+    sim.vx *= 0.35;
+    if (input.down && !input.jumpHeld) sim.vy = 128;
+    else if (input.jumpHeld) sim.vy = -128;
+    else sim.vy = 0;
+    sim.grounded = false;
+    sim.groundId = null;
+    sim.groundKind = null;
+  } else {
+    sim.vy = Math.min(MAX_FALL, sim.vy + gravity * dt);
+  }
 
   if (sim.grounded) sim.coyote = COYOTE;
   else sim.coyote = Math.max(0, sim.coyote - dt);
   if (input.jumpPressed) sim.jumpBuffer = BUFFER;
   else sim.jumpBuffer = Math.max(0, sim.jumpBuffer - dt);
+  if (sim.climbing) sim.jumpBuffer = 0;
   if (sim.drop > 0) sim.drop = Math.max(0, sim.drop - dt);
 
   if (input.down && sim.grounded && sim.groundKind && sim.groundKind !== "solid" && sim.groundKind !== "gate") {
@@ -720,7 +739,7 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
     sim.coyote = 0;
   }
 
-  const canJump = sim.jumpBuffer > 0 && (sim.grounded || sim.coyote > 0);
+  const canJump = !sim.climbing && sim.jumpBuffer > 0 && (sim.grounded || sim.coyote > 0);
   if (canJump) {
     sim.vy = JUMP;
     sim.grounded = false;
@@ -740,7 +759,7 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
   const prevX = sim.x;
   const prevY = sim.y;
   sim.x += sim.vx * dt;
-  resolveX(sim, prevX, prevY, nextBodies);
+  if (!sim.climbing) resolveX(sim, prevX, prevY, nextBodies);
   const midY = sim.y;
   sim.y += sim.vy * dt;
   const landed = resolveY(sim, prevX, midY, nextBodies);
@@ -1144,6 +1163,17 @@ function stepHunter(sim: Sim, dt: number, events: StepEvents) {
   }
 }
 
+function ladderHit(sim: Sim) {
+  const cx = sim.x + PW / 2;
+  for (const plat of sim.level.platforms) {
+    if (plat.kind !== "ladder") continue;
+    if (cx < plat.x + 2 || cx > plat.x + plat.w - 2) continue;
+    if (sim.y + PH < plat.y || sim.y > plat.y + plat.h) continue;
+    return plat;
+  }
+  return null;
+}
+
 function blocksSide(kind: Kind) {
   return kind === "solid" || kind === "gate";
 }
@@ -1181,6 +1211,7 @@ function resolveY(sim: Sim, prevX: number, prevY: number, bodies: Rect[]) {
     if (choirSafeDrop(sim, plat.id, plat.y - (sim.crumbles[plat.id]?.fall ?? 0), plat.x, plat.w)) continue;
     if (!overlaps(sim.x, sim.y, PW, PH, plat, 0)) continue;
     const topOnly = plat.kind !== "solid" && plat.kind !== "gate";
+    if (sim.climbing && plat.kind === "solid" && sim.vy < 0) continue;
     if (topOnly) {
       if (sim.drop > 0 && sim.dropId === plat.id) continue;
       if (sim.vy < 0) continue;

@@ -68,6 +68,7 @@ const SKY: Record<string, [string, string, string, string]> = {
   antler: ["#101114", "#c5c3be", "#6d6b68", "#101114"],
   moon: ["#050506", "#101218", "#1a1c22", "#050506"],
   tunnel: ["#050506", "#101012", "#0c0c0e", "#050506"],
+  hoist: ["#101012", "#cfcbc6", "#8a8682", "#0c0c0e"],
 };
 
 function drawTree(ctx: CanvasRenderingContext2D, tree: Tree, alpha: number) {
@@ -258,7 +259,7 @@ function drawTerrain(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) 
     ctx.lineTo(rect.x - 40, rect.y + drop);
     ctx.closePath();
     ctx.fill();
-    if (sim.level.id !== "roof" && sim.level.id !== "gale" && sim.level.id !== "choir" && sim.level.id !== "gear") drawGrass(ctx, rect, 26);
+    if (sim.level.id !== "roof" && sim.level.id !== "gale" && sim.level.id !== "choir" && sim.level.id !== "gear" && sim.level.id !== "hoist") drawGrass(ctx, rect, 26);
   }
   for (const rect of bodies) {
     if (rect.terrain) continue;
@@ -268,6 +269,9 @@ function drawTerrain(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) 
     else if (rect.kind === "sway" || rect.kind === "rope") {
       drawCage(ctx, rect, sim.rope < 1 && rect.id === "cageC");
     } else drawPlank(ctx, rect, rect.kind === "crumble" || (sim.crumbles[rect.id]?.timer ?? 0) > 0.9, sim.level.id === "choir");
+  }
+  for (const plat of sim.level.platforms) {
+    if (plat.kind === "ladder") drawLadder(ctx, plat);
   }
   if (sim.level.id === "choir") {
     for (const rect of bodies) {
@@ -2097,6 +2101,43 @@ function drawCrow(ctx: CanvasRenderingContext2D, x: number, y: number, flap: num
   ctx.restore();
 }
 
+function drawLadder(ctx: CanvasRenderingContext2D, plat: { x: number; y: number; w: number; h: number }) {
+  ctx.strokeStyle = "#1c1c20";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(plat.x + 3, plat.y);
+  ctx.lineTo(plat.x + 3, plat.y + plat.h);
+  ctx.moveTo(plat.x + plat.w - 3, plat.y);
+  ctx.lineTo(plat.x + plat.w - 3, plat.y + plat.h);
+  ctx.stroke();
+  ctx.fillStyle = "#141418";
+  for (let y = plat.y + 12; y < plat.y + plat.h - 6; y += 16) ctx.fillRect(plat.x + 3, y, plat.w - 6, 3);
+}
+
+function drawHoistFog(ctx: CanvasRenderingContext2D, camera: { x: number; y: number }, t: number, reduced: boolean) {
+  ctx.save();
+  ctx.translate(camera.x * 0.35, camera.y * 0.2);
+  ctx.fillStyle = "rgba(12,12,14,0.88)";
+  ctx.fillRect(180, 80, 620, 46);
+  ctx.fillRect(760, 80, 36, 18);
+  ctx.strokeStyle = "rgba(12,12,14,0.9)";
+  ctx.lineWidth = 8;
+  ctx.beginPath();
+  ctx.moveTo(820, 90);
+  ctx.lineTo(820, 420);
+  ctx.stroke();
+  for (let y = 110; y < 410; y += 22) ctx.fillRect(808, y, 24, 3);
+  ctx.fillStyle = "rgba(20,20,22,0.55)";
+  ctx.fillRect(-40, 430, 1600, 18);
+  ctx.restore();
+  if (reduced) return;
+  ctx.fillStyle = "rgba(255,255,255,0.05)";
+  for (let i = 0; i < 8; i++) {
+    const x = 200 + i * 280 + Math.sin(t * 0.2 + i) * 12;
+    ctx.fillRect(x, 60 + (i % 3) * 40, 90, 160);
+  }
+}
+
 function drawShrine(ctx: CanvasRenderingContext2D, x: number, y: number, t: number) {
   ctx.fillStyle = "#070708";
   ctx.fillRect(x, y, 8, 46);
@@ -2113,7 +2154,7 @@ function bellSurface(sim: Sim, x: number, hint: number) {
   let best: number | null = null;
   let bestDist = 90;
   for (const plat of sim.level.platforms) {
-    if (plat.kind === "gate" || plat.kind === "rope" || plat.gear) continue;
+    if (plat.kind === "gate" || plat.kind === "rope" || plat.kind === "ladder" || plat.gear) continue;
     if (x < plat.x + 4 || x > plat.x + plat.w - 4) continue;
     const dist = Math.abs(plat.y - hint);
     if (dist < bestDist) {
@@ -2649,6 +2690,8 @@ export function renderFrame(
     drawChoirGear(ctx, camera, sim.t, reduced);
   } else if (sim.level.id === "gear") {
     drawGearHall(ctx, camera, sim, reduced);
+  } else if (sim.level.id === "hoist") {
+    drawHoistFog(ctx, camera, sim.t, reduced);
   } else {
     ctx.save();
     ctx.translate(camera.x * 0.72, camera.y * 0.4);

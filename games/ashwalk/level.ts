@@ -1,4 +1,4 @@
-export type Kind = "solid" | "oneway" | "sway" | "rope" | "crumble" | "gate";
+export type Kind = "solid" | "oneway" | "sway" | "rope" | "crumble" | "gate" | "ladder";
 
 export type Platform = {
   id: string;
