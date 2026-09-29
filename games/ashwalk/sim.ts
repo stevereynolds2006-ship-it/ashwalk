@@ -58,6 +58,8 @@ export type RemoteBody = { x: number; y: number; dead: boolean };
 export type SharedWorld = {
   rope?: number;
   rope2?: number;
+  rope3?: number;
+  saved?: number;
   pulling?: boolean;
   moths?: string[];
   beacons?: string[];
@@ -85,6 +87,9 @@ export type Sim = {
   run: number;
   rope: number;
   rope2: number;
+  rope3: number;
+  /** Seconds beside the last cage. They follow once this passes 2. */
+  saved: number;
   pulling: boolean;
   won: boolean;
   dead: number;
@@ -182,6 +187,8 @@ export function createSim(level: Level = SHORE): Sim {
     run: 0,
     rope: 0,
     rope2: 0,
+    rope3: 0,
+    saved: 0,
     pulling: false,
     won: false,
     dead: 0,
@@ -244,6 +251,11 @@ export function applyShared(sim: Sim, world: SharedWorld) {
     sim.rope2 = world.rope2;
     if (world.rope2 > 0) sim.pulling = true;
   }
+  if (typeof world.rope3 === "number" && world.rope3 > sim.rope3) {
+    sim.rope3 = world.rope3;
+    if (world.rope3 > 0) sim.pulling = true;
+  }
+  if (typeof world.saved === "number" && world.saved > sim.saved) sim.saved = world.saved;
   for (const id of world.moths ?? []) sim.moths.add(id);
   for (const id of world.beacons ?? []) {
     if (sim.level.beacons.some((beacon) => beacon.id === id)) sim.beacons.add(id);
@@ -271,6 +283,8 @@ export function snapshotWorld(sim: Sim): SharedWorld {
   return {
     rope: sim.rope,
     rope2: sim.rope2,
+    rope3: sim.rope3,
+    saved: sim.saved,
     pulling: sim.pulling,
     moths: [...sim.moths],
     beacons: [...sim.beacons],
@@ -466,7 +480,7 @@ function palSupported(sim: Sim, x: number, y: number) {
 }
 
 function stepPal(sim: Sim, dt: number) {
-  if (sim.rope < 1 || sim.dead > 0 || sim.won) return;
+  if (sim.level.id !== "shore" || sim.saved <= 2 || sim.dead > 0 || sim.won || sim.suck > 0) return;
   if (!sim.grounded) return;
   const behind = sim.x - sim.facing * 38;
   const apart = Math.abs(sim.x - sim.palX) > 72 || Math.abs(sim.y - sim.palY) > 28;
@@ -533,7 +547,7 @@ function respawn(sim: Sim) {
       sim.stalkY = rock.surface;
     }
   }
-  if (sim.level.id === "shore" && sim.rope >= 1) {
+  if (sim.level.id === "shore" && sim.saved > 2) {
     sim.palX = sim.x - sim.facing * 40;
     sim.palY = sim.y;
     sim.palFace = sim.facing;
@@ -830,6 +844,28 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
           const nearFly = Math.abs(sim.x - 4788) < 180 && sim.y < 520;
           if (sim.feast2 > 0 || nearFly) sim.feast2 += dt;
         }
+        const endCrank = { id: "rope-end", x: 7360, y: 350, w: 110, h: 140 };
+        const atEnd = sim.rope3 < 1 && zoneHit(sim.x, sim.y, endCrank);
+        if (atEnd) sim.nearRope = true;
+        if (atEnd && input.interact) {
+          const before = sim.rope3;
+          if (!sim.pulling) events.pull = true;
+          sim.pulling = true;
+          sim.rope3 = Math.min(1, sim.rope3 + dt / 1.7);
+          if (before < 1 && sim.rope3 === 1) events.rope = true;
+        }
+        if (sim.rope3 >= 1) {
+          const nearEnd = Math.abs(sim.x - 7600) < 160 && sim.y < 530;
+          if (sim.saved > 0 || nearEnd) {
+            const before = sim.saved;
+            sim.saved += dt;
+            if (before <= 2 && sim.saved > 2) {
+              sim.palX = 7588;
+              sim.palY = 480 - PH;
+              sim.palFace = 1;
+            }
+          }
+        }
       }
     } else if (input.interactPressed && sim.nearRope && !sim.pulling) {
       sim.pulling = true;
@@ -967,8 +1003,9 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
   }
 
   if (events.beacon === "lock") events.beacon = null;
+  stepPal(sim, dt);
   sim.doorLocked =
-    (level.id === "shore" && (sim.rope < 1 || sim.rope2 < 1)) ||
+    (level.id === "shore" && (sim.rope < 1 || sim.rope2 < 1 || sim.saved <= 2)) ||
     (level.beacons.length > 0 && sim.beacons.size < level.beacons.length) ||
     (!!level.stalker && !sim.caged) ||
     (!!level.hunter && sim.wake < 1) ||
@@ -982,6 +1019,10 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
     const gy = level.goal.y + level.goal.h * 0.42 - PH / 2;
     sim.x += (gx - sim.x) * Math.min(1, dt * 4);
     sim.y += (gy - sim.y) * Math.min(1, dt * 4);
+    if (level.id === "shore" && sim.saved > 2) {
+      sim.palX += (gx - 22 - sim.palX) * Math.min(1, dt * 4);
+      sim.palY += (gy - sim.palY) * Math.min(1, dt * 4);
+    }
     if (sim.suck >= 1) {
       sim.won = true;
       events.goal = true;

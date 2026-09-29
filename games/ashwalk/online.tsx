@@ -206,6 +206,8 @@ export function Online({
           applyShared(simRef.current, {
             rope: pose.r,
             rope2: pose.r2,
+            rope3: pose.r3,
+            saved: pose.sv,
             moths: pose.m,
             beacons: pose.b,
             crumbles: pose.c.map(([id, fall, gone]) => ({
@@ -275,6 +277,8 @@ export function Online({
           applyShared(sim, {
             rope: typeof data.rope === "number" ? data.rope : undefined,
             rope2: typeof data.rope2 === "number" ? data.rope2 : undefined,
+            rope3: typeof data.rope3 === "number" ? data.rope3 : undefined,
+            saved: typeof data.saved === "number" ? data.saved : undefined,
             pulling: data.pulling === true,
             moths: stringList(data.moths),
             beacons: stringList(data.beacons),

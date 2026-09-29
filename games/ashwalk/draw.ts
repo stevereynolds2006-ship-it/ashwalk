@@ -314,6 +314,7 @@ function drawCagedFriend(
     floor: number;
     axleX: number;
     wireY: number;
+    empty?: boolean;
   },
 ) {
   const free = spec.rope >= 1;
@@ -343,7 +344,7 @@ function drawCagedFriend(
   ctx.lineTo(hookX, spec.wireY);
   ctx.lineTo(hookX, top);
   ctx.stroke();
-  if (melt < 1) {
+  if (melt < 1 && !spec.empty) {
     ctx.save();
     ctx.beginPath();
     ctx.rect(x - 24, y + melt * 46, 70, 80);
@@ -372,7 +373,7 @@ function drawCagedFriend(
   ctx.fillRect(cageX, top + cageH - 7, cageW, 7);
   for (let i = 0; i < 5; i++) ctx.fillRect(cageX + 6 + i * 18, top, 4, cageH);
   ctx.restore();
-  if (free && spec.feast < 3) {
+  if (free && spec.feast < 3 && !spec.empty) {
     ctx.strokeStyle = "#f4f1ea";
     ctx.lineWidth = 2;
     ctx.beginPath();
@@ -2684,6 +2685,18 @@ export function renderFrame(
       axleX: 4840,
       wireY: 96,
     });
+    drawCagedFriend(ctx, sprites, sim, reduced, cloth, {
+      rope: sim.rope3,
+      feast: 0,
+      startX: 7488,
+      landX: 7560,
+      hangTop: 160,
+      landTop: 380,
+      floor: 480,
+      axleX: 7410,
+      wireY: 110,
+      empty: sim.saved > 2,
+    });
   }
   if (sim.level.id === "latch") drawPulley(ctx, sim);
   if (sim.level.id === "roof") drawDrainTrash(ctx, sim.t, reduced);
@@ -2789,6 +2802,27 @@ export function renderFrame(
     ctx.scale(scale, scale);
     ctx.translate(-cx, -cy);
     ctx.globalAlpha = 1 - sim.suck * 0.9;
+  }
+  if (sim.level.id === "shore" && sim.saved > 2) {
+    const walking = sim.suck <= 0 && Math.abs(sim.x - sim.facing * 38 - sim.palX) > 8;
+    drawFriend(
+      ctx,
+      sprites,
+      {
+        x: sim.palX,
+        y: sim.palY,
+        facing: sim.palFace,
+        walking,
+        anim: walking ? sim.t * 8 : 0,
+        hurt: 0,
+        vx: sim.facing * 40,
+        vy: 0,
+      },
+      sim.t,
+      reduced,
+      false,
+      cloth,
+    );
   }
   drawFriend(
     ctx,

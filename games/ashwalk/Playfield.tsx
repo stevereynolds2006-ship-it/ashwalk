@@ -753,6 +753,8 @@ export function Playfield({
             n: sim.won ? 1 : 0,
             r: q(sim.rope),
             r2: q(sim.rope2),
+            r3: q(sim.rope3),
+            sv: q(sim.saved),
             c: Object.entries(sim.crumbles)
               .filter(([, crumb]) => crumb.timer > 0 || crumb.fall > 0 || crumb.gone)
               .map(([id, crumb]) => [id, q(crumb.fall), crumb.gone ? 1 : 0]),
@@ -1859,6 +1861,7 @@ function promptFor(sim: Sim, phase: Phase) {
   if (sim.holding) return "Holding the gate";
   if (sim.gateSeconds > 0) return `Gate ${sim.gateSeconds.toFixed(1)}`;
   if (sim.nearGoal && sim.doorLocked) {
+    if (sim.level.id === "shore" && sim.saved <= 2) return "Lower the last cage. They leave with you.";
     if (sim.level.combo && !comboSet(sim)) return "The lock is not the code";
     if (sim.level.hunter && sim.wake < 1) return "Reach him. Then the door opens behind you.";
     return "The door wants every bell";

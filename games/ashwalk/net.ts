@@ -27,6 +27,8 @@ export type PoseMsg = {
   n: 0 | 1;
   r: number;
   r2?: number;
+  r3?: number;
+  sv?: number;
   c: [string, number, number][];
   m: string[];
   b: string[];
@@ -57,6 +59,8 @@ export function asPose(data: unknown): PoseMsg | null {
     n: data.n === 1 ? 1 : 0,
     r: typeof data.r === "number" ? data.r : 0,
     r2: typeof data.r2 === "number" ? data.r2 : 0,
+    r3: typeof data.r3 === "number" ? data.r3 : 0,
+    sv: typeof data.sv === "number" ? data.sv : 0,
     c: crumbles,
     m: strings(data.m),
     b: strings(data.b),
