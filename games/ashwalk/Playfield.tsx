@@ -1303,7 +1303,7 @@ export function Playfield({
               ? `You have ${formatRareCoins(spendable(rareBalance ?? walletCoins, payingAccount) ?? 0n)} Rare coins. Only the red cape is open.`
               : "Connect a wallet to buy a cape with Rare coins."}
           </p>
-          <p className="ash-note">Only the red cape is open, at 15 Rare coins. Then one a week, each 15 Rare coins: white October 1, rainbow October 8, camo October 15, stripes October 22, pink October 29, black November 5, gold November 12, ember November 19, scarlet November 26, and blue December 3.</p>
+          <p className="ash-note">Only the red cape is open, at 15 Rare coins. Then one a week, each 15 Rare coins: white October 1, rainbow October 8, camo October 15, stripes October 22, pink October 29, the Halloween cape October 31, black November 5, gold November 12, ember November 19, scarlet November 26, and blue December 3.</p>
           <div className="ash-levels">
             {outfitList().map((cloth) => {
               const locked = !clothReleased(cloth.id);

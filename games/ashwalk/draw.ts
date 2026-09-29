@@ -996,6 +996,12 @@ function drawDrapedCape(
       const trail = back * (0.7 + Math.max(0, run) * 1.25);
       let color = tone[mark] ?? tone.n;
       if (cloth === "rainbow") color = mark === "k" ? "#141416" : bands[Math.min(bands.length - 1, Math.floor((y / CAPE_DRAPE.length) * bands.length))]!;
+      if (cloth === "halloween") {
+        const band = Math.floor((x + y) / 5) % 4;
+        const colors = ["#f08a14", "#6a2ca8", "#f3d7b0", "#7a3cc0"];
+        const shades = ["#c45a08", "#3d1468", "#d8c0a0", "#4a1878"];
+        color = mark === "k" ? "#1a0a14" : mark === "d" ? shades[band]! : colors[band]!;
+      }
       if (cloth === "stripes") {
         const band = Math.floor((x + y) / 5) % 3;
         color = mark === "k" ? "#12060a" : mark === "d" ? stripeShade[band]! : stripes[band]!;
@@ -1055,7 +1061,7 @@ function drawOutfit(
     ctx.stroke();
   }
 
-  const draped = cloth === "cape" || cloth === "white" || cloth === "rainbow" || cloth === "camo" || cloth === "stripes" || cloth === "pink" || cloth === "black" || cloth === "gold" || cloth === "ember" || cloth === "scarlet" || cloth === "blue";
+  const draped = cloth === "cape" || cloth === "white" || cloth === "rainbow" || cloth === "camo" || cloth === "stripes" || cloth === "pink" || cloth === "halloween" || cloth === "black" || cloth === "gold" || cloth === "ember" || cloth === "scarlet" || cloth === "blue";
   if (layer === "back" && draped) {
     ctx.save();
     ctx.beginPath();
