@@ -2161,7 +2161,7 @@ function drawYuleHill(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean)
   ];
   for (const [x, ground, scale] of trees) drawPine(ctx, x, ground, scale, true, sim.t);
   for (const plat of sim.level.platforms) {
-    if (plat.kind === "ladder") drawLadder(ctx, plat);
+    if (plat.kind === "ladder") drawLadder(ctx, plat, sim.level.id === "yule");
   }
   if (reduced) return;
   ctx.fillStyle = "#f7f4ee";
@@ -2559,17 +2559,34 @@ function drawCrow(ctx: CanvasRenderingContext2D, x: number, y: number, flap: num
   ctx.restore();
 }
 
-function drawLadder(ctx: CanvasRenderingContext2D, plat: { x: number; y: number; w: number; h: number }) {
-  ctx.strokeStyle = "#1c1c20";
-  ctx.lineWidth = 3;
+function drawLadder(ctx: CanvasRenderingContext2D, plat: { x: number; y: number; w: number; h: number }, snow = false) {
+  ctx.strokeStyle = snow ? "#d9d6d0" : "#1c1c20";
+  ctx.lineWidth = snow ? 4 : 3;
+  ctx.lineCap = "round";
   ctx.beginPath();
   ctx.moveTo(plat.x + 3, plat.y);
   ctx.lineTo(plat.x + 3, plat.y + plat.h);
   ctx.moveTo(plat.x + plat.w - 3, plat.y);
   ctx.lineTo(plat.x + plat.w - 3, plat.y + plat.h);
   ctx.stroke();
-  ctx.fillStyle = "#141418";
-  for (let y = plat.y + 12; y < plat.y + plat.h - 6; y += 16) ctx.fillRect(plat.x + 3, y, plat.w - 6, 3);
+  if (snow) {
+    ctx.strokeStyle = "#f7f4ee";
+    ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    ctx.moveTo(plat.x + 2, plat.y);
+    ctx.lineTo(plat.x + 2, plat.y + plat.h);
+    ctx.moveTo(plat.x + plat.w - 2, plat.y);
+    ctx.lineTo(plat.x + plat.w - 2, plat.y + plat.h);
+    ctx.stroke();
+  }
+  for (let y = plat.y + 12; y < plat.y + plat.h - 6; y += 16) {
+    ctx.fillStyle = snow ? "#9a9690" : "#141418";
+    ctx.fillRect(plat.x + 3, y, plat.w - 6, 3);
+    if (snow) {
+      ctx.fillStyle = "#f7f4ee";
+      ctx.fillRect(plat.x + 1, y - 2, plat.w - 2, 2.5);
+    }
+  }
 }
 
 function drawHoistFog(ctx: CanvasRenderingContext2D, camera: { x: number; y: number }, t: number, reduced: boolean) {
