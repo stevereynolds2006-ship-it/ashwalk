@@ -51,6 +51,25 @@ const SHORE_NEAR: Tree[] = Array.from({ length: 8 }, (_, i) => ({
   scale: 1.15 + (i % 2) * 0.22,
   seed: 80 + i * 13,
 }));
+const SHORE_REAL_FAR: Tree[] = Array.from({ length: 18 }, (_, i) => ({
+  x: -80 + i * 540,
+  ground: 500,
+  scale: 1.7 + (i % 3) * 0.32,
+  seed: 21 + i * 19,
+}));
+const SHORE_REAL_NEAR: Tree[] = Array.from({ length: 14 }, (_, i) => ({
+  x: 20 + i * 680,
+  ground: 530,
+  scale: 1.25 + (i % 2) * 0.28,
+  seed: 80 + i * 13,
+}));
+
+let shoreReal = false;
+
+export function setShoreLook(real: boolean) {
+  shoreReal = real;
+}
+
 const MID: Tree[] = Array.from({ length: 7 }, (_, i) => ({
   x: 80 + i * 780,
   ground: 500,
@@ -128,6 +147,8 @@ function drawLowerFill(ctx: CanvasRenderingContext2D, camera: Camera, id: string
         ctx.lineTo(worldX + dir * len * 0.45 + dir * 14, y - 36);
       }
       ctx.stroke();
+    } else if (id === "shore" && shoreReal) {
+      drawShoreTree(ctx, { x: worldX, ground: g, scale: 1.7 + (n % 3) * 0.28, seed: 40 + n * 11 }, 0.8);
     } else if (id === "shore" || id === "antler") {
       drawRealTree(ctx, { x: worldX, ground: g, scale: id === "antler" ? 2.15 + (n % 3) * 0.4 : 1.7 + (n % 3) * 0.28, seed: 40 + n * 11 }, id === "antler" ? 0.55 : 0.86);
     } else {
@@ -135,6 +156,100 @@ function drawLowerFill(ctx: CanvasRenderingContext2D, camera: Camera, id: string
     }
   }
   ctx.restore();
+}
+
+function drawShoreTree(ctx: CanvasRenderingContext2D, tree: Tree, alpha: number) {
+  const rand = rng(tree.seed);
+  ctx.save();
+  ctx.translate(tree.x, tree.ground);
+  ctx.scale(tree.scale, tree.scale);
+  ctx.globalAlpha = alpha;
+  ctx.lineCap = "round";
+  ctx.strokeStyle = "#3a3228";
+  ctx.fillStyle = "#3a3228";
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(-7, 8);
+  ctx.quadraticCurveTo(-28, 10, -46, 18);
+  ctx.moveTo(8, 8);
+  ctx.quadraticCurveTo(26, 12, 44, 16);
+  ctx.moveTo(-2, 4);
+  ctx.quadraticCurveTo(-8, 16, -18, 22);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(-11, 16);
+  ctx.quadraticCurveTo(-8, -40, -4, -92);
+  ctx.quadraticCurveTo(-2, -130, 2, -150);
+  ctx.quadraticCurveTo(6, -120, 8, -70);
+  ctx.quadraticCurveTo(11, -20, 12, 16);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = "rgba(214, 196, 168, 0.35)";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(-2, -10);
+  ctx.quadraticCurveTo(1, -70, 0, -130);
+  ctx.stroke();
+  for (let i = 0; i < 8; i++) {
+    const ang = (i / 8) * Math.PI * 1.3 - 0.3;
+    const rad = 46 + rand() * 28;
+    const x = Math.cos(ang) * rad * (i % 2 === 0 ? 1 : 0.72);
+    const y = -108 - Math.sin(ang) * 36 - rand() * 24;
+    ctx.fillStyle = i % 3 === 0 ? "#2c3824" : i % 3 === 1 ? "#3e5230" : "#56703c";
+    ctx.beginPath();
+    ctx.ellipse(x, y, 28 + rand() * 18, 16 + rand() * 12, (rand() - 0.5) * 0.4, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.fillStyle = "rgba(196, 214, 160, 0.45)";
+  for (let i = 0; i < 5; i++) {
+    ctx.beginPath();
+    ctx.ellipse((rand() - 0.5) * 70, -150 - rand() * 30, 10, 6, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.strokeStyle = "#4a5a34";
+  ctx.lineWidth = 1.2;
+  for (let i = 0; i < 7; i++) {
+    const x = (rand() - 0.5) * 80;
+    const y = -130 - rand() * 30;
+    const drop = 40 + rand() * 70;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.quadraticCurveTo(x + (rand() - 0.5) * 10, y + drop * 0.5, x + (rand() - 0.5) * 6, y + drop);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawShoreWater(ctx: CanvasRenderingContext2D, camera: Camera, t: number) {
+  const x0 = camera.x - 80;
+  const x1 = camera.x + camera.w + 80;
+  const surface = 528;
+  const deep = camera.y + camera.h + 120;
+  const water = ctx.createLinearGradient(0, surface - 20, 0, deep);
+  water.addColorStop(0, "#6e8a78");
+  water.addColorStop(0.08, "#2a4036");
+  water.addColorStop(1, "#0c1412");
+  ctx.fillStyle = water;
+  ctx.fillRect(x0, surface, x1 - x0, deep - surface);
+  ctx.strokeStyle = "rgba(214, 226, 206, 0.35)";
+  ctx.lineWidth = 1.5;
+  for (let row = 0; row < 5; row++) {
+    const y = surface + 8 + row * 14;
+    ctx.globalAlpha = 0.35 - row * 0.05;
+    ctx.beginPath();
+    for (let x = x0; x <= x1; x += 16) {
+      const wave = Math.sin(x * 0.02 + t * 0.8 + row) * (3 + row);
+      if (x === x0) ctx.moveTo(x, y + wave);
+      else ctx.lineTo(x, y + wave);
+    }
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+  const mist = ctx.createLinearGradient(0, surface - 36, 0, surface + 24);
+  mist.addColorStop(0, "rgba(210, 216, 206, 0)");
+  mist.addColorStop(1, "rgba(210, 216, 206, 0.28)");
+  ctx.fillStyle = mist;
+  ctx.fillRect(x0, surface - 36, x1 - x0, 60);
 }
 
 function drawTree(ctx: CanvasRenderingContext2D, tree: Tree, alpha: number) {
@@ -408,7 +523,25 @@ function drawTerrain(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) 
     ctx.lineTo(rect.x - 40, rect.y + drop);
     ctx.closePath();
     ctx.fill();
-    if (sim.level.id === "shore") {
+    if (sim.level.id === "shore" && shoreReal) {
+      const soil = ctx.createLinearGradient(rect.x, rect.y - 8, rect.x, rect.y + 70);
+      soil.addColorStop(0, "#6a6256");
+      soil.addColorStop(0.18, "#3e382f");
+      soil.addColorStop(1, "#161412");
+      ctx.fillStyle = soil;
+      ctx.fillRect(rect.x, rect.y - 6, rect.w, 78);
+      ctx.fillStyle = "rgba(214, 206, 188, 0.55)";
+      ctx.fillRect(rect.x, rect.y, rect.w, 3);
+      const pebbles = rng((Math.floor(rect.x) * 3) >>> 0);
+      ctx.fillStyle = "#8a8174";
+      for (let i = 0; i < rect.w / 36; i++) {
+        const px = rect.x + 8 + pebbles() * (rect.w - 16);
+        ctx.beginPath();
+        ctx.ellipse(px, rect.y + 10 + pebbles() * 8, 3 + pebbles() * 4, 2 + pebbles() * 2, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      drawReeds(ctx, rect);
+    } else if (sim.level.id === "shore") {
       const lip = ctx.createLinearGradient(rect.x, rect.y - 16, rect.x, rect.y + 4);
       lip.addColorStop(0, "rgba(255,255,255,0)");
       lip.addColorStop(1, "rgba(244,241,234,0.55)");
@@ -417,7 +550,7 @@ function drawTerrain(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) 
       ctx.fillStyle = "rgba(255,255,255,0.92)";
       ctx.fillRect(rect.x, rect.y, rect.w, 2);
     }
-    if (sim.level.id === "shore") drawGrass(ctx, rect, 44, 2);
+    if (sim.level.id === "shore") drawGrass(ctx, rect, 44, 2, shoreReal ? "#3f4c32" : "#070708");
     else if (sim.level.id !== "roof" && sim.level.id !== "gale" && sim.level.id !== "choir" && sim.level.id !== "gear" && sim.level.id !== "hoist" && sim.level.id !== "hallow") drawGrass(ctx, rect, 26);
   }
   for (const rect of bodies) {
@@ -430,8 +563,13 @@ function drawTerrain(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) 
       drawCage(ctx, rect, sim.rope < 1 && rect.id === "cageC", sim.t * (rect.id === "cageC" ? 1.4 : 0.65));
     } else if (rect.id.startsWith("glow")) drawLightPlank(ctx, sim, rect);
     else {
-      drawPlank(ctx, rect, rect.kind === "crumble" || (sim.crumbles[rect.id]?.timer ?? 0) > 0.9, sim.level.id === "choir" || sim.level.id === "shore");
-      if (sim.level.id === "shore" && (rect.kind === "crumble" || rect.kind === "oneway") && !rect.id.startsWith("glow")) drawGrass(ctx, rect, 30, 2);
+      if (shoreReal && sim.level.id === "shore" && (rect.kind === "crumble" || rect.kind === "oneway") && !rect.id.startsWith("glow")) {
+        drawWood(ctx, rect);
+        drawGrass(ctx, rect, 30, 2, "#3f4c32");
+      } else {
+        drawPlank(ctx, rect, rect.kind === "crumble" || (sim.crumbles[rect.id]?.timer ?? 0) > 0.9, sim.level.id === "choir" || sim.level.id === "shore");
+        if (sim.level.id === "shore" && (rect.kind === "crumble" || rect.kind === "oneway") && !rect.id.startsWith("glow")) drawGrass(ctx, rect, 30, 2);
+      }
     }
   }
   drawLightGaps(ctx, sim);
@@ -836,15 +974,15 @@ function drawDrainTrash(ctx: CanvasRenderingContext2D, t: number, reduced: boole
   ctx.restore();
 }
 
-function drawGrass(ctx: CanvasRenderingContext2D, rect: RectLike, tall: number, dense = 1) {
+function drawGrass(ctx: CanvasRenderingContext2D, rect: RectLike, tall: number, dense = 1, color = "#070708") {
   const rand = rng((Math.floor(rect.x) * 13 + Math.floor(rect.y)) >>> 0);
-  ctx.fillStyle = "#070708";
   const blades = Math.max(6, Math.floor(rect.w / (dense > 1 ? 3 : 6)));
   for (let i = 0; i < blades; i++) {
     const x = rect.x + ((i + rand() * 0.6) / blades) * rect.w;
     const h = 6 + rand() * tall;
     const lean = (rand() - 0.45) * h * 0.45;
     const wide = rand() > 0.82 ? 3.4 : 1.6;
+    ctx.fillStyle = color !== "#070708" && rand() > 0.72 ? "#6d7d4a" : color;
     ctx.beginPath();
     ctx.moveTo(x, rect.y + 3);
     ctx.lineTo(x + lean, rect.y - h);
@@ -852,6 +990,41 @@ function drawGrass(ctx: CanvasRenderingContext2D, rect: RectLike, tall: number, 
     ctx.closePath();
     ctx.fill();
   }
+}
+
+function drawReeds(ctx: CanvasRenderingContext2D, rect: RectLike) {
+  const rand = rng((Math.floor(rect.x) * 7 + 19) >>> 0);
+  ctx.strokeStyle = "#5c6a48";
+  ctx.lineCap = "round";
+  const clumps = Math.max(1, Math.floor(rect.w / 90));
+  for (let i = 0; i < clumps; i++) {
+    const x = rect.x + 16 + rand() * (rect.w - 32);
+    for (let k = 0; k < 4; k++) {
+      const h = 18 + rand() * 28;
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(x + k * 3, rect.y + 6);
+      ctx.quadraticCurveTo(x + k * 3 + (rand() - 0.5) * 8, rect.y - h * 0.6, x + k * 3 + (rand() - 0.5) * 10, rect.y - h);
+      ctx.stroke();
+    }
+  }
+}
+
+function drawWood(ctx: CanvasRenderingContext2D, rect: RectLike) {
+  const boards = Math.max(1, Math.floor(rect.w / 18));
+  const bw = rect.w / boards;
+  for (let i = 0; i < boards; i++) {
+    ctx.fillStyle = i % 2 === 0 ? "#5a4636" : "#3e3126";
+    ctx.fillRect(rect.x + i * bw, rect.y, bw - 1.5, 10);
+    ctx.strokeStyle = "rgba(214, 186, 146, 0.35)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(rect.x + i * bw + 3, rect.y + 3);
+    ctx.lineTo(rect.x + (i + 1) * bw - 5, rect.y + 7);
+    ctx.stroke();
+  }
+  ctx.fillStyle = "rgba(232, 224, 206, 0.45)";
+  ctx.fillRect(rect.x, rect.y, rect.w, 2);
 }
 
 function drawLightPlank(ctx: CanvasRenderingContext2D, sim: Sim, rect: RectLike & { id: string }) {
@@ -4091,7 +4264,9 @@ export function renderFrame(
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, cssW, cssH);
 
-  const skyStops = SKY[sim.level.id] ?? SKY.shore!;
+  const skyStops = (sim.level.id === "shore" && shoreReal
+    ? (["#1a2422", "#c9cfc6", "#7d8a78", "#15201c"] as [string, string, string, string])
+    : SKY[sim.level.id]) ?? SKY.shore!;
   const sky = ctx.createLinearGradient(0, 0, 0, cssH);
   sky.addColorStop(0, skyStops[0]);
   sky.addColorStop(0.42, skyStops[1]);
@@ -4120,14 +4295,17 @@ export function renderFrame(
     drawSkyline(ctx, camera);
     drawRareSign(ctx, sim.t, reduced);
   } else if (sim.level.id === "shore") {
+    const far = shoreReal ? SHORE_REAL_FAR : SHORE_FAR;
+    const near = shoreReal ? SHORE_REAL_NEAR : SHORE_NEAR;
+    const paint = shoreReal ? drawShoreTree : drawRealTree;
     ctx.save();
     ctx.translate(camera.x * 0.72, camera.y * 0.4);
-    for (const tree of SHORE_FAR) drawRealTree(ctx, tree, 0.55);
+    for (const tree of far) paint(ctx, tree, shoreReal ? 0.72 : 0.55);
     ctx.restore();
     drawBranch(ctx);
     ctx.save();
     ctx.translate(camera.x * 0.4, camera.y * 0.15);
-    for (const tree of SHORE_NEAR) drawRealTree(ctx, tree, 0.92);
+    for (const tree of near) paint(ctx, tree, shoreReal ? 0.95 : 0.92);
     ctx.restore();
   } else if (sim.level.id === "antler") {
     ctx.save();
@@ -4182,6 +4360,7 @@ export function renderFrame(
   }
 
   drawLowerFill(ctx, camera, sim.level.id);
+  if (sim.level.id === "shore" && shoreReal) drawShoreWater(ctx, camera, sim.t);
 
   drawTerrain(ctx, sim, reduced);
   if (sim.level.id === "hoist") drawToxic(ctx, sim, camera);

@@ -11,7 +11,7 @@ import { windAccel, chapterAt } from "./level";
 import { Online, type NetApi } from "./online";
 import type { Ghost } from "./net";
 import { comboSet, createSim, step, type Actions, type Sim } from "./sim";
-import { burst, frameCamera, renderFrame, viewSize } from "./draw";
+import { burst, frameCamera, renderFrame, setShoreLook, viewSize } from "./draw";
 import { createAshMusic, type AshMusic, type MusicScene } from "./music";
 import {
   ALL_FOGS_COST,
@@ -1166,7 +1166,8 @@ export function Playfield({
     }
   }
 
-  function beginShore() {
+  function beginShore(real = false) {
+    setShoreLook(real);
     armAudio();
     startLevel("shore");
   }
@@ -1461,8 +1462,11 @@ export function Playfield({
           )}
           {picker}
           <div className="ash-actions">
-            <button type="button" className="ash-btn" onClick={beginShore}>
+            <button type="button" className="ash-btn" onClick={() => beginShore(false)}>
               Walk into the fog
+            </button>
+            <button type="button" className="ash-btn-ghost" onClick={() => beginShore(true)}>
+              Realistic shore · free
             </button>
             <button type="button" className="ash-btn-ghost" onClick={() => go("levels")}>
               Other fogs
@@ -1583,6 +1587,7 @@ export function Playfield({
             opened={ledger.opened}
             onPick={(id) => {
               armAudio();
+              if (id === "shore") setShoreLook(false);
               startLevel(id);
             }}
           />
