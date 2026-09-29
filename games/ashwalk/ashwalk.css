@@ -423,21 +423,24 @@
 }
 
 .ash-touch-hoist div {
-  gap: 4px;
+  flex: 1;
+  gap: 6px;
 }
 
 .ash-touch-hoist button {
-  min-width: 64px;
-  min-height: 58px;
-  padding: 0 10px;
-  font-size: 14px;
+  flex: 1;
+  min-width: 0;
+  min-height: 66px;
+  padding: 0 8px;
+  font-size: 15px;
   letter-spacing: 0.04em;
 }
 
 .ash-touch-hoist button[aria-label="Jump"] {
-  min-width: 82px;
-  min-height: 68px;
-  font-size: 16px;
+  flex: 1.25;
+  min-width: 0;
+  min-height: 78px;
+  font-size: 17px;
 }
 
 @media (pointer: coarse), (max-width: 800px) {

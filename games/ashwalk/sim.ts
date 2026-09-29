@@ -781,6 +781,13 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
   if (!sim.climbing) resolveX(sim, prevX, prevY, nextBodies);
   const midY = sim.y;
   sim.y += sim.vy * dt;
+  if (sim.climbing && shaft && sim.vy > 0) {
+    const floor = shaft.y + shaft.h;
+    if (sim.y + PH > floor) {
+      sim.y = floor - PH;
+      sim.vy = 0;
+    }
+  }
   const landed = resolveY(sim, prevX, midY, nextBodies);
   if (landed && !sim.wasGrounded) events.land = true;
   sim.wasGrounded = sim.grounded;
