@@ -8,6 +8,10 @@ export type MusicScene =
   | "choir"
   | "chant"
   | "works"
+  | "gear"
+  | "roof"
+  | "tunnel"
+  | "hoist"
   | "moon"
   | "mirror"
   | "hunt"
@@ -108,6 +112,44 @@ const SCENES: Record<MusicScene, SceneScore> = {
     gain: 0.08,
     steps: [[0], [], [7], [], [0, 12], [], [5], []],
     noise: 0.05,
+  },
+  gear: {
+    step: 0.36,
+    drones: [31, 38, 43],
+    pluck: 55,
+    wave: "square",
+    gain: 0.09,
+    steps: [[0, 7], [0], [12], [0], [5, 12], [7], [0], [3]],
+    noise: 0.045,
+  },
+  roof: {
+    step: 1.28,
+    drones: [42, 49, 54],
+    pluck: 66,
+    wave: "triangle",
+    gain: 0.11,
+    sustain: 1.4,
+    steps: [[0, 3], [], [7], [10], [3, 15], [], [8], [12]],
+    noise: 0,
+  },
+  tunnel: {
+    step: 1.7,
+    drones: [26, 33, 38],
+    pluck: 50,
+    wave: "sine",
+    gain: 0.1,
+    sustain: 3.2,
+    steps: [[0], [], [], [7], [], [3], [], [10]],
+    noise: 0.08,
+  },
+  hoist: {
+    step: 0.66,
+    drones: [44, 51, 56],
+    pluck: 68,
+    wave: "square",
+    gain: 0.075,
+    steps: [[0, 12], [], [7], [4], [0], [9], [5], [12]],
+    noise: 0.03,
   },
   moon: {
     step: 1.15,

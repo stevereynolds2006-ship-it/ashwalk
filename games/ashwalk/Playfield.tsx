@@ -1977,27 +1977,16 @@ function musicScene(phase: Phase, sim: Sim): MusicScene {
   if (phase === "rite") return "rite";
   if (phase === "clear") return "clear";
   if (phase === "title" || phase === "levels" || phase === "lobby" || phase === "clothes") return "title";
-  if (sim.level.id === "hoist") return "works";
-  if (sim.level.id === "tunnel") return "gale";
+  if (sim.level.id === "hoist") return "hoist";
+  if (sim.level.id === "tunnel") return "tunnel";
   if (sim.level.id === "mirror") return "mirror";
   if (sim.level.id === "moon") return "moon";
   if (sim.level.id === "antler") return "hunt";
-  if (sim.level.id === "choir") return "chant";
-  if (sim.level.id === "gear") return "works";
-  const id = chapterAt(sim.level, sim.x + 7).id;
-  if (id === "lock") return "white";
-  if (id === "gust") return "gale";
-  if (id === "roof" || id === "letters") return "choir";
-  if (
-    id === "cages" ||
-    id === "white" ||
-    id === "latch" ||
-    id === "gale" ||
-    id === "choir" ||
-    id === "shore"
-  ) {
-    return id;
-  }
+  if (sim.level.id === "choir") return "choir";
+  if (sim.level.id === "gear") return "gear";
+  if (sim.level.id === "roof") return "roof";
+  if (sim.level.id === "gale") return "gale";
+  if (sim.level.id === "latch") return "latch";
   return "shore";
 }
 

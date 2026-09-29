@@ -499,8 +499,7 @@ const PUDDLE = [
   "..###...................####....",
 ];
 
-function drawCageBones(ctx: CanvasRenderingContext2D, x: number, floorY: number) {
-  const scale = 1.55;
+function drawCageBones(ctx: CanvasRenderingContext2D, x: number, floorY: number, scale = 1.55) {
   const row = PUDDLE[0]!.length;
   const w = row * scale;
   const h = PUDDLE.length * scale;
@@ -3043,7 +3042,7 @@ export function renderFrame(
     );
   }
   if (sim.dead > 0) {
-    drawCageBones(ctx, sim.x + PW / 2, sim.y + PH);
+    drawCageBones(ctx, sim.x + PW / 2, sim.y + PH, 3.4);
   } else {
     drawFriend(
       ctx,

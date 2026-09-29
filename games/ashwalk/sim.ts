@@ -457,11 +457,37 @@ function zoneHit(x: number, y: number, z: { x: number; y: number; w: number; h: 
 
 function kill(sim: Sim, events: StepEvents) {
   if (sim.invuln > 0 || sim.dead > 0 || sim.won) return;
-  sim.dead = 1.05;
+  const floor = boneFloor(sim);
+  sim.x = floor.x;
+  sim.y = floor.y - PH;
   sim.vx = 0;
   sim.vy = 0;
+  sim.dead = 1.05;
   sim.hurt = 0.45;
   events.died = true;
+}
+
+function boneFloor(sim: Sim) {
+  const foot = sim.y + PH;
+  let bestX = sim.x;
+  let bestY = foot;
+  let bestDist = 1e9;
+  for (const plat of sim.level.platforms) {
+    if (plat.kind === "ladder" || plat.kind === "gate") continue;
+    if (sim.x + PW < plat.x || sim.x > plat.x + plat.w) continue;
+    if (plat.y + 12 < foot) continue;
+    const dist = Math.abs(plat.y - foot);
+    if (dist < bestDist) {
+      bestDist = dist;
+      bestY = plat.y;
+      bestX = Math.max(plat.x, Math.min(plat.x + plat.w - PW, sim.x));
+    }
+  }
+  if (bestDist > 280) {
+    const cp = sim.level.checkpoints[sim.checkpoint] ?? sim.level.checkpoints[0];
+    if (cp) return { x: cp.x, y: cp.surface };
+  }
+  return { x: bestX, y: bestY };
 }
 
 function gearPerch(sim: Sim, hintX: number) {
