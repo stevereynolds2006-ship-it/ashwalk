@@ -68,8 +68,8 @@ const SKY: Record<string, [string, string, string, string]> = {
   antler: ["#2a2c30", "#c8c6c0", "#8a8884", "#1c1e22"],
   moon: ["#050506", "#101218", "#1a1c22", "#050506"],
   mirror: ["#3a3e44", "#d8d8d4", "#a4a8ae", "#2a2e34"],
-  tunnel: ["#050506", "#101012", "#0c0c0e", "#050506"],
-  hoist: ["#101012", "#cfcbc6", "#8a8682", "#0c0c0e"],
+  tunnel: ["#1e2228", "#7a8088", "#4a5058", "#1a1e24"],
+  hoist: ["#2c3036", "#d8d6d0", "#a4a29c", "#24282e"],
   yule: ["#050506", "#9a9894", "#2a2a2c", "#050506"],
 };
 
@@ -85,7 +85,14 @@ function drawLowerFill(ctx: CanvasRenderingContext2D, camera: Camera, id: string
     const n = Math.abs(Math.round(x / spacing));
     const worldX = camera.x + (x - layer);
     const g = ground + (n % 2) * 24;
-    if (id === "gear" || id === "choir" || id === "hoist" || id === "latch") {
+    if (id === "hoist") {
+      ctx.fillStyle = "rgba(70,74,80,0.55)";
+      const h = 520 + (n % 3) * 140;
+      ctx.fillRect(worldX, g - h, 90 + (n % 2) * 36, h + 220);
+      ctx.fillStyle = "rgba(244,241,234,0.35)";
+      ctx.fillRect(worldX, g - h, 90 + (n % 2) * 36, 4);
+      ctx.fillRect(worldX + 16, g - h - 70, 12, 74);
+    } else if (id === "gear" || id === "choir" || id === "latch") {
       ctx.fillStyle = "rgba(8,8,10,0.62)";
       const h = 340 + (n % 3) * 90;
       ctx.fillRect(worldX, g - h, 54 + (n % 2) * 24, h + 180);
@@ -2795,27 +2802,62 @@ function drawLadder(ctx: CanvasRenderingContext2D, plat: { x: number; y: number;
   }
 }
 
-function drawHoistFog(ctx: CanvasRenderingContext2D, camera: { x: number; y: number }, t: number, reduced: boolean) {
+function drawHoistFog(ctx: CanvasRenderingContext2D, camera: { x: number; y: number; w: number; h: number }, t: number, reduced: boolean) {
   ctx.save();
-  ctx.translate(camera.x * 0.35, camera.y * 0.2);
-  ctx.fillStyle = "rgba(12,12,14,0.88)";
-  ctx.fillRect(180, 80, 620, 46);
-  ctx.fillRect(760, 80, 36, 18);
-  ctx.strokeStyle = "rgba(12,12,14,0.9)";
-  ctx.lineWidth = 8;
-  ctx.beginPath();
-  ctx.moveTo(820, 90);
-  ctx.lineTo(820, 420);
-  ctx.stroke();
-  for (let y = 110; y < 410; y += 22) ctx.fillRect(808, y, 24, 3);
-  ctx.fillStyle = "rgba(20,20,22,0.55)";
-  ctx.fillRect(-40, 430, 1600, 18);
+  const spacing = 220;
+  const layer = camera.x * 0.45;
+  const first = Math.floor((layer - 400) / spacing) * spacing;
+  const last = layer + camera.w + 400;
+  const top = camera.y - 80;
+  const bottom = camera.y + camera.h + 80;
+  for (let x = first; x <= last; x += spacing) {
+    const n = Math.abs(Math.round(x / spacing));
+    const worldX = camera.x + (x - layer);
+    ctx.fillStyle = n % 2 ? "rgba(92,96,102,0.55)" : "rgba(120,124,128,0.42)";
+    ctx.fillRect(worldX, top, 36, bottom - top);
+    ctx.fillStyle = "rgba(244,241,234,0.45)";
+    ctx.fillRect(worldX, top + 40 + (n % 4) * 70, 36, 3);
+    ctx.fillRect(worldX + 8, top, 6, bottom - top);
+  }
   ctx.restore();
   if (reduced) return;
-  ctx.fillStyle = "rgba(255,255,255,0.05)";
-  for (let i = 0; i < 8; i++) {
-    const x = 200 + i * 280 + Math.sin(t * 0.2 + i) * 12;
-    ctx.fillRect(x, 60 + (i % 3) * 40, 90, 160);
+  ctx.fillStyle = "rgba(255,255,255,0.08)";
+  for (let i = 0; i < 10; i++) {
+    const x = camera.x + ((i * 180 + t * 12) % (camera.w + 80)) - 40;
+    ctx.fillRect(x, camera.y + 40 + (i % 4) * 90, 70, 120);
+  }
+}
+
+function drawToxic(ctx: CanvasRenderingContext2D, sim: Sim, camera: Camera) {
+  const pools: [number, number, number][] = [
+    [80, 700, 280],
+    [520, 700, 200],
+    [1420, 700, 320],
+    [2140, 700, 180],
+    [3520, 700, 220],
+    [4240, 700, 360],
+    [4900, 700, 240],
+  ];
+  for (const [x, y, w] of pools) {
+    if (x > camera.x + camera.w + 40 || x + w < camera.x - 40) continue;
+    const glow = ctx.createRadialGradient(x + w / 2, y, 4, x + w / 2, y, w * 0.55);
+    glow.addColorStop(0, "rgba(170, 240, 70, 0.9)");
+    glow.addColorStop(0.45, "rgba(70, 170, 30, 0.55)");
+    glow.addColorStop(1, "rgba(30, 80, 16, 0)");
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.ellipse(x + w / 2, y + 8, w / 2, 22, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "rgba(210, 255, 90, 0.8)";
+    ctx.fillRect(x, y - 1, w, 4);
+    ctx.fillStyle = "rgba(230, 255, 140, 0.75)";
+    for (let i = 0; i < 5; i++) {
+      const bx = x + ((i * 53 + sim.t * 24) % w);
+      const by = y - ((sim.t * 32 + i * 18) % 48);
+      ctx.beginPath();
+      ctx.arc(bx, by, 2 + (i % 2), 0, Math.PI * 2);
+      ctx.fill();
+    }
   }
 }
 
@@ -2921,7 +2963,7 @@ function drawJungle(ctx: CanvasRenderingContext2D, t: number, reduced: boolean) 
 function drawCave(ctx: CanvasRenderingContext2D, camera: Camera, t: number, reduced: boolean, lit: boolean) {
   const world = 6600;
   const roof = (x: number) => 20 + x * 0.28;
-  ctx.fillStyle = lit ? "#4a4c50" : "#050506";
+  ctx.fillStyle = lit ? "#8a9098" : "#4a525c";
   ctx.beginPath();
   ctx.moveTo(-120, -400);
   ctx.lineTo(world + 160, -400);
@@ -2932,7 +2974,7 @@ function drawCave(ctx: CanvasRenderingContext2D, camera: Camera, t: number, redu
   }
   ctx.closePath();
   ctx.fill();
-  ctx.fillStyle = "#070708";
+  ctx.fillStyle = lit ? "#c8ccd0" : "#8a929a";
   for (let x = -40; x < world; x += 28) {
     const top = roof(x) - 20;
     const h = 30 + ((x * 19) % 84);
@@ -2945,15 +2987,16 @@ function drawCave(ctx: CanvasRenderingContext2D, camera: Camera, t: number, redu
 
   ctx.save();
   ctx.translate(camera.x * 0.28, camera.y * 0.08);
-  ctx.fillStyle = "rgba(6,6,8,0.85)";
-  for (let i = 0; i < 8; i++) {
-    const x = i * 680;
-    const y = roof(x) + 80;
+  ctx.fillStyle = lit ? "rgba(90,98,108,0.55)" : "rgba(40,48,56,0.7)";
+  for (let i = 0; i < 14; i++) {
+    const x = i * 420;
+    const y = roof(x) + 40;
+    const foot = camera.y + camera.h + 80;
     ctx.beginPath();
-    ctx.moveTo(x, y + 220);
-    ctx.quadraticCurveTo(x + 40, y - 20, x + 180, y + 30);
-    ctx.quadraticCurveTo(x + 300, y + 70, x + 340, y + 240);
-    ctx.lineTo(x, y + 240);
+    ctx.moveTo(x, foot);
+    ctx.quadraticCurveTo(x + 30, y - 10, x + 140, y + 20);
+    ctx.quadraticCurveTo(x + 260, y + 50, x + 300, foot);
+    ctx.closePath();
     ctx.fill();
   }
   ctx.restore();
@@ -2965,7 +3008,10 @@ function drawCave(ctx: CanvasRenderingContext2D, camera: Camera, t: number, redu
     wash.addColorStop(1, "rgba(18,20,24,0.15)");
     ctx.fillStyle = wash;
   } else {
-    ctx.fillStyle = "#0c1014";
+    const wash = ctx.createLinearGradient(0, 200, 0, camera.y + camera.h);
+    wash.addColorStop(0, "rgba(120,132,144,0.35)");
+    wash.addColorStop(1, "rgba(36,46,54,0.4)");
+    ctx.fillStyle = wash;
   }
   ctx.fillRect(-40, 300, world + 80, 2100);
   const ripples = lit ? 18 : 12;
@@ -3083,7 +3129,14 @@ function drawCaveBats(
   ctx.restore();
 }
 
-function drawMirrorFog(ctx: CanvasRenderingContext2D, camera: Camera, sim: Sim, reduced: boolean) {
+function drawMirrorFog(
+  ctx: CanvasRenderingContext2D,
+  camera: Camera,
+  sim: Sim,
+  sprites: GenerationSprites | null,
+  reduced: boolean,
+  cloth: string | null,
+) {
   ctx.save();
   const spacing = 190;
   const layer = camera.x * 0.78;
@@ -3107,12 +3160,53 @@ function drawMirrorFog(ctx: CanvasRenderingContext2D, camera: Camera, sim: Sim, 
     ctx.moveTo(worldX + 10, top + 16);
     ctx.lineTo(worldX + w * 0.42, top + pane * 0.55);
     ctx.stroke();
-    if (!reduced) {
-      ctx.fillStyle = "rgba(255,255,255,0.18)";
-      ctx.fillRect(worldX + 12, top + 24 + (n % 4) * 30, w * 0.28, pane * 0.22);
-    }
   }
   ctx.restore();
+  ctx.save();
+  ctx.globalAlpha = 0.22;
+  drawFriend(
+    ctx,
+    sprites,
+    {
+      x: camera.x * 0.62 + sim.x * 0.38,
+      y: sim.y - 30,
+      facing: sim.facing === 1 ? -1 : 1,
+      walking: Math.abs(sim.vx) > 8,
+      anim: sim.anim,
+      hurt: 0,
+      vx: sim.vx,
+      vy: 0,
+    },
+    sim.t,
+    reduced,
+    false,
+    cloth,
+  );
+  ctx.restore();
+  const waterTop = 500;
+  const waterBottom = camera.y + camera.h + 60;
+  const wash = ctx.createLinearGradient(0, waterTop, 0, waterBottom);
+  wash.addColorStop(0, "rgba(150,190,200,0.55)");
+  wash.addColorStop(0.2, "rgba(24,48,56,0.72)");
+  wash.addColorStop(1, "rgba(8,18,22,0.88)");
+  ctx.fillStyle = wash;
+  ctx.fillRect(camera.x - 80, waterTop, camera.w + 160, Math.max(120, waterBottom - waterTop));
+  ctx.fillStyle = "rgba(220,236,240,0.7)";
+  ctx.fillRect(camera.x - 80, waterTop, camera.w + 160, 3);
+  if (!reduced) {
+    ctx.strokeStyle = "rgba(200,220,226,0.35)";
+    ctx.lineWidth = 1;
+    for (let i = 0; i < 8; i++) {
+      const y = waterTop + 16 + i * 18;
+      ctx.beginPath();
+      for (let x = camera.x - 40; x < camera.x + camera.w + 40; x += 24) {
+        const wave = Math.sin(sim.t * 1.6 + x * 0.02 + i) * 3;
+        if (x <= camera.x - 40) ctx.moveTo(x, y + wave);
+        else ctx.lineTo(x, y + wave);
+      }
+      ctx.stroke();
+    }
+  }
 }
 
 function drawMoonFog(ctx: CanvasRenderingContext2D, camera: Camera, t: number, reduced: boolean, light: number) {
@@ -3374,7 +3468,7 @@ export function renderFrame(
       sim.altars.size / Math.max(1, sim.level.lamps?.length ?? 1),
     );
   } else if (sim.level.id === "mirror") {
-    drawMirrorFog(ctx, camera, sim, reduced);
+    drawMirrorFog(ctx, camera, sim, sprites, reduced, cloth);
   } else if (sim.level.id === "tunnel") {
     drawCave(ctx, camera, sim.t, reduced, gloom <= 0);
   } else if (sim.level.id === "latch") {
@@ -3404,6 +3498,7 @@ export function renderFrame(
   drawLowerFill(ctx, camera, sim.level.id);
 
   drawTerrain(ctx, sim, reduced);
+  if (sim.level.id === "hoist") drawToxic(ctx, sim, camera);
   if (sim.level.id === "yule") drawYuleHill(ctx, sim, reduced);
   if (sim.level.id === "shore") {
     drawCagedFriend(ctx, sprites, sim, reduced, cloth, {
