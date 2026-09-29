@@ -71,13 +71,13 @@ const SKY: Record<string, [string, string, string, string]> = {
   tunnel: ["#1e2228", "#7a8088", "#4a5058", "#1a1e24"],
   hoist: ["#2c3036", "#d8d6d0", "#a4a29c", "#24282e"],
   yule: ["#050506", "#9a9894", "#2a2a2c", "#050506"],
-  hallow: ["#07060a", "#2a241c", "#100e12", "#050408"],
+  hallow: ["#242228", "#8a8884", "#5a5854", "#1e1c22"],
 };
 
 function drawLowerFill(ctx: CanvasRenderingContext2D, camera: Camera, id: string) {
   if (id === "yule" || id === "tunnel" || id === "roof" || id === "mirror") return;
   ctx.save();
-  const spacing = id === "moon" ? 360 : 280;
+  const spacing = id === "moon" ? 360 : id === "hallow" ? 150 : 280;
   const layer = camera.x * 0.7;
   const first = Math.floor((layer - 700) / spacing) * spacing;
   const last = layer + camera.w + 700;
@@ -111,6 +111,23 @@ function drawLowerFill(ctx: CanvasRenderingContext2D, camera: Camera, id: string
       ctx.lineTo(worldX + 160, g + 180);
       ctx.lineTo(worldX - 160, g + 180);
       ctx.fill();
+    } else if (id === "hallow") {
+      ctx.strokeStyle = "rgba(120,116,110,0.9)";
+      ctx.lineWidth = 2.4;
+      ctx.beginPath();
+      const top = g - 340 - (n % 4) * 70;
+      ctx.moveTo(worldX, g + 260);
+      ctx.lineTo(worldX, top);
+      for (let k = 0; k < 8; k++) {
+        const y = g + 40 - k * 52;
+        const dir = k % 2 ? 1 : -1;
+        const len = 28 + ((n + k) % 4) * 16;
+        ctx.moveTo(worldX, y);
+        ctx.lineTo(worldX + dir * len, y - 34);
+        ctx.moveTo(worldX + dir * len * 0.45, y - 16);
+        ctx.lineTo(worldX + dir * len * 0.45 + dir * 14, y - 36);
+      }
+      ctx.stroke();
     } else if (id === "shore" || id === "antler") {
       drawRealTree(ctx, { x: worldX, ground: g, scale: id === "antler" ? 2.15 + (n % 3) * 0.4 : 1.7 + (n % 3) * 0.28, seed: 40 + n * 11 }, id === "antler" ? 0.55 : 0.86);
     } else {
@@ -2900,21 +2917,25 @@ function drawHallow(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) {
       ctx.fill();
     }
   }
-  const trees = [1480, 2100, 5600];
-  ctx.strokeStyle = "#141216";
-  ctx.lineWidth = 3;
+  const trees = [80, 420, 760, 1100, 1480, 1820, 2100, 2460, 4300, 4700, 5200, 5600, 6100, 6500];
+  ctx.strokeStyle = "#6e6a64";
+  ctx.lineWidth = 2.6;
+  ctx.beginPath();
   for (const x of trees) {
-    ctx.beginPath();
-    ctx.moveTo(x, 500);
-    ctx.lineTo(x + 10, 180);
-    ctx.moveTo(x + 10, 280);
-    ctx.lineTo(x - 70, 200);
-    ctx.moveTo(x + 10, 240);
-    ctx.lineTo(x + 90, 150);
-    ctx.moveTo(x + 10, 200);
-    ctx.lineTo(x + 40, 120);
-    ctx.stroke();
+    const h = 220 + (x % 5) * 28;
+    ctx.moveTo(x, 980);
+    ctx.lineTo(x, 500 - h);
+    for (let i = 0; i < 6; i++) {
+      const y = 460 - i * (h / 7);
+      const dir = i % 2 ? 1 : -1;
+      const len = 36 + (i % 3) * 18;
+      ctx.moveTo(x, y);
+      ctx.lineTo(x + dir * len, y - 32);
+      ctx.moveTo(x + dir * len * 0.5, y - 14);
+      ctx.lineTo(x + dir * (len * 0.5 + 16), y - 34);
+    }
   }
+  ctx.stroke();
   ctx.fillStyle = "#161418";
   const stones: [number, number, number][] = [
     [180, 500, 28],
@@ -2928,7 +2949,7 @@ function drawHallow(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) {
     ctx.roundRect(x, y - h, 22, h, 8);
     ctx.fill();
   }
-  ctx.fillStyle = "#0c0a0e";
+  ctx.fillStyle = "#2a2830";
   ctx.fillRect(3460, 80, 2100, 430);
   ctx.beginPath();
   ctx.moveTo(3380, 160);
@@ -2936,7 +2957,7 @@ function drawHallow(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) {
   ctx.lineTo(5560, 160);
   ctx.closePath();
   ctx.fill();
-  ctx.fillStyle = "rgba(255, 120, 30, 0.18)";
+  ctx.fillStyle = "rgba(255, 150, 50, 0.45)";
   for (const win of [3720, 4020, 4480, 5120, 5340]) {
     ctx.fillRect(win, 250, 46, 64);
   }
@@ -2959,29 +2980,27 @@ function drawPumpkins(ctx: CanvasRenderingContext2D, sim: Sim) {
     const lit = sim.beacons.has(bell.id);
     const x = bell.x + bell.w / 2;
     const y = bellSurface(sim, x, bell.y + bell.h);
-    ctx.fillStyle = lit ? "#e07018" : "#6a3810";
+    ctx.fillStyle = lit ? "#ff8a1a" : "#c45a10";
     ctx.beginPath();
-    ctx.ellipse(x, y - 10, 16, 12, 0, 0, Math.PI * 2);
+    ctx.ellipse(x, y - 14, 22, 16, 0, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = "#2a1a0c";
-    ctx.fillRect(x - 2, y - 24, 4, 6);
-    ctx.fillStyle = lit ? "#ffd27a" : "#2a1408";
-    ctx.fillRect(x - 8, y - 14, 3, 3);
-    ctx.fillRect(x + 4, y - 14, 3, 3);
+    ctx.fillStyle = "#3a2410";
+    ctx.fillRect(x - 3, y - 32, 6, 8);
+    ctx.fillStyle = lit ? "#ffe08a" : "#ffb45a";
+    ctx.fillRect(x - 10, y - 18, 4, 4);
+    ctx.fillRect(x + 5, y - 18, 4, 4);
     ctx.beginPath();
-    ctx.moveTo(x - 4, y - 6);
+    ctx.moveTo(x - 6, y - 8);
     ctx.lineTo(x, y - 2);
-    ctx.lineTo(x + 5, y - 6);
+    ctx.lineTo(x + 7, y - 8);
     ctx.fill();
-    if (lit) {
-      const glow = ctx.createRadialGradient(x, y - 10, 2, x, y - 10, 40);
-      glow.addColorStop(0, "rgba(255,150,40,0.75)");
-      glow.addColorStop(1, "rgba(255,150,40,0)");
-      ctx.fillStyle = glow;
-      ctx.beginPath();
-      ctx.arc(x, y - 10, 40, 0, Math.PI * 2);
-      ctx.fill();
-    }
+    const glow = ctx.createRadialGradient(x, y - 14, 4, x, y - 14, lit ? 56 : 28);
+    glow.addColorStop(0, lit ? "rgba(255,160,40,0.9)" : "rgba(255,120,30,0.45)");
+    glow.addColorStop(1, "rgba(255,120,30,0)");
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(x, y - 14, lit ? 56 : 28, 0, Math.PI * 2);
+    ctx.fill();
   }
   ctx.restore();
 }
