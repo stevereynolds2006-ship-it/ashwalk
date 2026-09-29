@@ -232,12 +232,12 @@ function pay(account: string, balance: bigint, whole: number) {
   const have = balance > ledger.spent ? balance - ledger.spent : 0n;
   if (have < cost) return false;
   ledger.spent += cost;
-  ledger.burned += burnedHalf(whole);
+  ledger.burned += whole;
   writeLedger(account, ledger);
   return true;
 }
 
-/** Half of a spend used to be burned. That half is now sent to the second wallet. */
+/** Coins spent in the game. The wallet sends the full amount. */
 export function burnedHalf(whole: number) {
   return whole - Math.floor(whole / 2);
 }
@@ -282,7 +282,7 @@ export const ROAD_COST = 10;
 export function grantFog(account: string, id: string, cost: number) {
   const ledger = readLedger(account);
   if (!ledger.opened.includes(id)) ledger.opened = [...ledger.opened, id];
-  ledger.burned += cost / 2;
+  ledger.burned += cost;
   writeLedger(account, ledger);
   return true;
 }
@@ -293,7 +293,7 @@ export function grantCloth(account: string, id: string, cost: number, now = new 
   const ledger = readLedger(account);
   if (!ledger.owned.includes(id)) ledger.owned = [...ledger.owned, id];
   ledger.equipped = id;
-  ledger.burned += cost / 2;
+  ledger.burned += cost;
   writeLedger(account, ledger);
   return true;
 }
@@ -301,7 +301,7 @@ export function grantCloth(account: string, id: string, cost: number, now = new 
 export function grantAllFogs(account: string, cost: number) {
   const ledger = readLedger(account);
   ledger.allFogs = true;
-  ledger.burned += cost / 2;
+  ledger.burned += cost;
   writeLedger(account, ledger);
   return true;
 }
