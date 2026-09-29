@@ -2962,7 +2962,12 @@ function drawJungle(ctx: CanvasRenderingContext2D, t: number, reduced: boolean) 
 
 function drawCave(ctx: CanvasRenderingContext2D, camera: Camera, t: number, reduced: boolean, lit: boolean) {
   const world = 6600;
-  const roof = (x: number) => 20 + x * 0.28;
+  const roof = (x: number) => {
+    if (x < 3300) return -20 + x * 0.24;
+    const t = Math.min(1, (x - 3300) / 1400);
+    const low = -20 + 3300 * 0.24;
+    return low + (-220 - low) * t;
+  };
   ctx.fillStyle = lit ? "#8a9098" : "#4a525c";
   ctx.beginPath();
   ctx.moveTo(-120, -400);
@@ -4544,7 +4549,7 @@ export function frameCamera(
       y -= 36 * huntPull;
     }
   }
-  const yMin = sim.level.id === "moon" ? -1400 : sim.level.id === "choir" ? -820 : -40;
+  const yMin = sim.level.id === "moon" ? -1400 : sim.level.id === "choir" ? -820 : sim.level.id === "tunnel" ? -280 : -40;
   x = Math.max(0, Math.min(Math.max(0, sim.level.worldW - viewW), x));
   y = Math.max(yMin, Math.min(worldH - viewH, y));
   return { x, y, w: viewW, h: viewH };
