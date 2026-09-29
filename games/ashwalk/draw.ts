@@ -2121,7 +2121,7 @@ function drawYuleSky(ctx: CanvasRenderingContext2D, camera: Camera, t: number, r
     [3780, 740, 1],
     [4380, 700, 1.25],
   ];
-  for (const pine of pines) drawPine(ctx, pine[0], pine[1], pine[2]);
+  for (const pine of pines) drawPine(ctx, pine[0], pine[1], pine[2], true, t);
   ctx.restore();
 }
 
@@ -2153,13 +2153,16 @@ function drawYuleHill(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean)
   ctx.lineTo(9400, 866);
   ctx.lineTo(5600, 446);
   ctx.fill();
-  const trees: [number, number][] = [
-    [444, 760],
-    [1494, 860],
-    [3234, 700],
-    [4474, 760],
+  const trees: [number, number, number][] = [
+    [444, 760, 2.5],
+    [1494, 860, 3.25],
+    [3234, 700, 2.7],
+    [4474, 760, 2.8],
   ];
-  for (const [x, ground] of trees) drawPine(ctx, x, ground, 1.35);
+  for (const [x, ground, scale] of trees) drawPine(ctx, x, ground, scale, true, sim.t);
+  for (const plat of sim.level.platforms) {
+    if (plat.kind === "ladder") drawLadder(ctx, plat);
+  }
   if (reduced) return;
   ctx.fillStyle = "#f7f4ee";
   for (let i = 0; i < 90; i++) {
@@ -2171,7 +2174,14 @@ function drawYuleHill(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean)
   ctx.globalAlpha = 1;
 }
 
-function drawPine(ctx: CanvasRenderingContext2D, x: number, ground: number, scale: number) {
+function drawPine(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  ground: number,
+  scale: number,
+  lights = false,
+  t = 0,
+) {
   ctx.save();
   ctx.translate(x, ground);
   ctx.scale(scale, scale);
@@ -2193,6 +2203,33 @@ function drawPine(ctx: CanvasRenderingContext2D, x: number, ground: number, scal
   ctx.lineTo(12, -142);
   ctx.lineTo(-10, -146);
   ctx.fill();
+  if (lights) {
+    const bulbs: [number, number, string][] = [
+      [0, -150, "#ff3b3b"],
+      [-16, -128, "#3dff7a"],
+      [14, -118, "#ffd24a"],
+      [-22, -90, "#4aa3ff"],
+      [20, -78, "#ff3b3b"],
+      [-8, -62, "#ffd24a"],
+      [10, -48, "#3dff7a"],
+      [-28, -30, "#ff4fa3"],
+      [26, -18, "#4aa3ff"],
+      [0, -24, "#ffd24a"],
+    ];
+    for (const [bx, by, color] of bulbs) {
+      const glow = 0.55 + 0.45 * Math.abs(Math.sin(t * 3 + bx + by));
+      ctx.globalAlpha = glow;
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(bx, by, 3.4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = glow * 0.35;
+      ctx.beginPath();
+      ctx.arc(bx, by, 8, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
   ctx.restore();
 }
 

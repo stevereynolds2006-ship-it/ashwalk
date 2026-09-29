@@ -460,16 +460,16 @@
 }
 
 .ash-touch-eve button {
-  min-width: 55px;
-  min-height: 44px;
-  padding: 0 10px;
-  font-size: 11px;
+  min-width: 69px;
+  min-height: 55px;
+  padding: 0 12px;
+  font-size: 14px;
 }
 
 .ash-touch-eve button[aria-label="Jump"] {
-  min-width: 83px;
-  min-height: 62px;
-  font-size: 14px;
+  min-width: 104px;
+  min-height: 78px;
+  font-size: 18px;
 }
 
 @media (pointer: coarse), (max-width: 800px) {
