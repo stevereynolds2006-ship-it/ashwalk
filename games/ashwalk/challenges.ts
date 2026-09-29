@@ -1315,7 +1315,7 @@ const HALLOW: Level = {
   light: { x: 400, y: 40 },
 };
 
-export const LEVELS: readonly Level[] = [SHORE, LATCH, GALE, CHOIR, GEAR, ROOF, ANTLER, MOON, MIRROR, TUNNEL, HOIST, YULE, HALLOW];
+export const LEVELS: readonly Level[] = [SHORE, LATCH, GALE, CHOIR, GEAR, ROOF, ANTLER, MOON, HALLOW, MIRROR, TUNNEL, YULE, HOIST];
 
 export function previousFog(id: string): string | null {
   const index = LEVELS.findIndex((level) => level.id === id);
@@ -1324,7 +1324,7 @@ export function previousFog(id: string): string | null {
 }
 
 /** Try build. Set true to open every fog. */
-export const TRY_ALL = true;
+export const TRY_ALL = false;
 /** Lets the tunnel be played before December 1. */
 export const TRY_TUNNEL = false;
 /** Lets the choir be played before the road is open. */
@@ -1332,8 +1332,8 @@ export const TRY_CHOIR = false;
 /** The hoist stays shut until January 1. */
 export const TRY_HOIST = false;
 
-/** The eve is open to try. */
-export const TRY_YULE = true;
+/** The eve stays shut until December 25. */
+export const TRY_YULE = false;
 
 export function fogTry(id: string) {
   return (id === "tunnel" && TRY_TUNNEL) || (id === "choir" && TRY_CHOIR) || (id === "hoist" && TRY_HOIST) || (id === "yule" && TRY_YULE);
@@ -1349,10 +1349,11 @@ export function fogReleased(id: string, now = new Date()) {
   if (id === "hoist" && TRY_HOIST) return true;
   if (id === "yule" && TRY_YULE) return true;
   if (id === "moon") return now >= new Date(2026, 9, 1);
+  if (id === "hallow") return now >= new Date(2026, 9, 31);
   if (id === "mirror") return now >= new Date(2026, 10, 1);
   if (id === "tunnel") return now >= new Date(2026, 11, 1);
+  if (id === "yule") return now >= new Date(2026, 11, 25);
   if (id === "hoist") return now >= new Date(2027, 0, 1);
-  if (id === "hallow") return now >= new Date(2026, 9, 31);
   return true;
 }
 
