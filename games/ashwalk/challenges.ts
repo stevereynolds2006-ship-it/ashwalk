@@ -1098,7 +1098,7 @@ const YULE: Level = {
   id: "yule",
   title: "The eve",
   kicker: "The light is only on the hill.",
-  rule: "Snow falls through one shaft of light. The candles stand on the hills. Light the three tall ones. The reindeer run the ground. Step onto the sled. It takes the hill to the exit.",
+  rule: "Snow falls through one shaft of light. Light the candles on the way. The reindeer run the ground. Step onto the sled and it carries you down the hill.",
   together: "The candles stay lit for everyone. The reindeer do not.",
   clearKicker: "The eve",
   clearTitle: "The hill kept the light",
@@ -1158,7 +1158,7 @@ const YULE: Level = {
   chapters: [
     { x: 0, id: "eve", title: "The eve", kicker: "Light the candles." },
     { x: 1100, id: "well", title: "The dip", kicker: "Down, then out." },
-    { x: 3200, id: "sled", title: "The sled", kicker: "Use it." },
+    { x: 3200, id: "sled", title: "The sled", kicker: "It takes you." },
   ],
   light: { x: 220, y: 80 },
 };

@@ -1033,17 +1033,22 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
     }
   }
 
-  if (level.id === "yule" && !sim.won && sim.suck <= 0 && sim.beacons.size >= level.beacons.length) {
-    const crest = sim.x > 3380 && sim.x < 3620 && sim.y + PH > 378 && sim.y + PH < 430;
-    if (sim.cage > 0 || crest) {
-      if (sim.cage <= 0) sim.cage = 0.02;
-      sim.cage = Math.min(1, sim.cage + dt / 6);
+  if (level.id === "yule" && !sim.won && sim.suck <= 0) {
+    const onCrest =
+      sim.x + PW > 3360 &&
+      sim.x < 3640 &&
+      sim.y + PH > 360 &&
+      sim.y + PH < 470;
+    if (sim.cage > 0 || onCrest) {
+      if (sim.cage <= 0) sim.cage = 0.04;
+      sim.cage = Math.min(1, sim.cage + dt / 5.5);
       const u = sim.cage;
       sim.vx = 0;
       sim.vy = 0;
       sim.climbing = false;
-      sim.x = 3480 + u * 1160;
-      sim.y = 400 - PH + u * 250;
+      sim.grounded = true;
+      sim.x = 3460 + u * 1180;
+      sim.y = 400 - PH + u * u * 270;
     }
   }
 
@@ -1094,7 +1099,7 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
   stepPal(sim, dt);
   sim.doorLocked =
     (level.id === "shore" && (sim.rope < 1 || sim.rope2 < 1 || sim.saved <= 2)) ||
-    (level.beacons.length > 0 && sim.beacons.size < level.beacons.length) ||
+    (level.beacons.length > 0 && sim.beacons.size < level.beacons.length && !(level.id === "yule" && sim.cage > 0.15)) ||
     (!!level.stalker && !sim.caged) ||
     (!!level.hunter && sim.wake < 1) ||
     !comboSet(sim);
