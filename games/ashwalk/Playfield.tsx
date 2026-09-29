@@ -1041,7 +1041,9 @@ export function Playfield({
           shoreGlowRef.current <= 0
           ? sim.level.id === "choir"
             ? 0.58
-            : 0.86
+            : sim.level.id === "shore"
+              ? 0.72
+              : 0.86
           : sim.level.id === "hoist"
             ? Math.max(0.08, 0.84 - (sim.altars.size / Math.max(1, sim.level.lamps?.length ?? 1)) * 0.76) *
               (sim.altars.size > 0 ? 0.5 : 1)
