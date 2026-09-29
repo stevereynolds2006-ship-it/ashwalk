@@ -2998,6 +2998,7 @@ function drawPumpkins(ctx: CanvasRenderingContext2D, sim: Sim) {
   ctx.save();
   for (const bell of sim.level.beacons) {
     const lit = sim.beacons.has(bell.id);
+    if (sim.level.id === "hallow" && lit) continue;
     const x = bell.x + bell.w / 2;
     const y = bellSurface(sim, x, bell.y + bell.h);
     ctx.fillStyle = lit ? "#ff8a1a" : "#c45a10";

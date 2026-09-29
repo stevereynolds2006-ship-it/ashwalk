@@ -1212,7 +1212,7 @@ const HALLOW: Level = {
   id: "hallow",
   title: "The hallow",
   kicker: "The yard is awake.",
-  rule: "Saws swing over the gaps. Scarecrows walk the ground. Climb the ropes to the house. Blood falls from the ceiling. Find three pumpkins and use them. Then the gate.",
+  rule: "Saws swing over the gaps. Scarecrows walk the ground. Climb the ropes to the house. Blood falls from the ceiling. Walk over three pumpkins. Then the gate.",
   together: "The pumpkins are shared. The saws and the scarecrows are the same for everyone.",
   clearKicker: "The hallow",
   clearTitle: "The house let you out",

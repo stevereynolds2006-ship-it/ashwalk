@@ -1026,7 +1026,7 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
     if (sim.beacons.has(beacon.id)) continue;
     if (!zoneHit(sim.x, sim.y, beacon)) continue;
     sim.nearBeacon = beacon.id;
-    if (input.interactPressed) {
+    if (level.id === "hallow" || input.interactPressed) {
       sim.beacons.add(beacon.id);
       events.beacon = beacon.id;
     }
