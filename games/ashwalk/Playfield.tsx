@@ -1043,7 +1043,9 @@ export function Playfield({
             ? 0.58
             : sim.level.id === "shore"
               ? 0.72
-              : 0.86
+              : sim.level.id === "roof"
+                ? 0.38
+                : 0.86
           : sim.level.id === "hoist"
             ? Math.max(0.08, 0.84 - (sim.altars.size / Math.max(1, sim.level.lamps?.length ?? 1)) * 0.76) *
               (sim.altars.size > 0 ? 0.5 : 1)
@@ -1838,7 +1840,7 @@ export function Playfield({
             <button type="button" aria-label="Use" draggable={false} {...hold("use")}>
               Use
             </button>
-            {(pickId === "hoist" || pickId === "yule") && (
+            {(pickId === "hoist" || pickId === "yule" || pickId === "antler") && (
               <button type="button" aria-label="Climb down" draggable={false} {...hold("down")}>
                 Down
               </button>

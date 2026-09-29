@@ -64,16 +64,17 @@ const SKY: Record<string, [string, string, string, string]> = {
   gale: ["#121214", "#7a7a7e", "#3c3c40", "#101012"],
   choir: ["#5a5a62", "#f4f2ec", "#ddd9d2", "#4a4a52"],
   gear: ["#16161a", "#c8c8cc", "#7a7a80", "#121214"],
-  roof: ["#2a2a2c", "#c8c8c6", "#6a6a6c", "#121214"],
-  antler: ["#101114", "#c5c3be", "#6d6b68", "#101114"],
+  roof: ["#4a4c50", "#e4e2de", "#b0aea8", "#3a3c40"],
+  antler: ["#2a2c30", "#c8c6c0", "#8a8884", "#1c1e22"],
   moon: ["#050506", "#101218", "#1a1c22", "#050506"],
+  mirror: ["#3a3e44", "#d8d8d4", "#a4a8ae", "#2a2e34"],
   tunnel: ["#050506", "#101012", "#0c0c0e", "#050506"],
   hoist: ["#101012", "#cfcbc6", "#8a8682", "#0c0c0e"],
   yule: ["#050506", "#9a9894", "#2a2a2c", "#050506"],
 };
 
 function drawLowerFill(ctx: CanvasRenderingContext2D, camera: Camera, id: string) {
-  if (id === "yule" || id === "tunnel") return;
+  if (id === "yule" || id === "tunnel" || id === "roof" || id === "mirror") return;
   ctx.save();
   const spacing = id === "moon" ? 360 : 280;
   const layer = camera.x * 0.7;
@@ -102,8 +103,8 @@ function drawLowerFill(ctx: CanvasRenderingContext2D, camera: Camera, id: string
       ctx.lineTo(worldX + 160, g + 180);
       ctx.lineTo(worldX - 160, g + 180);
       ctx.fill();
-    } else if (id === "shore") {
-      drawRealTree(ctx, { x: worldX, ground: g, scale: 1.7 + (n % 3) * 0.28, seed: 40 + n * 11 }, 0.86);
+    } else if (id === "shore" || id === "antler") {
+      drawRealTree(ctx, { x: worldX, ground: g, scale: id === "antler" ? 2.15 + (n % 3) * 0.4 : 1.7 + (n % 3) * 0.28, seed: 40 + n * 11 }, id === "antler" ? 0.55 : 0.86);
     } else {
       drawTree(ctx, { x: worldX, ground: g, scale: 2.6 + (n % 3) * 0.5, seed: 90 + n * 13 }, 0.78);
     }
@@ -3084,33 +3085,34 @@ function drawCaveBats(
 
 function drawMirrorFog(ctx: CanvasRenderingContext2D, camera: Camera, sim: Sim, reduced: boolean) {
   ctx.save();
-  ctx.translate(camera.x * 0.62, camera.y * 0.2);
-  drawJungle(ctx, sim.t, reduced);
-  ctx.restore();
-
-  const wash = ctx.createLinearGradient(0, 360, 0, 520);
-  wash.addColorStop(0, "rgba(8,8,10,0)");
-  wash.addColorStop(0.55, "rgba(196,196,192,0.16)");
-  wash.addColorStop(1, "rgba(8,8,10,0)");
-  ctx.fillStyle = wash;
-  ctx.fillRect(0, 340, sim.level.worldW, 200);
-
-  ctx.fillStyle = "#101114";
-  ctx.fillRect(0, 500, sim.level.worldW, 1400);
-  if (!reduced) {
-    ctx.strokeStyle = "rgba(220,220,216,0.12)";
-    ctx.lineWidth = 1;
-    for (let i = 0; i < 18; i++) {
-      const y = 512 + i * 28 + Math.sin(sim.t * 0.6 + i) * 1.5;
-      const fade = Math.max(0.04, 0.14 - i * 0.006);
-      ctx.strokeStyle = `rgba(220,220,216,${fade})`;
-      ctx.beginPath();
-      ctx.moveTo(0, y);
-      ctx.lineTo(sim.level.worldW, y + 2);
-      ctx.stroke();
+  const spacing = 190;
+  const layer = camera.x * 0.78;
+  const first = Math.floor((layer - 400) / spacing) * spacing;
+  const last = layer + camera.w + 400;
+  const top = camera.y - 40;
+  const bottom = camera.y + camera.h + 80;
+  for (let x = first; x <= last; x += spacing) {
+    const n = Math.abs(Math.round(x / spacing));
+    const worldX = camera.x + (x - layer);
+    const w = 150 + (n % 3) * 16;
+    const pane = bottom - top;
+    ctx.fillStyle = n % 2 ? "rgba(214,216,220,0.42)" : "rgba(186,190,196,0.5)";
+    ctx.fillRect(worldX, top, w, pane);
+    ctx.strokeStyle = "rgba(244,241,234,0.85)";
+    ctx.lineWidth = 3;
+    ctx.strokeRect(worldX, top, w, pane);
+    ctx.strokeStyle = "rgba(255,255,255,0.55)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(worldX + 10, top + 16);
+    ctx.lineTo(worldX + w * 0.42, top + pane * 0.55);
+    ctx.stroke();
+    if (!reduced) {
+      ctx.fillStyle = "rgba(255,255,255,0.18)";
+      ctx.fillRect(worldX + 12, top + 24 + (n % 4) * 30, w * 0.28, pane * 0.22);
     }
   }
-
+  ctx.restore();
 }
 
 function drawMoonFog(ctx: CanvasRenderingContext2D, camera: Camera, t: number, reduced: boolean, light: number) {
@@ -3340,7 +3342,7 @@ export function renderFrame(
   if (sim.level.id === "roof") {
     drawSkyline(ctx, camera);
     drawRareSign(ctx, sim.t, reduced);
-  } else if (sim.level.id === "shore" || sim.level.id === "antler") {
+  } else if (sim.level.id === "shore") {
     ctx.save();
     ctx.translate(camera.x * 0.72, camera.y * 0.4);
     for (const tree of SHORE_FAR) drawRealTree(ctx, tree, 0.55);
@@ -3349,6 +3351,19 @@ export function renderFrame(
     ctx.save();
     ctx.translate(camera.x * 0.4, camera.y * 0.15);
     for (const tree of SHORE_NEAR) drawRealTree(ctx, tree, 0.92);
+    ctx.restore();
+  } else if (sim.level.id === "antler") {
+    ctx.save();
+    ctx.translate(camera.x * 0.55, camera.y * 0.2);
+    for (const tree of SHORE_FAR) {
+      drawRealTree(ctx, { ...tree, scale: tree.scale + 0.9, ground: tree.ground + 40 }, 0.42);
+    }
+    ctx.restore();
+    ctx.save();
+    ctx.translate(camera.x * 0.32, camera.y * 0.08);
+    for (const tree of SHORE_NEAR) {
+      drawRealTree(ctx, { ...tree, scale: tree.scale + 1.15, ground: tree.ground + 80 }, 0.58);
+    }
     ctx.restore();
   } else if (sim.level.id === "moon") {
     drawMoonFog(
@@ -3966,44 +3981,29 @@ function cutFog(
 
 function drawSkyline(ctx: CanvasRenderingContext2D, camera: Camera) {
   ctx.save();
-  ctx.translate(camera.x * 0.45, 40);
-  ctx.fillStyle = "rgba(12,12,14,0.55)";
-  const far: [number, number, number][] = [
-    [0, 220, 180],
-    [260, 140, 260],
-    [430, 300, 150],
-    [780, 180, 240],
-    [1000, 90, 320],
-    [1140, 260, 170],
-    [1460, 200, 280],
-    [1720, 160, 190],
-    [1940, 240, 150],
-    [2240, 120, 300],
-    [2420, 280, 160],
-    [2760, 180, 220],
-  ];
-  for (const [x, w, h] of far) {
-    ctx.fillRect(x, 520 - h, w, h + 80);
-    ctx.fillRect(x + w * 0.4, 520 - h - 28, 4, 28);
+  const spacing = 200;
+  const layer = camera.x * 0.62;
+  const first = Math.floor((layer - 500) / spacing) * spacing;
+  const last = layer + camera.w + 500;
+  const floor = camera.y + camera.h + 30;
+  for (let x = first; x <= last; x += spacing) {
+    const n = Math.abs(Math.round(x / spacing));
+    const worldX = camera.x + (x - layer) + (n % 2) * 8;
+    const w = 150 + (n % 4) * 22;
+    const h = 260 + (n % 5) * 78;
+    const top = floor - h;
+    ctx.fillStyle = n % 2 ? "rgba(92,94,98,0.78)" : "rgba(122,124,128,0.7)";
+    ctx.fillRect(worldX, top, w, h + 60);
+    ctx.fillStyle = "rgba(244,241,234,0.82)";
+    ctx.fillRect(worldX, top, w, 4);
+    ctx.fillStyle = n % 3 === 0 ? "rgba(255,214,140,0.45)" : "rgba(244,241,234,0.28)";
+    for (let wy = top + 18; wy < floor - 24; wy += 24) {
+      for (let wx = worldX + 12; wx < worldX + w - 14; wx += 18) {
+        if ((n + wx + wy) % 7 === 0) continue;
+        ctx.fillRect(wx, wy, 7, 10);
+      }
+    }
   }
-  ctx.restore();
-
-  ctx.save();
-  ctx.translate(camera.x * 0.2, 0);
-  ctx.fillStyle = "rgba(8,8,9,0.72)";
-  const near: [number, number, number][] = [
-    [-40, 360, 220],
-    [400, 200, 160],
-    [680, 280, 240],
-    [1040, 160, 180],
-    [1280, 340, 140],
-    [1700, 220, 260],
-    [2000, 180, 150],
-    [2280, 300, 210],
-    [2660, 240, 170],
-    [2980, 200, 230],
-  ];
-  for (const [x, w, h] of near) ctx.fillRect(x, 500 - h, w, h + 40);
   ctx.restore();
 }
 

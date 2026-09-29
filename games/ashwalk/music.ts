@@ -125,14 +125,14 @@ const SCENES: Record<MusicScene, SceneScore> = {
     noise: 0.045,
   },
   roof: {
-    step: 1.28,
-    drones: [42, 49, 54],
-    pluck: 66,
+    step: 1.1,
+    drones: [40, 47],
+    pluck: 64,
     wave: "triangle",
-    gain: 0.11,
-    sustain: 1.4,
-    steps: [[0, 3], [], [7], [10], [3, 15], [], [8], [12]],
-    noise: 0,
+    gain: 0.05,
+    sustain: 0.7,
+    steps: [[0], [], [7], [], [3], [], [10], []],
+    noise: 0.16,
   },
   tunnel: {
     step: 1.7,
@@ -355,6 +355,10 @@ export function createAshMusic(): AshMusic {
       noiseFilter.type = "highpass";
       noiseFilter.frequency.setTargetAtTime(1800, ctx.currentTime, 0.3);
       noiseFilter.Q.setTargetAtTime(0.45, ctx.currentTime, 0.3);
+    } else if (scene === "roof") {
+      noiseFilter.type = "bandpass";
+      noiseFilter.frequency.setTargetAtTime(640, ctx.currentTime, 0.3);
+      noiseFilter.Q.setTargetAtTime(0.7, ctx.currentTime, 0.3);
     } else {
       noiseFilter.type = "lowpass";
       noiseFilter.frequency.setTargetAtTime(420, ctx.currentTime, 0.3);
@@ -411,6 +415,11 @@ export function createAshMusic(): AshMusic {
         noiseFilter.frequency.setTargetAtTime(1500 + Math.sin(t * 0.17) * 500, t, 0.4);
         const high = drones[drones.length - 1];
         if (high) high.osc.frequency.setTargetAtTime(hz(80) + Math.sin(t * 0.12) * 8, t, 0.6);
+      } else if (scene === "roof") {
+        const traffic = 0.5 + 0.5 * Math.sin(t * 1.6);
+        const horn = Math.pow(Math.max(0, Math.sin(t * 2.8 + Math.sin(t * 0.63))), 8);
+        noiseGain.gain.setTargetAtTime(0.05 + traffic * 0.07 + horn * 0.14, t, 0.04);
+        noiseFilter.frequency.setTargetAtTime(240 + traffic * 1100 + horn * 1600, t, 0.05);
       }
     }
   }
