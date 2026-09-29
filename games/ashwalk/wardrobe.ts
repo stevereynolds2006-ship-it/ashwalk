@@ -237,7 +237,7 @@ function pay(account: string, balance: bigint, whole: number) {
   return true;
 }
 
-/** Half of a spend is burned. Odd amounts burn the extra coin. */
+/** Half of a spend used to be burned. That half is now sent to the second wallet. */
 export function burnedHalf(whole: number) {
   return whole - Math.floor(whole / 2);
 }
