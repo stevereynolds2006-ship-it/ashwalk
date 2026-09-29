@@ -1402,7 +1402,7 @@ export function Playfield({
               : "Connect a wallet to buy boards with Rare coins."}
           </p>
           <p>The shore is free. You start it with 2 coins. Coins you pick up only turn things on inside the stage. Rare coins pay to open the next fog and to buy a cape. Beat a fog, then the next one is 25 Rare coins. You cannot buy the next one until the one before it is beaten.</p>
-          <p>Every month a new map opens. A new cape opens each week, starting October 1. Every cape is 15 Rare coins. Only the red cape is open now.</p>
+          <p>Every month a new map opens. A new cape opens each week, starting October 1. Capes are 15 Rare coins. The Halloween cape and the Christmas cape are 25. Only the red cape is open now.</p>
           {stakeMsg && (
             <p className="ash-error" role="alert">
               {stakeMsg}
@@ -1461,7 +1461,7 @@ export function Playfield({
               ? `You have ${formatRareCoins(spendable(rareBalance ?? walletCoins, payingAccount) ?? 0n)} Rare coins. Only the red cape is open.`
               : "Connect a wallet to buy a cape with Rare coins."}
           </p>
-          <p className="ash-note">Only the red cape is open, at 15 Rare coins. Then one a week, each 15 Rare coins: white October 1, rainbow October 8, camo October 15, stripes October 22, pink October 29, the Halloween cape October 31, black November 5, gold November 12, ember November 19, scarlet November 26, blue December 3, yule December 10, frost December 17, gilded December 24, and the Christmas cape December 25.</p>
+          <p className="ash-note">Only the red cape is open, at 15 Rare coins. Then one a week, each 15 Rare coins, except Halloween and Christmas at 25: white October 1, rainbow October 8, camo October 15, stripes October 22, pink October 29, the Halloween cape October 31, black November 5, gold November 12, ember November 19, scarlet November 26, blue December 3, yule December 10, frost December 17, gilded December 24, and the Christmas cape December 25.</p>
           <div className="ash-levels">
             {outfitList().map((cloth) => {
               const locked = !clothReleased(cloth.id);

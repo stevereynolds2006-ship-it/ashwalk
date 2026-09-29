@@ -15,7 +15,7 @@ export const CLOTHES: readonly Cloth[] = [
   { id: "camo", name: "Camo cape", cost: 15, rare: false, note: "A camo cape." },
   { id: "stripes", name: "Striped cape", cost: 15, rare: false, note: "Red, white, and blue." },
   { id: "pink", name: "Pink cape", cost: 15, rare: false, note: "A bright pink cape." },
-  { id: "halloween", name: "Halloween cape", cost: 15, rare: false, note: "Orange, purple, and cream." },
+  { id: "halloween", name: "Halloween cape", cost: 25, rare: false, note: "Orange, purple, and cream." },
   { id: "black", name: "Black cape", cost: 15, rare: false, note: "A dark cape." },
   { id: "gold", name: "Gold cape", cost: 15, rare: false, note: "Gold with a blue band." },
   { id: "ember", name: "Ember cape", cost: 15, rare: false, note: "Torn orange streaks." },
@@ -24,7 +24,7 @@ export const CLOTHES: readonly Cloth[] = [
   { id: "yule", name: "Yule cape", cost: 15, rare: false, note: "Red, green, and white." },
   { id: "frost", name: "Frost cape", cost: 15, rare: false, note: "Ice blue and white." },
   { id: "gilded", name: "Gilded cape", cost: 15, rare: false, note: "Red with a gold edge." },
-  { id: "christmas", name: "Christmas cape", cost: 15, rare: false, note: "Red, with snow on the edge." },
+  { id: "christmas", name: "Christmas cape", cost: 25, rare: false, note: "Red, with snow on the edge." },
 ];
 
 /** Locked capes open one per week, starting October 1. */
