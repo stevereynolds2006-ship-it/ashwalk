@@ -4535,7 +4535,7 @@ export function renderFrame(
 
   if (sim.level.id === "roof") {
     drawSkyline(ctx, camera);
-    drawRareSign(ctx, sim.t, reduced);
+    if (realLevel !== "roof") drawRareSign(ctx, sim.t, reduced);
   } else if (sim.level.id === "shore") {
     const far = shoreReal ? SHORE_REAL_FAR : SHORE_FAR;
     const near = shoreReal ? SHORE_REAL_NEAR : SHORE_NEAR;
@@ -4609,6 +4609,7 @@ export function renderFrame(
   }
   if (sim.level.id === "shore" && shoreReal) drawShoreWater(ctx, camera, sim.t);
   if (sim.level.id === "gear") drawWorksGears(ctx, sim, reduced);
+  if (sim.level.id === "roof" && realLevel === "roof") drawRareSign(ctx, sim.t, reduced);
 
   drawTerrain(ctx, sim, reduced);
   if (sim.level.id === "hoist") drawToxic(ctx, sim, camera);
@@ -5457,6 +5458,7 @@ function drawGearHall(ctx: CanvasRenderingContext2D, camera: Camera, sim: Sim, r
 }
 
 function drawWorksGears(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) {
+  const ink = realLevel === "gear";
   const specks = Array.from({ length: 28 }, (_, i) => ({
     x: 40 + i * 190 + (i % 3) * 24,
     y: 120 + (i % 5) * 58,
@@ -5468,30 +5470,95 @@ function drawWorksGears(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolea
     ctx.save();
     ctx.translate(wheel.x, wheel.y);
     ctx.rotate(sim.t * (reduced ? wheel.speed * 0.35 : wheel.speed));
-    ctx.fillStyle = "rgba(12,12,14,0.72)";
-    drawCog(ctx, wheel.r, wheel.teeth);
+    if (ink) drawStippleGear(ctx, wheel.r, wheel.teeth, wheel.x);
+    else {
+      ctx.fillStyle = "rgba(12,12,14,0.72)";
+      drawCog(ctx, wheel.r, wheel.teeth);
+    }
     ctx.restore();
   }
 
   const wheels = [
-    { x: 900, y: 780, r: 340, speed: 0.22, teeth: 10 },
-    { x: 1900, y: 820, r: 400, speed: -0.16, teeth: 11 },
-    { x: 2900, y: 790, r: 360, speed: 0.18, teeth: 9 },
-    { x: 3900, y: 840, r: 380, speed: -0.2, teeth: 10 },
-    { x: 4800, y: 800, r: 300, speed: 0.24, teeth: 8 },
+    { x: 900, y: 780, r: 340, speed: 0.22, teeth: 16 },
+    { x: 1900, y: 820, r: 400, speed: -0.16, teeth: 18 },
+    { x: 2900, y: 790, r: 360, speed: 0.18, teeth: 15 },
+    { x: 3900, y: 840, r: 380, speed: -0.2, teeth: 17 },
+    { x: 4800, y: 800, r: 300, speed: 0.24, teeth: 14 },
   ];
   for (const wheel of wheels) {
     ctx.save();
     ctx.translate(wheel.x, wheel.y);
     ctx.rotate(sim.t * (reduced ? wheel.speed * 0.35 : wheel.speed));
-    ctx.fillStyle = "rgba(8,8,10,0.94)";
-    drawCog(ctx, wheel.r, wheel.teeth);
-    ctx.beginPath();
-    ctx.arc(0, 0, wheel.r * 0.16, 0, Math.PI * 2);
-    ctx.fillStyle = "#2c2c30";
-    ctx.fill();
+    if (ink) drawStippleGear(ctx, wheel.r, wheel.teeth, wheel.x);
+    else {
+      ctx.fillStyle = "rgba(8,8,10,0.94)";
+      drawCog(ctx, wheel.r, wheel.teeth);
+      ctx.beginPath();
+      ctx.arc(0, 0, wheel.r * 0.16, 0, Math.PI * 2);
+      ctx.fillStyle = "#2c2c30";
+      ctx.fill();
+    }
     ctx.restore();
   }
+}
+
+function drawStippleGear(ctx: CanvasRenderingContext2D, r: number, teeth: number, seed: number) {
+  const phase = (seed % 360) * 0.02;
+  ctx.save();
+  ctx.strokeStyle = "rgba(244,241,234,0.92)";
+  ctx.lineJoin = "miter";
+  ctx.lineWidth = Math.max(1.1, r * 0.014);
+  ctx.beginPath();
+  for (let i = 0; i < teeth; i++) {
+    const step = (Math.PI * 2) / teeth;
+    const a0 = i * step;
+    const rim = r * 0.78;
+    const at = (ang: number, rad: number, first: boolean) => {
+      const x = Math.cos(ang) * rad;
+      const y = Math.sin(ang) * rad;
+      if (first) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    };
+    at(a0, rim, i === 0);
+    at(a0 + step * 0.16, r, false);
+    at(a0 + step * 0.42, r, false);
+    at(a0 + step * 0.7, rim, false);
+  }
+  ctx.closePath();
+  ctx.stroke();
+  ctx.save();
+  ctx.translate(r * 0.012, r * 0.018);
+  ctx.globalAlpha = 0.4;
+  ctx.stroke();
+  ctx.restore();
+
+  const bands = Math.max(6, Math.min(14, Math.floor(r / 26)));
+  ctx.setLineDash(r > 80 ? [1.4, 2.2] : [1, 2]);
+  ctx.lineWidth = r > 80 ? 1.15 : 0.8;
+  for (let b = 0; b < bands; b++) {
+    const u = b / bands;
+    const base = r * (0.2 + u * 0.54);
+    const amp = r * (0.045 + u * 0.05);
+    const steps = r > 80 ? 90 : 36;
+    ctx.beginPath();
+    for (let i = 0; i <= steps; i++) {
+      const a = (i / steps) * Math.PI * 2;
+      const warp =
+        Math.sin(a * 3 + phase + b * 0.55) * amp + Math.sin(a * 5 - b * 0.8 + phase) * amp * 0.38;
+      const rad = Math.max(r * 0.18, base + warp);
+      const x = Math.cos(a) * rad;
+      const y = Math.sin(a) * rad;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  }
+  ctx.setLineDash([]);
+  ctx.fillStyle = "#050506";
+  ctx.beginPath();
+  ctx.arc(0, 0, r * 0.14, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
 }
 
 function drawPixelCrowd(ctx: CanvasRenderingContext2D, x: number, y: number, s: number) {
