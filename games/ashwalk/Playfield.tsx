@@ -185,7 +185,7 @@ async function purchasesOnChain(account: string) {
 }
 
 const REAL_PRICE = 10;
-const REAL_TRY = true;
+const REAL_TRY = false;
 const LAMP_PRICE = 5;
 const LIGHT_PRICE = 1;
 const LIGHT_SECONDS = 13;
