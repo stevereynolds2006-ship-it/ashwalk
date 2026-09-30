@@ -65,9 +65,18 @@ const SHORE_REAL_NEAR: Tree[] = Array.from({ length: 14 }, (_, i) => ({
 }));
 
 let shoreReal = false;
+let latchReal = false;
 
 export function setShoreLook(real: boolean) {
   shoreReal = real;
+}
+
+export function setLatchLook(real: boolean) {
+  latchReal = real;
+}
+
+export function latchLookOn() {
+  return latchReal;
 }
 
 const MID: Tree[] = Array.from({ length: 7 }, (_, i) => ({
@@ -112,6 +121,12 @@ function drawLowerFill(ctx: CanvasRenderingContext2D, camera: Camera, id: string
       ctx.fillStyle = "rgba(244,241,234,0.35)";
       ctx.fillRect(worldX, g - h, 90 + (n % 2) * 36, 4);
       ctx.fillRect(worldX + 16, g - h - 70, 12, 74);
+    } else if (id === "latch" && latchReal) {
+      ctx.fillStyle = "#3a2c22";
+      const h = 420 + (n % 3) * 80;
+      ctx.fillRect(worldX, g - h, 28, h + 180);
+      ctx.fillStyle = "rgba(196, 160, 110, 0.35)";
+      ctx.fillRect(worldX + 6, g - h, 3, h + 180);
     } else if (id === "gear" || id === "choir" || id === "latch") {
       ctx.fillStyle = "rgba(8,8,10,0.62)";
       const h = 340 + (n % 3) * 90;
@@ -523,7 +538,16 @@ function drawTerrain(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) 
     ctx.lineTo(rect.x - 40, rect.y + drop);
     ctx.closePath();
     ctx.fill();
-    if (sim.level.id === "shore" && shoreReal) {
+    if (sim.level.id === "latch" && latchReal) {
+      const boards = Math.max(4, Math.floor(rect.w / 22));
+      for (let i = 0; i < boards; i++) {
+        ctx.fillStyle = i % 2 === 0 ? "#5a4030" : "#3e2c20";
+        const bx = rect.x + (rect.w * i) / boards;
+        ctx.fillRect(bx, rect.y, rect.w / boards - 1.5, 16);
+      }
+      ctx.fillStyle = "rgba(214, 186, 140, 0.4)";
+      ctx.fillRect(rect.x, rect.y, rect.w, 2);
+    } else if (sim.level.id === "shore" && shoreReal) {
       const soil = ctx.createLinearGradient(rect.x, rect.y - 8, rect.x, rect.y + 70);
       soil.addColorStop(0, "#6a6256");
       soil.addColorStop(0.18, "#3e382f");
@@ -556,7 +580,7 @@ function drawTerrain(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) 
   for (const rect of bodies) {
     if (rect.terrain) continue;
     if (rect.id.startsWith("ceil")) continue;
-    if (rect.kind === "gate") drawGate(ctx, rect);
+    if (rect.kind === "gate") drawGate(ctx, rect, sim.level.id === "latch" && latchReal);
     else if (rect.id.startsWith("trap")) drawTrapDoor(ctx, sim, rect);
     else if (sim.level.platforms.find((item) => item.id === rect.id)?.gear) drawGearTooth(ctx, sim, rect);
     else if (rect.kind === "sway" || rect.kind === "rope") {
@@ -566,6 +590,8 @@ function drawTerrain(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) 
       if (shoreReal && sim.level.id === "shore" && (rect.kind === "crumble" || rect.kind === "oneway") && !rect.id.startsWith("glow")) {
         drawWood(ctx, rect);
         drawGrass(ctx, rect, 30, 2, "#3f4c32");
+      } else if (latchReal && sim.level.id === "latch" && (rect.kind === "crumble" || rect.kind === "oneway")) {
+        drawWood(ctx, rect);
       } else {
         drawPlank(ctx, rect, rect.kind === "crumble" || (sim.crumbles[rect.id]?.timer ?? 0) > 0.9, sim.level.id === "choir" || sim.level.id === "shore");
         if (sim.level.id === "shore" && (rect.kind === "crumble" || rect.kind === "oneway") && !rect.id.startsWith("glow")) drawGrass(ctx, rect, 30, 2);
@@ -1109,9 +1135,26 @@ function drawCage(ctx: CanvasRenderingContext2D, rect: RectLike, occupied: boole
   }
 }
 
-function drawGate(ctx: CanvasRenderingContext2D, rect: RectLike) {
+function drawGate(ctx: CanvasRenderingContext2D, rect: RectLike, iron = false) {
   const x = rect.x;
   const y = rect.y;
+  if (iron) {
+    ctx.fillStyle = "#2c241c";
+    ctx.fillRect(x - 6, y, rect.w + 12, 12);
+    ctx.fillRect(x - 6, y + rect.h - 10, rect.w + 12, 10);
+    ctx.fillStyle = "#6e5a48";
+    const bars = 4;
+    for (let i = 0; i < bars; i++) {
+      const bx = x + (rect.w * (i + 0.5)) / bars - 2;
+      ctx.fillRect(bx, y, 4, rect.h);
+      ctx.fillStyle = "rgba(196, 140, 80, 0.55)";
+      ctx.fillRect(bx, y + 18 + (i % 2) * 26, 4, 6);
+      ctx.fillStyle = "#6e5a48";
+    }
+    ctx.fillStyle = "rgba(232, 210, 170, 0.7)";
+    ctx.fillRect(x - 6, y, rect.w + 12, 3);
+    return;
+  }
   ctx.strokeStyle = "#0a0a0b";
   ctx.lineWidth = 2;
   ctx.beginPath();
@@ -4182,6 +4225,34 @@ function drawHangFrame(ctx: CanvasRenderingContext2D, x: number, y: number, t: n
   ctx.restore();
 }
 
+function drawLatchHall(ctx: CanvasRenderingContext2D, camera: Camera, t: number, reduced: boolean) {
+  ctx.save();
+  ctx.translate(camera.x * 0.5, camera.y * 0.08);
+  for (let x = -500; x < 6400; x += 26) {
+    ctx.fillStyle = Math.floor(x / 26) % 2 === 0 ? "#4a382c" : "#2e241c";
+    ctx.fillRect(x, -120, 24, 980);
+    ctx.fillStyle = "rgba(196, 154, 108, 0.18)";
+    ctx.fillRect(x + 3, -120, 2, 980);
+  }
+  ctx.fillStyle = "#1a120e";
+  for (let x = -240; x < 6400; x += 240) {
+    ctx.fillRect(x, 20, 42, 280);
+    ctx.fillStyle = "#6a5040";
+    ctx.fillRect(x, 20, 42, 8);
+    ctx.fillStyle = "#1a120e";
+    ctx.fillRect(x - 80, 70, 200, 16);
+  }
+  if (!reduced) {
+    ctx.fillStyle = "rgba(230, 206, 160, 0.35)";
+    for (let i = 0; i < 48; i++) {
+      const x = (i * 181 + t * 14) % 6200;
+      const y = 60 + ((i * 53) % 360) + Math.sin(t * 0.8 + i) * 8;
+      ctx.fillRect(x, y, 2, 2);
+    }
+  }
+  ctx.restore();
+}
+
 function drawLatchFog(ctx: CanvasRenderingContext2D, camera: Camera, t: number, reduced: boolean) {
   ctx.save();
   ctx.translate(camera.x * 0.62, camera.y * 0.18);
@@ -4266,7 +4337,9 @@ export function renderFrame(
 
   const skyStops = (sim.level.id === "shore" && shoreReal
     ? (["#1a2422", "#c9cfc6", "#7d8a78", "#15201c"] as [string, string, string, string])
-    : SKY[sim.level.id]) ?? SKY.shore!;
+    : sim.level.id === "latch" && latchReal
+      ? (["#1c1612", "#a08870", "#4a382c", "#120e0c"] as [string, string, string, string])
+      : SKY[sim.level.id]) ?? SKY.shore!;
   const sky = ctx.createLinearGradient(0, 0, 0, cssH);
   sky.addColorStop(0, skyStops[0]);
   sky.addColorStop(0.42, skyStops[1]);
@@ -4333,7 +4406,8 @@ export function renderFrame(
   } else if (sim.level.id === "tunnel") {
     drawCave(ctx, camera, sim.t, reduced, gloom <= 0);
   } else if (sim.level.id === "latch") {
-    drawLatchFog(ctx, camera, sim.t, reduced);
+    if (latchReal) drawLatchHall(ctx, camera, sim.t, reduced);
+    else drawLatchFog(ctx, camera, sim.t, reduced);
   } else if (sim.level.id === "gale") {
     drawGaleStorm(ctx, camera, sim.t, reduced);
     drawGaleSky(ctx);

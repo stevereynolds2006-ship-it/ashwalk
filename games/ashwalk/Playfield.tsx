@@ -11,7 +11,7 @@ import { windAccel, chapterAt } from "./level";
 import { Online, type NetApi } from "./online";
 import type { Ghost } from "./net";
 import { comboSet, createSim, step, type Actions, type Sim } from "./sim";
-import { burst, frameCamera, renderFrame, setShoreLook, viewSize } from "./draw";
+import { burst, frameCamera, latchLookOn, renderFrame, setLatchLook, setShoreLook, viewSize } from "./draw";
 import { createAshMusic, type AshMusic, type MusicScene } from "./music";
 import {
   ALL_FOGS_COST,
@@ -565,7 +565,7 @@ export function Playfield({
     }
   };
 
-  async function startLevel(id: string) {
+  async function startLevel(id: string, trial = false) {
     if (fogHeld(id)) {
       setStakeMsg("The mirror stays shut.");
       return;
@@ -586,7 +586,7 @@ export function Playfield({
       );
       return;
     }
-    if (!TRY_ALL && id !== "shore" && !fogTry(id)) {
+    if (!trial && !TRY_ALL && id !== "shore" && !fogTry(id)) {
       const prev = previousFog(id);
       if (prev && !clearedRef.current.has(prev)) {
         setStakeMsg(`Beat ${getLevel(prev).title} before you can open this fog.`);
@@ -1168,14 +1168,22 @@ export function Playfield({
 
   function beginShore(real = false) {
     setShoreLook(real);
+    setLatchLook(false);
     armAudio();
     startLevel("shore");
+  }
+
+  function beginLatch() {
+    setShoreLook(false);
+    setLatchLook(true);
+    armAudio();
+    void startLevel("latch", true);
   }
 
   function restart() {
     const id = simRef.current.level.id;
     if (session?.host) apiRef.current?.send({ k: "begin", level: id });
-    startLevel(id);
+    void startLevel(id, id === "latch" && latchLookOn());
   }
 
   function chooseLevel(id: string) {
@@ -1468,6 +1476,9 @@ export function Playfield({
             <button type="button" className="ash-btn-ghost" onClick={() => beginShore(true)}>
               Realistic shore · free
             </button>
+            <button type="button" className="ash-btn-ghost" onClick={beginLatch}>
+              Realistic latch · free
+            </button>
             <button type="button" className="ash-btn-ghost" onClick={() => go("levels")}>
               Other fogs
             </button>
@@ -1588,6 +1599,7 @@ export function Playfield({
             onPick={(id) => {
               armAudio();
               if (id === "shore") setShoreLook(false);
+              setLatchLook(false);
               startLevel(id);
             }}
           />
