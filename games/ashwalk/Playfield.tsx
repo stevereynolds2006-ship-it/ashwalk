@@ -11,7 +11,7 @@ import { windAccel, chapterAt } from "./level";
 import { Online, type NetApi } from "./online";
 import type { Ghost } from "./net";
 import { comboSet, createSim, step, type Actions, type Sim } from "./sim";
-import { burst, frameCamera, latchLookOn, renderFrame, setLatchLook, setShoreLook, viewSize } from "./draw";
+import { burst, frameCamera, latchLookOn, mirrorLookOn, renderFrame, setLatchLook, setMirrorLook, setShoreLook, viewSize } from "./draw";
 import { createAshMusic, type AshMusic, type MusicScene } from "./music";
 import {
   ALL_FOGS_COST,
@@ -33,7 +33,7 @@ import {
 } from "./wardrobe";
 import "./ashwalk.css";
 
-type Phase = "title" | "levels" | "lobby" | "play" | "pause" | "lives" | "rite" | "clear" | "clothes";
+type Phase = "title" | "levels" | "real" | "lobby" | "play" | "pause" | "lives" | "rite" | "clear" | "clothes";
 type Holds = { left: boolean; right: boolean; jump: boolean; down: boolean; use: boolean };
 type Session = { code: string; host: boolean };
 type WalletProvider = { request: (args: { method: string; params?: unknown[] }) => Promise<unknown> };
@@ -566,11 +566,11 @@ export function Playfield({
   };
 
   async function startLevel(id: string, trial = false) {
-    if (fogHeld(id)) {
+    if (!trial && fogHeld(id)) {
       setStakeMsg("The mirror stays shut.");
       return;
     }
-    if (!fogReleased(id)) {
+    if (!trial && !fogReleased(id)) {
       setStakeMsg(
         id === "mirror"
           ? "The mirror opens November 1. Coming soon."
@@ -1129,7 +1129,7 @@ export function Playfield({
         const current = phaseRef.current;
         if (current === "play") go("pause");
         else if (current === "pause" || current === "rite") go("play");
-        else if (current === "levels" || current === "clothes") go("title");
+        else if (current === "levels" || current === "clothes" || current === "real") go("title");
         else if (current === "lobby" && !session) go("title");
         return;
       }
@@ -1169,21 +1169,23 @@ export function Playfield({
   function beginShore(real = false) {
     setShoreLook(real);
     setLatchLook(false);
+    setMirrorLook(false);
     armAudio();
     startLevel("shore");
   }
 
-  function beginLatch() {
-    setShoreLook(false);
-    setLatchLook(true);
+  function beginReal(id: "shore" | "latch" | "mirror") {
+    setShoreLook(id === "shore");
+    setLatchLook(id === "latch");
+    setMirrorLook(id === "mirror");
     armAudio();
-    void startLevel("latch", true);
+    void startLevel(id, true);
   }
 
   function restart() {
     const id = simRef.current.level.id;
     if (session?.host) apiRef.current?.send({ k: "begin", level: id });
-    void startLevel(id, id === "latch" && latchLookOn());
+    void startLevel(id, (id === "latch" && latchLookOn()) || (id === "mirror" && mirrorLookOn()));
   }
 
   function chooseLevel(id: string) {
@@ -1344,7 +1346,7 @@ export function Playfield({
           onLobby={() => go("lobby")}
         />
       )}
-      {phase !== "title" && phase !== "levels" && phase !== "lobby" && (
+      {phase !== "title" && phase !== "levels" && phase !== "real" && phase !== "lobby" && (
         <div className="ash-hud">
           <div>
             <p className="ash-kicker">{identity}</p>
@@ -1473,11 +1475,8 @@ export function Playfield({
             <button type="button" className="ash-btn" onClick={() => beginShore(false)}>
               Walk into the fog
             </button>
-            <button type="button" className="ash-btn-ghost" onClick={() => beginShore(true)}>
-              Realistic shore · free
-            </button>
-            <button type="button" className="ash-btn-ghost" onClick={beginLatch}>
-              Realistic latch · free
+            <button type="button" className="ash-btn-ghost" onClick={() => go("real")}>
+              Realistic fog
             </button>
             <button type="button" className="ash-btn-ghost" onClick={() => go("levels")}>
               Other fogs
@@ -1574,6 +1573,32 @@ export function Playfield({
           </div>
         </section>
       )}
+      {phase === "real" && (
+        <section className="ash-panel" aria-label="Realistic fog">
+          <p className="ash-kicker">A closer look</p>
+          <h2>Realistic fog</h2>
+          <p className="ash-note">These are free. They do not open the paid boards.</p>
+          <div className="ash-levels">
+            {(
+              [
+                ["shore", "The shore", "Earth, water, and fuller trees."],
+                ["latch", "The latch", "A timber hall and iron gates."],
+                ["mirror", "The mirror", "A hall of glass over a jungle."],
+              ] as const
+            ).map(([id, title, note]) => (
+              <button key={id} type="button" className="ash-level" onClick={() => beginReal(id)}>
+                <span>{title}</span>
+                <small>{note} Free.</small>
+              </button>
+            ))}
+          </div>
+          <div className="ash-actions">
+            <button type="button" className="ash-btn-ghost" onClick={() => go("title")}>
+              Back
+            </button>
+          </div>
+        </section>
+      )}
       {phase === "levels" && (
         <section className="ash-panel" aria-label="Choose a fog">
           <p className="ash-kicker">Four woods</p>
@@ -1600,6 +1625,7 @@ export function Playfield({
               armAudio();
               if (id === "shore") setShoreLook(false);
               setLatchLook(false);
+              setMirrorLook(false);
               startLevel(id);
             }}
           />

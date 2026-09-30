@@ -11,7 +11,7 @@ export type NetApi = {
   peerCount: () => number;
 };
 
-type Phase = "title" | "levels" | "lobby" | "play" | "pause" | "lives" | "rite" | "clear" | "clothes";
+type Phase = "title" | "levels" | "real" | "lobby" | "play" | "pause" | "lives" | "rite" | "clear" | "clothes";
 
 function inRun(phase: Phase) {
   return phase === "play" || phase === "pause" || phase === "lives" || phase === "rite" || phase === "clear";

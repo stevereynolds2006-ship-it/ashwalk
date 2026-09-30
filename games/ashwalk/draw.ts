@@ -66,6 +66,7 @@ const SHORE_REAL_NEAR: Tree[] = Array.from({ length: 14 }, (_, i) => ({
 
 let shoreReal = false;
 let latchReal = false;
+let mirrorReal = false;
 
 export function setShoreLook(real: boolean) {
   shoreReal = real;
@@ -77,6 +78,14 @@ export function setLatchLook(real: boolean) {
 
 export function latchLookOn() {
   return latchReal;
+}
+
+export function setMirrorLook(real: boolean) {
+  mirrorReal = real;
+}
+
+export function mirrorLookOn() {
+  return mirrorReal;
 }
 
 const MID: Tree[] = Array.from({ length: 7 }, (_, i) => ({
@@ -538,7 +547,13 @@ function drawTerrain(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) 
     ctx.lineTo(rect.x - 40, rect.y + drop);
     ctx.closePath();
     ctx.fill();
-    if (sim.level.id === "latch" && latchReal) {
+    if (sim.level.id === "mirror" && mirrorReal) {
+      ctx.fillStyle = "#24302c";
+      ctx.fillRect(rect.x, rect.y - 2, rect.w, 14);
+      ctx.fillStyle = "rgba(186, 210, 200, 0.45)";
+      ctx.fillRect(rect.x, rect.y, rect.w, 2);
+      drawReeds(ctx, rect);
+    } else if (sim.level.id === "latch" && latchReal) {
       const boards = Math.max(4, Math.floor(rect.w / 22));
       for (let i = 0; i < boards; i++) {
         ctx.fillStyle = i % 2 === 0 ? "#5a4030" : "#3e2c20";
@@ -4028,6 +4043,14 @@ function drawMirrorFog(
   reduced: boolean,
   cloth: string | null,
 ) {
+  if (mirrorReal) {
+    ctx.save();
+    ctx.translate(camera.x * 0.35, camera.y * 0.08);
+    for (let i = 0; i < 14; i++) {
+      drawShoreTree(ctx, { x: -120 + i * 520, ground: 560, scale: 1.5 + (i % 3) * 0.25, seed: 30 + i * 17 }, 0.7);
+    }
+    ctx.restore();
+  }
   ctx.save();
   const spacing = 190;
   const layer = camera.x * 0.78;
@@ -4040,11 +4063,22 @@ function drawMirrorFog(
     const worldX = camera.x + (x - layer);
     const w = 150 + (n % 3) * 16;
     const pane = bottom - top;
-    ctx.fillStyle = n % 2 ? "rgba(214,216,220,0.42)" : "rgba(186,190,196,0.5)";
-    ctx.fillRect(worldX, top, w, pane);
-    ctx.strokeStyle = "rgba(244,241,234,0.85)";
-    ctx.lineWidth = 3;
-    ctx.strokeRect(worldX, top, w, pane);
+    if (mirrorReal) {
+      ctx.fillStyle = "rgba(18, 28, 26, 0.35)";
+      ctx.fillRect(worldX, top, w, pane);
+      ctx.fillStyle = "#3a2c22";
+      ctx.fillRect(worldX - 6, top, 8, pane);
+      ctx.fillRect(worldX + w - 2, top, 8, pane);
+      ctx.fillRect(worldX - 6, top, w + 14, 8);
+      ctx.fillStyle = "rgba(196, 168, 110, 0.7)";
+      ctx.fillRect(worldX + 4, top + 10, 2, pane - 20);
+    } else {
+      ctx.fillStyle = n % 2 ? "rgba(214,216,220,0.42)" : "rgba(186,190,196,0.5)";
+      ctx.fillRect(worldX, top, w, pane);
+      ctx.strokeStyle = "rgba(244,241,234,0.85)";
+      ctx.lineWidth = 3;
+      ctx.strokeRect(worldX, top, w, pane);
+    }
     ctx.strokeStyle = "rgba(255,255,255,0.55)";
     ctx.lineWidth = 2;
     ctx.beginPath();
@@ -4085,9 +4119,15 @@ function drawMirrorFog(
   const waterTop = 500;
   const waterBottom = camera.y + camera.h + 60;
   const wash = ctx.createLinearGradient(0, waterTop, 0, waterBottom);
-  wash.addColorStop(0, "rgba(150,190,200,0.55)");
-  wash.addColorStop(0.2, "rgba(24,48,56,0.72)");
-  wash.addColorStop(1, "rgba(8,18,22,0.88)");
+  if (mirrorReal) {
+    wash.addColorStop(0, "rgba(120, 150, 120, 0.45)");
+    wash.addColorStop(0.16, "rgba(18, 42, 32, 0.82)");
+    wash.addColorStop(1, "rgba(6, 14, 12, 0.94)");
+  } else {
+    wash.addColorStop(0, "rgba(150,190,200,0.55)");
+    wash.addColorStop(0.2, "rgba(24,48,56,0.72)");
+    wash.addColorStop(1, "rgba(8,18,22,0.88)");
+  }
   ctx.fillStyle = wash;
   ctx.fillRect(camera.x - 80, waterTop, camera.w + 160, Math.max(120, waterBottom - waterTop));
   ctx.fillStyle = "rgba(220,236,240,0.7)";
@@ -4339,7 +4379,9 @@ export function renderFrame(
     ? (["#1a2422", "#c9cfc6", "#7d8a78", "#15201c"] as [string, string, string, string])
     : sim.level.id === "latch" && latchReal
       ? (["#1c1612", "#a08870", "#4a382c", "#120e0c"] as [string, string, string, string])
-      : SKY[sim.level.id]) ?? SKY.shore!;
+      : sim.level.id === "mirror" && mirrorReal
+        ? (["#101816", "#7a8c78", "#243028", "#0c1210"] as [string, string, string, string])
+        : SKY[sim.level.id]) ?? SKY.shore!;
   const sky = ctx.createLinearGradient(0, 0, 0, cssH);
   sky.addColorStop(0, skyStops[0]);
   sky.addColorStop(0.42, skyStops[1]);
