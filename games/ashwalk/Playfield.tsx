@@ -1144,7 +1144,9 @@ export function Playfield({
                 ? 0.38
                 : sim.level.id === "tunnel"
                   ? 0.4
-                  : 0.86
+                  : sim.level.id === "stack"
+                    ? 0.48
+                    : 0.86
           : sim.level.id === "hoist"
             ? Math.max(0.08, 0.46 - (sim.altars.size / Math.max(1, sim.level.lamps?.length ?? 1)) * 0.38) *
               (sim.altars.size > 0 ? 0.55 : 1)
