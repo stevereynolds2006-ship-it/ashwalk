@@ -190,7 +190,7 @@ const LAMP_PRICE = 5;
 const LIGHT_PRICE = 1;
 const LIGHT_SECONDS = 13;
 const SHORE_COINS = 2;
-const LIFE_PRICE = 10;
+const LIFE_PRICE = 3;
 const LIVES = 3;
 const ALPHABET = "abcdefghjkmnpqrstuvwxyz23456789";
 
@@ -555,7 +555,7 @@ export function Playfield({
     const who = accountRef.current;
     const balance = rareRef.current;
     if (!who || !isAddress(who) || balance == null) {
-      setStakeMsg("Connect a wallet. A life is 10 Rare coins.");
+      setStakeMsg("Connect a wallet. A life is 3 Rare coins.");
       return;
     }
     if (!(await chargeRare(LIFE_PRICE, "life"))) return;
@@ -1548,7 +1548,7 @@ export function Playfield({
               <p>
                 A and D, or the arrow keys, move. W, up, or space jumps. S drops through a thin plank. On the hoist, Use climbs up and Down climbs down.
                 E pulls, lights a bell, or buys a lantern. A lantern costs 1 coin you picked up in the stage and lasts 13 seconds. The flashlight costs 5 of those coins. On the moon that buy is a saber, not a flashlight. Stand on a plank too long and it falls.
-                It comes back after 4 seconds. Three lives to a board. After that, one more life is 10 Rare coins.
+                It comes back after 4 seconds. Three lives to a board. After that, one more life is 3 Rare coins.
                 A death takes half the coins you picked up in the stage. Rare coins you spend are sent in one payment. Confirm it in your wallet.
               </p>
             </div>
@@ -1954,7 +1954,7 @@ export function Playfield({
       {phase === "play" && (
         <div
           className={
-            pickId === "hoist" ? "ash-touch ash-touch-hoist" : pickId === "yule" ? "ash-touch ash-touch-eve" : pickId === "tunnel" ? "ash-touch ash-touch-tunnel" : pickId === "roof" ? "ash-touch ash-touch-sign" : pickId === "gale" || pickId === "hallow" ? "ash-touch ash-touch-gale" : "ash-touch"
+            pickId === "hoist" ? "ash-touch ash-touch-hoist" : pickId === "yule" ? "ash-touch ash-touch-eve" : pickId === "tunnel" ? "ash-touch ash-touch-tunnel" : pickId === "roof" ? "ash-touch ash-touch-sign" : pickId === "gale" || pickId === "hallow" ? "ash-touch ash-touch-gale" : pickId === "antler" ? "ash-touch ash-touch-antler" : "ash-touch"
           }
           ref={bindTouch}
         >

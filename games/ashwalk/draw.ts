@@ -389,7 +389,7 @@ function drawRealBackdrop(ctx: CanvasRenderingContext2D, camera: Camera, id: str
       ctx.ellipse(x, 120 + (i % 3) * 30, 180, 36, 0, 0, Math.PI * 2);
       ctx.fill();
     }
-  } else if (id === "gear" || id === "hoist" || id === "roof") {
+  } else if (id === "gear" || id === "roof") {
     for (let x = -300; x < 9000; x += 180) {
       ctx.fillStyle = id === "roof" ? "#2a3038" : "#3a3028";
       ctx.fillRect(x, 40, 70, 520);
@@ -3762,28 +3762,40 @@ function drawLadder(ctx: CanvasRenderingContext2D, plat: { x: number; y: number;
 }
 
 function drawHoistFog(ctx: CanvasRenderingContext2D, camera: { x: number; y: number; w: number; h: number }, t: number, reduced: boolean) {
+  const full = realLevel === "hoist";
   ctx.save();
-  const spacing = 220;
-  const layer = camera.x * 0.45;
-  const first = Math.floor((layer - 400) / spacing) * spacing;
-  const last = layer + camera.w + 400;
-  const top = camera.y - 80;
-  const bottom = camera.y + camera.h + 80;
+  const spacing = full ? 86 : 220;
+  const layer = camera.x * (full ? 0.28 : 0.45);
+  const first = Math.floor((layer - 500) / spacing) * spacing;
+  const last = layer + camera.w + 500;
+  const top = camera.y - (full ? 200 : 80);
+  const bottom = camera.y + camera.h + (full ? 220 : 80);
   for (let x = first; x <= last; x += spacing) {
     const n = Math.abs(Math.round(x / spacing));
     const worldX = camera.x + (x - layer);
-    ctx.fillStyle = n % 2 ? "rgba(92,96,102,0.55)" : "rgba(120,124,128,0.42)";
-    ctx.fillRect(worldX, top, 36, bottom - top);
-    ctx.fillStyle = "rgba(244,241,234,0.45)";
-    ctx.fillRect(worldX, top + 40 + (n % 4) * 70, 36, 3);
-    ctx.fillRect(worldX + 8, top, 6, bottom - top);
+    const col = full ? 70 : 36;
+    ctx.fillStyle = full ? (n % 2 ? "#3a4038" : "#2a3028") : n % 2 ? "rgba(92,96,102,0.55)" : "rgba(120,124,128,0.42)";
+    ctx.fillRect(worldX, top, col, bottom - top);
+    ctx.fillStyle = full ? "rgba(214, 186, 120, 0.35)" : "rgba(244,241,234,0.45)";
+    const rows = full ? 8 : 1;
+    for (let row = 0; row < rows; row++) {
+      ctx.fillRect(worldX + 8, top + 36 + row * 72 + (n % 3) * 8, col - 16, full ? 16 : 3);
+    }
+    if (full) {
+      ctx.fillStyle = "rgba(244,241,234,0.28)";
+      ctx.fillRect(worldX, top, col, 4);
+    }
+  }
+  if (full) {
+    ctx.fillStyle = "rgba(18, 20, 16, 0.55)";
+    for (let y = top; y < bottom; y += 64) ctx.fillRect(camera.x - 40, y, camera.w + 80, 10);
   }
   ctx.restore();
   if (reduced) return;
-  ctx.fillStyle = "rgba(255,255,255,0.08)";
-  for (let i = 0; i < 10; i++) {
-    const x = camera.x + ((i * 180 + t * 12) % (camera.w + 80)) - 40;
-    ctx.fillRect(x, camera.y + 40 + (i % 4) * 90, 70, 120);
+  ctx.fillStyle = full ? "rgba(90, 98, 80, 0.28)" : "rgba(255,255,255,0.08)";
+  for (let i = 0; i < (full ? 18 : 10); i++) {
+    const x = camera.x + ((i * 140 + t * 8) % (camera.w + 120)) - 40;
+    ctx.fillRect(x, camera.y + 20 + (i % 5) * 78, full ? 110 : 70, full ? 180 : 120);
   }
 }
 
@@ -4188,8 +4200,8 @@ function drawMirrorFog(
   const layer = camera.x * 0.78;
   const first = Math.floor((layer - 400) / spacing) * spacing;
   const last = layer + camera.w + 400;
-  const top = camera.y - 40;
-  const bottom = camera.y + camera.h + 80;
+  const top = mirrorReal ? -120 : camera.y - 40;
+  const bottom = mirrorReal ? 1100 : camera.y + camera.h + 80;
   for (let x = first; x <= last; x += spacing) {
     const n = Math.abs(Math.round(x / spacing));
     const worldX = camera.x + (x - layer);
@@ -4271,7 +4283,7 @@ function drawMirrorFog(
       const y = waterTop + 16 + i * 18;
       ctx.beginPath();
       for (let x = camera.x - 40; x < camera.x + camera.w + 40; x += 24) {
-        const wave = Math.sin(sim.t * 1.6 + x * 0.02 + i) * 3;
+        const wave = mirrorReal ? 0 : Math.sin(sim.t * 1.6 + x * 0.02 + i) * 3;
         if (x <= camera.x - 40) ctx.moveTo(x, y + wave);
         else ctx.lineTo(x, y + wave);
       }
