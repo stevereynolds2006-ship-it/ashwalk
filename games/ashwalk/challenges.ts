@@ -1118,6 +1118,9 @@ const HOIST: Level = {
     { x0: 1400, x1: 1900, y: 678, amp: 0, speed: 52, start: 1600, kind: "rat" },
     { x0: 4220, x1: 4700, y: 678, amp: 0, speed: 58, start: 4400, kind: "rat" },
     { x0: 4480, x1: 4920, y: 678, amp: 0, speed: 40, start: 4700, kind: "rat" },
+    { kind: "shade", x0: 2200, x1: 2800, y: 700, amp: 0, speed: 20, start: 2400 },
+    { kind: "shade", x0: 3000, x1: 3600, y: 700, amp: 0, speed: 18, start: 3200 },
+    { kind: "shade", x0: 5000, x1: 5400, y: 700, amp: 0, speed: 16, start: 5120 },
   ],
   spiders: [
     { id: "arm", mode: "crawl", x0: 280, x1: 860, y: 342, ceil: 0, speed: 42, reach: 0, period: 1, phase: 0.2 },
