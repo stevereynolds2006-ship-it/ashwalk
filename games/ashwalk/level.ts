@@ -256,6 +256,11 @@ export const SHORE: Level = {
     { id: "m11", x: 4788, y: 390 },
     { id: "m14", x: 7868, y: 340 },
     { id: "m15", x: 8688, y: 400 },
+    { id: "c1", x: 980, y: 400 },
+    { id: "c2", x: 2100, y: 340 },
+    { id: "c3", x: 4500, y: 400 },
+    { id: "c4", x: 5800, y: 400 },
+    { id: "c5", x: 8100, y: 360 },
   ],
   checkpoints: [
     { id: "shore", x: 96, surface: 468 },

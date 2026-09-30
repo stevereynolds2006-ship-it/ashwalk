@@ -930,7 +930,8 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
   }
 
   if (level.id === "yule" && sim.dead <= 0 && sim.cage <= 0 && sim.suck <= 0) {
-    const needRoom = sim.moths.has("p4") && sim.gifts < level.moths.length;
+    const presents = level.moths.filter((moth) => moth.id.startsWith("p")).length;
+    const needRoom = sim.moths.has("p4") && sim.gifts < presents;
     const inRoom = sim.x > 11200;
     if (needRoom && !inRoom) {
       if (sim.hearthX === 0) {
@@ -955,10 +956,10 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
       }
     } else if (inRoom && input.interactPressed) {
       const tree = sim.x > 11940 && sim.x < 12180 && sim.y + PH > 590;
-      if (tree && sim.gifts < sim.moths.size) {
+      if (tree && sim.gifts < presents) {
         sim.gifts += 1;
         sim.feast = 1.2;
-        if (sim.gifts >= level.moths.length) sim.hearthLeave = 5;
+        if (sim.gifts >= presents) sim.hearthLeave = 5;
       }
     }
     if (inRoom && sim.feast > 0) sim.feast = Math.max(0, sim.feast - dt);
@@ -1150,7 +1151,7 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
   }
 
   if (level.id === "yule" && !sim.won && sim.suck <= 0) {
-    const presents = sim.moths.size >= level.moths.length && sim.gifts >= level.moths.length;
+    const presents = sim.moths.size >= level.moths.filter((moth) => moth.id.startsWith("p")).length && sim.gifts >= level.moths.filter((moth) => moth.id.startsWith("p")).length;
     const onCrest =
       presents &&
       sim.x + PW > 5240 &&
@@ -1223,7 +1224,7 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
   stepPal(sim, dt);
   sim.doorLocked =
     (level.id === "shore" && (sim.rope < 1 || sim.rope2 < 1 || sim.saved <= 2)) ||
-    (level.id === "yule" && sim.gifts < level.moths.length) ||
+    (level.id === "yule" && sim.gifts < level.moths.filter((moth) => moth.id.startsWith("p")).length) ||
     (level.id !== "yule" && level.beacons.length > 0 && sim.beacons.size < level.beacons.length) ||
     (!!level.stalker && !sim.caged) ||
     (!!level.hunter && sim.wake < 1) ||

@@ -769,10 +769,6 @@ function drawTerrain(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) 
       ctx.fillRect(rect.x, rect.y, rect.w, 2);
     }
   }
-  if (sim.level.id === "choir" && sim.y > 720) {
-    ctx.fillStyle = "#070708";
-    ctx.fillRect(-80, sim.y + PH, sim.level.worldW + 160, 2200);
-  }
   const lid = bodies.find((rect) => rect.id === "lid");
   if (lid) {
     ctx.fillStyle = "#070708";
@@ -3598,14 +3594,16 @@ function drawCrawler(ctx: CanvasRenderingContext2D, x: number, floor: number, t:
   ctx.restore();
 }
 
-function drawShade(ctx: CanvasRenderingContext2D, x: number, y: number, face: number, seed: number, look: "mask" | "beard" | "suit" = "mask") {
+function drawShade(ctx: CanvasRenderingContext2D, x: number, y: number, face: number, seed: number, look: "mask" | "beard" | "suit" | "jacket" = "mask") {
   ctx.save();
   ctx.translate(x + 12, y);
   ctx.scale(face < 0 ? -1 : 1, 1);
   const tall = seed % 3 === 0;
   const h = tall ? 78 : 60;
   const suit = look === "suit";
-  ctx.fillStyle = suit ? "#c45512" : "#07080c";
+  const jacket = look === "jacket";
+  const cloth = suit ? "#c45512" : jacket ? "#d9d3c6" : "#07080c";
+  ctx.fillStyle = cloth;
   ctx.fillRect(-7, -18, 4, 18);
   ctx.fillRect(4, -18, 4, 18);
   ctx.beginPath();
@@ -3619,7 +3617,7 @@ function drawShade(ctx: CanvasRenderingContext2D, x: number, y: number, face: nu
     ctx.fillRect(-7, -16, 3, 12);
     ctx.fillRect(5, -16, 3, 12);
   }
-  ctx.fillStyle = suit ? "#d26518" : "#07080c";
+  ctx.fillStyle = suit ? "#d26518" : jacket ? "#cfc8b8" : "#07080c";
   ctx.beginPath();
   ctx.moveTo(-13, -h + 18);
   ctx.quadraticCurveTo(-18, -28, -11, -16);
@@ -3627,13 +3625,27 @@ function drawShade(ctx: CanvasRenderingContext2D, x: number, y: number, face: nu
   ctx.quadraticCurveTo(18, -28, 13, -h + 18);
   ctx.closePath();
   ctx.fill();
+  if (jacket) {
+    ctx.strokeStyle = "#6a645c";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(-12, -h + 28);
+    ctx.quadraticCurveTo(0, -h + 18, 12, -h + 34);
+    ctx.moveTo(12, -h + 26);
+    ctx.quadraticCurveTo(0, -h + 40, -12, -h + 32);
+    ctx.stroke();
+    ctx.fillStyle = "#2a2826";
+    ctx.fillRect(-3, -h + 30, 6, 5);
+    ctx.fillRect(-8, -h + 38, 5, 4);
+    ctx.fillRect(3, -h + 22, 5, 4);
+  }
   if (suit) {
     ctx.fillStyle = "#1a1c20";
     ctx.fillRect(-12, -h + 34, 24, 4);
     ctx.fillStyle = "#e8c24a";
     ctx.fillRect(-12, -h + 28, 24, 2);
   }
-  ctx.fillStyle = suit ? "#d26518" : "#07080c";
+  ctx.fillStyle = suit ? "#d26518" : jacket ? "#d9d3c6" : "#07080c";
   ctx.beginPath();
   ctx.arc(0, -h + 8, tall ? 11 : 9, 0, Math.PI * 2);
   ctx.fill();
@@ -3652,7 +3664,7 @@ function drawShade(ctx: CanvasRenderingContext2D, x: number, y: number, face: nu
     ctx.quadraticCurveTo(9, -h + 30, 8, -h + 14);
     ctx.quadraticCurveTo(0, -h + 18, -8, -h + 14);
     ctx.fill();
-  } else if (suit) {
+  } else if (suit || jacket) {
     ctx.fillStyle = "#c4a48a";
     ctx.beginPath();
     ctx.ellipse(0, -h + 10, 6.4, 7.2, 0, 0, Math.PI * 2);
@@ -3661,8 +3673,10 @@ function drawShade(ctx: CanvasRenderingContext2D, x: number, y: number, face: nu
     ctx.fillRect(-2.6, -h + 8, 1.5, 1.5);
     ctx.fillRect(1.4, -h + 8, 1.5, 1.5);
     ctx.fillRect(-1.2, -h + 13, 2.4, 1.2);
-    ctx.fillStyle = "#f0c24a";
-    ctx.fillRect(-9, -h + 2, 18, 3);
+    if (suit) {
+      ctx.fillStyle = "#f0c24a";
+      ctx.fillRect(-9, -h + 2, 18, 3);
+    }
   } else {
     ctx.fillStyle = "#e4e0d8";
     ctx.beginPath();
@@ -3677,7 +3691,7 @@ function drawShade(ctx: CanvasRenderingContext2D, x: number, y: number, face: nu
     ctx.fillRect(-3.6, -h + 9, 1.3, 1.3);
     ctx.fillRect(2.8, -h + 9, 1.3, 1.3);
   }
-  if (!suit && seed % 2 === 0) {
+  if (!suit && !jacket && seed % 2 === 0) {
     ctx.strokeStyle = "#07080c";
     ctx.lineWidth = 3;
     ctx.beginPath();
@@ -4771,7 +4785,8 @@ export function renderFrame(
     else if (bird.kind === "eagle") drawEagle(ctx, bird.x, bird.y, sim.t * 8, bird.dir);
     else if (bird.kind === "scare") drawScarecrow(ctx, bird.x, bird.y, sim.t, bird.dir);
     else if (bird.kind === "shade") {
-      const look = sim.level.id === "yule" ? "beard" : sim.level.id === "gear" || sim.level.id === "hoist" ? "suit" : "mask";
+      const look =
+        sim.level.id === "yule" ? "beard" : sim.level.id === "gear" || sim.level.id === "hoist" ? "suit" : sim.level.id === "latch" ? "jacket" : "mask";
       drawShade(ctx, bird.x, bird.y, bird.dir, bird.index, look);
     }
     else drawCrow(ctx, bird.x, bird.y, sim.t * 14, bird.dir);
