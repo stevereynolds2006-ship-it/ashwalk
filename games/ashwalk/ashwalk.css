@@ -661,11 +661,19 @@
   }
 }
 
+.ash-card {
+  bottom: 120px;
+}
+
 @media (min-width: 900px) {
   .ash-card,
   .ash-panel {
     left: 28px;
     bottom: 28px;
+  }
+
+  .ash-card {
+    bottom: 148px;
   }
 }
 
