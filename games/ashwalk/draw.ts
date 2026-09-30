@@ -142,7 +142,7 @@ const SKY: Record<string, [string, string, string, string]> = {
 function drawLowerFill(ctx: CanvasRenderingContext2D, camera: Camera, id: string) {
   if (id === "yule" || id === "tunnel" || id === "roof" || id === "mirror") return;
   ctx.save();
-  const spacing = id === "moon" ? 360 : id === "hallow" ? 150 : 280;
+  const spacing = id === "moon" ? 360 : id === "hallow" ? 150 : id === "stack" ? 200 : 280;
   const layer = camera.x * 0.7;
   const first = Math.floor((layer - 700) / spacing) * spacing;
   const last = layer + camera.w + 700;
@@ -182,6 +182,9 @@ function drawLowerFill(ctx: CanvasRenderingContext2D, camera: Camera, id: string
       ctx.lineTo(worldX + 160, g + 180);
       ctx.lineTo(worldX - 160, g + 180);
       ctx.fill();
+    } else if (id === "stack") {
+      drawShoreTree(ctx, { x: worldX + 80, ground: g + 16, scale: 1.7, seed: 80 + n * 7 }, 0.42);
+      drawShoreTree(ctx, { x: worldX, ground: g + 120, scale: 2.8 + (n % 3) * 0.35, seed: 15 + n * 19 }, 0.94);
     } else if (id === "hallow") {
       ctx.strokeStyle = "rgba(120,116,110,0.9)";
       ctx.lineWidth = 2.4;
@@ -4717,12 +4720,6 @@ export function renderFrame(
     drawHallow(ctx, sim, reduced);
   } else if (sim.level.id === "stack") {
     drawGaleStorm(ctx, camera, sim.t, reduced);
-    for (let i = 0; i < 8; i++) {
-      ctx.save();
-      ctx.translate(i * 1900, 0);
-      drawHallow(ctx, sim, reduced);
-      ctx.restore();
-    }
   } else {
     ctx.save();
     ctx.translate(camera.x * 0.72, camera.y * 0.4);
