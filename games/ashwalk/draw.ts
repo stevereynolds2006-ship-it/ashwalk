@@ -408,9 +408,8 @@ function drawRealBackdrop(ctx: CanvasRenderingContext2D, camera: Camera, id: str
       ctx.arc(x, y + Math.sin(t * 0.2 + x) * 6, r, 0, Math.PI * 2);
       ctx.fill();
     }
-  } else if (id === "hallow" || id === "antler" || id === "yule") {
-    const paint = id === "yule" ? drawTree : drawShoreTree;
-    for (let i = 0; i < 12; i++) paint(ctx, { x: -80 + i * 640, ground: 540, scale: 1.4, seed: 12 + i * 9 }, id === "hallow" ? 0.45 : 0.75);
+  } else if (id === "hallow" || id === "antler") {
+    for (let i = 0; i < 12; i++) drawShoreTree(ctx, { x: -80 + i * 640, ground: 540, scale: 1.4, seed: 12 + i * 9 }, id === "hallow" ? 0.45 : 0.75);
   } else if (id === "tunnel") {
     ctx.fillStyle = "rgba(40,48,52,0.8)";
     for (let x = -200; x < 8000; x += 220) {
@@ -5554,10 +5553,6 @@ function drawStippleGear(ctx: CanvasRenderingContext2D, r: number, teeth: number
     ctx.stroke();
   }
   ctx.setLineDash([]);
-  ctx.fillStyle = "#050506";
-  ctx.beginPath();
-  ctx.arc(0, 0, r * 0.14, 0, Math.PI * 2);
-  ctx.fill();
   ctx.restore();
 }
 
