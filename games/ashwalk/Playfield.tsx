@@ -1603,6 +1603,8 @@ export function Playfield({
               ? `You have ${formatRareCoins(spendable(rareBalance ?? walletCoins, payingAccount) ?? 0n)} Rare coins.`
               : "Connect a wallet to buy boards with Rare coins."}
           </p>
+          <p>Beat a paid fog in one life and half the Rare coins you spent come off your next buy.</p>
+          {ledger.rebate > 0 && <p>{ledger.rebate} Rare coins are waiting on your next buy.</p>}
           {stakeMsg && (
             <p className="ash-error" role="alert">
               {stakeMsg}
@@ -1649,7 +1651,7 @@ export function Playfield({
           </div>
           {guide && (
             <div className="ash-guide">
-              <p>The shore is free. You start it with 2 coins. Coins you pick up only turn things on inside the stage. Rare coins pay to open the next fog and to buy a cape. Beat a fog, then the next one is 25 Rare coins. You cannot buy the next one until the one before it is beaten.</p>
+              <p>The shore is free. You start it with 2 coins. Coins you pick up only turn things on inside the stage. Rare coins pay to open the next fog and to buy a cape. Beat a fog, then the next one is 25 Rare coins. You cannot buy the next one until the one before it is beaten. Beat a paid fog without dying and half those Rare coins come off your next buy.</p>
               <p>Every month a new map opens. A new cape opens each week, starting October 1. Capes are 15 Rare coins. The Halloween cape and the Christmas cape are 25. Only the red cape is open now. The hallow opens October 31. The eve opens December 25. The hoist opens January 1st.</p>
               <p>
                 A and D, or the arrow keys, move. W, up, or space jumps. S drops through a thin plank. On the hoist, Use climbs up and Down climbs down.
@@ -1778,7 +1780,7 @@ export function Playfield({
               : "Connect a wallet to buy a board with Rare coins."}
           </p>
           <p className="ash-note">
-            The shore is free. Beat a fog before you can buy the next one. Every board after the shore is 25 Rare coins. The moon opens October 1, the hallow October 31, the mirror November 1, the tunnel December 1, the eve December 25, and the hoist January 1st.
+            The shore is free. Beat a fog before you can buy the next one. Every board after the shore is 25 Rare coins. Beat one in a single life and half of what you paid comes off the next buy. The moon opens October 1, the hallow October 31, the mirror November 1, the tunnel December 1, the eve December 25, and the hoist January 1st.
           </p>
           <LevelList
             current={pickId}
@@ -1997,7 +1999,7 @@ export function Playfield({
             simulated. One lantern costs 1 RF and returns less, on average, than it takes.
           </p>
           {clearLevel.id !== "shore" || !TRY_ALL ? (
-            <p className="ash-note">The next fog is 25 Rare coins, and only after this one is beaten.</p>
+            <p className="ash-note">The next fog is 25 Rare coins, and only after this one is beaten. Beat a paid fog in one life and half of what you paid comes off the next buy.</p>
           ) : null}
           <div className="ash-actions">
             <button type="button" className="ash-btn" onClick={() => go("rite")}>
