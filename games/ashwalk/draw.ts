@@ -4715,6 +4715,14 @@ export function renderFrame(
     drawYuleSky(ctx, camera, sim.t, reduced);
   } else if (sim.level.id === "hallow") {
     drawHallow(ctx, sim, reduced);
+  } else if (sim.level.id === "stack") {
+    drawGaleStorm(ctx, camera, sim.t, reduced);
+    for (let i = 0; i < 8; i++) {
+      ctx.save();
+      ctx.translate(i * 1900, 0);
+      drawHallow(ctx, sim, reduced);
+      ctx.restore();
+    }
   } else {
     ctx.save();
     ctx.translate(camera.x * 0.72, camera.y * 0.4);
@@ -5883,7 +5891,7 @@ export function frameCamera(
       y -= 36 * huntPull;
     }
   }
-  const yMin = sim.level.id === "moon" ? -1400 : sim.level.id === "choir" ? -820 : sim.level.id === "tunnel" ? -280 : sim.level.id === "mirror" ? -560 : sim.level.id === "roof" ? -200 : sim.level.id === "gale" ? -760 : sim.level.id === "hallow" ? -280 : -40;
+  const yMin = sim.level.id === "moon" ? -1400 : sim.level.id === "choir" ? -820 : sim.level.id === "tunnel" ? -280 : sim.level.id === "mirror" ? -560 : sim.level.id === "roof" ? -200 : sim.level.id === "gale" ? -760 : sim.level.id === "hallow" ? -280 : sim.level.id === "stack" ? -280 : -40;
   x = Math.max(0, Math.min(Math.max(0, sim.level.worldW - viewW), x));
   y = Math.max(yMin, Math.min(worldH - viewH, y));
   return { x, y, w: viewW, h: viewH };

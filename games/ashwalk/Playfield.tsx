@@ -211,7 +211,7 @@ const REAL_NOTE: Record<string, string> = {
 };
 
 function dimBoard(id: string) {
-  return id === "shore" || id === "roof" || id === "choir" || id === "tunnel";
+  return id === "shore" || id === "roof" || id === "choir" || id === "tunnel" || id === "stack";
 }
 
 function makeCode() {
@@ -639,8 +639,8 @@ export function Playfield({
     }
     livesRef.current = LIVES;
     setLives(LIVES);
-    purseRef.current = id === "shore" ? SHORE_COINS : 0;
-    setPurse(id === "shore" ? SHORE_COINS : 0);
+    purseRef.current = id === "shore" || id === "stack" ? SHORE_COINS : 0;
+    setPurse(id === "shore" || id === "stack" ? SHORE_COINS : 0);
     setStakeMsg("");
     if (id === "shore") setShopError("");
     const level = getLevel(id);
@@ -2156,7 +2156,7 @@ function musicScene(phase: Phase, sim: Sim): MusicScene {
   if (phase === "rite") return "rite";
   if (phase === "clear") return "clear";
   if (phase === "title" || phase === "levels" || phase === "lobby" || phase === "clothes") return "title";
-  if (sim.level.id === "hallow") return "hallow";
+  if (sim.level.id === "hallow" || sim.level.id === "stack") return "hallow";
   if (sim.level.id === "yule") return "yule";
   if (sim.level.id === "hoist") return "hoist";
   if (sim.level.id === "tunnel") return "tunnel";
