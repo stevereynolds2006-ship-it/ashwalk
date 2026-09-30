@@ -183,8 +183,11 @@ function drawLowerFill(ctx: CanvasRenderingContext2D, camera: Camera, id: string
       ctx.lineTo(worldX - 160, g + 180);
       ctx.fill();
     } else if (id === "stack") {
-      drawShoreTree(ctx, { x: worldX + 80, ground: g + 16, scale: 1.7, seed: 80 + n * 7 }, 0.42);
-      drawShoreTree(ctx, { x: worldX, ground: g + 120, scale: 2.8 + (n % 3) * 0.35, seed: 15 + n * 19 }, 0.94);
+      ctx.save();
+      ctx.filter = "grayscale(1) brightness(1.35) contrast(0.85)";
+      drawShoreTree(ctx, { x: worldX + 80, ground: g + 16, scale: 1.7, seed: 80 + n * 7 }, 0.5);
+      drawShoreTree(ctx, { x: worldX, ground: g + 120, scale: 2.8 + (n % 3) * 0.35, seed: 15 + n * 19 }, 0.9);
+      ctx.restore();
     } else if (id === "hallow") {
       ctx.strokeStyle = "rgba(120,116,110,0.9)";
       ctx.lineWidth = 2.4;
