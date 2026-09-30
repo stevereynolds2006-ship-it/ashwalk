@@ -1205,12 +1205,6 @@ export function Playfield({
     }
   }
 
-  function beginShore() {
-    setRealLook(null);
-    armAudio();
-    startLevel("shore");
-  }
-
   async function beginReal(id: string) {
     if (id !== "shore") {
       if (!clearedRef.current.has(id)) {
@@ -1518,14 +1512,11 @@ export function Playfield({
           )}
           {picker}
           <div className="ash-actions">
-            <button type="button" className="ash-btn" onClick={beginShore}>
-              Walk into the fog
+            <button type="button" className="ash-btn" onClick={() => go("levels")}>
+              Fog Levels
             </button>
             <button type="button" className="ash-btn-ghost" onClick={() => go("real")}>
               Realistic fog
-            </button>
-            <button type="button" className="ash-btn-ghost" onClick={() => go("levels")}>
-              Other fogs
             </button>
             <button type="button" className="ash-btn-ghost" onClick={() => go("clothes")}>
               Clothes
@@ -1663,8 +1654,8 @@ export function Playfield({
       )}
       {phase === "levels" && (
         <section className="ash-panel" aria-label="Choose a fog">
-          <p className="ash-kicker">Four woods</p>
-          <h2>Choose a fog</h2>
+          <p className="ash-kicker">The woods</p>
+          <h2>Fog Levels</h2>
           {stakeMsg && (
             <p className="ash-error" role="alert">
               {stakeMsg}
