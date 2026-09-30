@@ -183,11 +183,8 @@ function drawLowerFill(ctx: CanvasRenderingContext2D, camera: Camera, id: string
       ctx.lineTo(worldX - 160, g + 180);
       ctx.fill();
     } else if (id === "stack") {
-      ctx.save();
-      ctx.filter = "grayscale(1) brightness(1.35) contrast(0.85)";
-      drawShoreTree(ctx, { x: worldX + 80, ground: g + 16, scale: 1.7, seed: 80 + n * 7 }, 0.5);
-      drawShoreTree(ctx, { x: worldX, ground: g + 120, scale: 2.8 + (n % 3) * 0.35, seed: 15 + n * 19 }, 0.9);
-      ctx.restore();
+      drawAshTree(ctx, { x: worldX + 90, ground: g + 10, scale: 1.65, seed: 80 + n * 7 }, 0.55);
+      drawAshTree(ctx, { x: worldX, ground: g + 130, scale: 2.7 + (n % 3) * 0.32, seed: 15 + n * 19 }, 0.96);
     } else if (id === "hallow") {
       ctx.strokeStyle = "rgba(120,116,110,0.9)";
       ctx.lineWidth = 2.4;
@@ -212,6 +209,88 @@ function drawLowerFill(ctx: CanvasRenderingContext2D, camera: Camera, id: string
     } else {
       drawTree(ctx, { x: worldX, ground: g, scale: 2.6 + (n % 3) * 0.5, seed: 90 + n * 13 }, 0.78);
     }
+  }
+  ctx.restore();
+}
+
+function drawAshTree(ctx: CanvasRenderingContext2D, tree: Tree, alpha: number) {
+  const rand = rng(tree.seed);
+  ctx.save();
+  ctx.translate(tree.x, tree.ground);
+  ctx.scale(tree.scale, tree.scale);
+  ctx.globalAlpha = alpha;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  const bark = "#4a4742";
+  const ridge = "#b7b2a8";
+  const dark = "#2a2826";
+  const leaf = "#8a8680";
+  const pale = "#d8d4cc";
+  ctx.strokeStyle = dark;
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(-8, 6);
+  ctx.quadraticCurveTo(-36, 14, -58, 26);
+  ctx.moveTo(9, 6);
+  ctx.quadraticCurveTo(34, 16, 56, 24);
+  ctx.moveTo(-3, 8);
+  ctx.quadraticCurveTo(-6, 20, -14, 28);
+  ctx.stroke();
+  ctx.fillStyle = bark;
+  ctx.beginPath();
+  ctx.moveTo(-13, 22);
+  ctx.quadraticCurveTo(-16, -40, -8, -150);
+  ctx.quadraticCurveTo(-4, -178, 0, -186);
+  ctx.quadraticCurveTo(6, -176, 9, -140);
+  ctx.quadraticCurveTo(14, -30, 14, 22);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = ridge;
+  ctx.lineWidth = 1;
+  for (let i = 0; i < 9; i++) {
+    const y = 8 - i * 18;
+    ctx.beginPath();
+    ctx.moveTo(-6 + (i % 2) * 4, y);
+    ctx.quadraticCurveTo(0, y - 8, 6 - (i % 2) * 3, y - 16);
+    ctx.stroke();
+  }
+  const spray = (x: number, y: number, dir: number, len: number) => {
+    ctx.strokeStyle = dark;
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.quadraticCurveTo(x + dir * len * 0.45, y - 10, x + dir * len, y - 4);
+    ctx.stroke();
+    for (let k = 0; k < 5; k++) {
+      const u = 0.28 + k * 0.15;
+      const px = x + dir * len * u;
+      const py = y - 8 * u;
+      const side = k % 2 === 0 ? 1 : -1;
+      ctx.fillStyle = k % 2 === 0 ? leaf : pale;
+      ctx.beginPath();
+      ctx.ellipse(px + dir * 4, py + side * 7, 8, 3.4, dir * 0.5 + side * 0.6, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  };
+  for (let i = 0; i < 7; i++) {
+    const y = -36 - i * 20 - rand() * 6;
+    const dir = i % 2 === 0 ? 1 : -1;
+    const len = 54 + rand() * 48;
+    ctx.strokeStyle = bark;
+    ctx.lineWidth = Math.max(1.6, 4.2 - i * 0.4);
+    ctx.beginPath();
+    ctx.moveTo(dir * 3, y);
+    ctx.quadraticCurveTo(dir * len * 0.4, y - 16, dir * len, y - 28 - rand() * 10);
+    ctx.stroke();
+    spray(dir * len * 0.72, y - 18, dir, 28 + rand() * 16);
+    if (i % 2 === 0) spray(dir * len * 0.4, y - 6, -dir, 18 + rand() * 10);
+  }
+  ctx.fillStyle = "rgba(216, 212, 204, 0.55)";
+  for (let i = 0; i < 8; i++) {
+    const ang = (i / 8) * Math.PI - 0.1;
+    ctx.beginPath();
+    ctx.ellipse(Math.cos(ang) * (30 + rand() * 24) * (i % 2 ? 1 : -1), -168 - rand() * 22, 22 + rand() * 10, 12, (rand() - 0.5) * 0.4, 0, Math.PI * 2);
+    ctx.fill();
   }
   ctx.restore();
 }
