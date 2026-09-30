@@ -1,6 +1,6 @@
 import { spriteFrame, type GenerationSprites } from "@rarefriends/friendsdk/sprites";
 import type { Ghost } from "./net";
-import { PH, PW, birdSpots, perchPosition, rectsAt, spiderPoses, type Sim } from "./sim";
+import { PH, PW, birdSpots, comboSet, perchPosition, rectsAt, spiderPoses, type Sim } from "./sim";
 
 export type Camera = { x: number; y: number; w: number; h: number };
 
@@ -1547,10 +1547,19 @@ function drawExitSnare(ctx: CanvasRenderingContext2D, sim: Sim) {
   ctx.lineTo(x + w / 2, top);
   ctx.stroke();
   drawSheave(ctx, x + w / 2, 28, 12, sim.t * sim.cage * 3);
+  const pour = !comboSet(sim) ? Math.max(0, Math.min(1, (sim.feast - 17) / 3)) : 0;
+  drawAcidDump(ctx, x + w / 2, top, sim.t, pour);
   ctx.fillStyle = "#070708";
   ctx.fillRect(x, top, w, 7);
   ctx.fillRect(x, floor - 7, w, 7);
   for (let i = 0; i < 6; i++) ctx.fillRect(x + 8 + i * 32, top, 4, floor - top);
+  if (!comboSet(sim) && sim.dead <= 0) {
+    const left = Math.max(0, Math.ceil(20 - sim.feast));
+    ctx.fillStyle = left <= 5 ? "#d2ee55" : "#f7f4ee";
+    ctx.font = "bold 22px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(String(left), x + w / 2, floor - 40);
+  }
 }
 
 function drawPlate(ctx: CanvasRenderingContext2D, plate: RectLike, hot: boolean) {

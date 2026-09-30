@@ -576,6 +576,7 @@ function respawn(sim: Sim) {
   sim.drop = 0;
   sim.cage = 0;
   sim.suck = 0;
+  if (sim.level.id === "latch") sim.feast = 0;
   sim.climbing = false;
   sim.climbDir = -1;
   sim.nearLadder = false;
@@ -1213,10 +1214,15 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
       sim.vy = 0;
       sim.y = 468 - PH - 156 * sim.cage;
       sim.x = Math.min(5132, Math.max(4992, sim.x));
+      if (sim.cage > 0.55 && sim.dead <= 0) {
+        sim.feast += dt;
+        if (sim.feast >= 20) kill(sim, events);
+      }
     } else if (sim.cage > 0) {
       sim.cage = Math.max(0, sim.cage - dt * 1.8);
       sim.vy = 0;
       sim.y = 468 - PH - 156 * sim.cage;
+      sim.feast = 0;
     }
   }
 

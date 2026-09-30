@@ -2181,10 +2181,11 @@ function promptFor(sim: Sim, phase: Phase) {
         ? "E · light the yard · 1 coin · 13 seconds"
         : "E · buy light · 1 coin you picked up";
   }
-  if (sim.nearCombo != null) {
-    if (sim.level.id === "latch" && sim.cage > 0.4) return comboSet(sim) ? "The cage is opening" : "E · enter the number";
-    return comboSet(sim) ? "The lock is open" : "E · turn this wheel";
+  if (sim.level.id === "latch" && sim.cage > 0.4 && !comboSet(sim)) {
+    const left = Math.max(0, Math.ceil(20 - sim.feast));
+    return sim.nearCombo != null ? `Acid in ${left}s · E · enter the number` : `Acid in ${left}s`;
   }
+  if (sim.nearCombo != null) return comboSet(sim) ? "The lock is open" : "E · turn this wheel";
   if (sim.holding) return "Holding the gate";
   if (sim.gateSeconds > 0) return `Gate ${sim.gateSeconds.toFixed(1)}`;
   if (sim.nearGoal && sim.doorLocked) {
