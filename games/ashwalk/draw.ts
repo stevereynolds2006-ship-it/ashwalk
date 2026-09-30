@@ -3594,7 +3594,7 @@ function drawCrawler(ctx: CanvasRenderingContext2D, x: number, floor: number, t:
   ctx.restore();
 }
 
-function drawShade(ctx: CanvasRenderingContext2D, x: number, y: number, face: number, seed: number, look: "mask" | "beard" | "suit" | "jacket" = "mask") {
+function drawShade(ctx: CanvasRenderingContext2D, x: number, y: number, face: number, seed: number, look: "mask" | "beard" | "suit" | "jacket" = "mask", t = 0) {
   ctx.save();
   ctx.translate(x + 12, y);
   ctx.scale(face < 0 ? -1 : 1, 1);
@@ -3603,20 +3603,27 @@ function drawShade(ctx: CanvasRenderingContext2D, x: number, y: number, face: nu
   const suit = look === "suit";
   const jacket = look === "jacket";
   const cloth = suit ? "#c45512" : jacket ? "#d9d3c6" : "#07080c";
-  ctx.fillStyle = cloth;
-  ctx.fillRect(-7, -18, 4, 18);
-  ctx.fillRect(4, -18, 4, 18);
-  ctx.beginPath();
-  ctx.ellipse(-5, -1, 5, 2.2, 0, 0, Math.PI * 2);
-  ctx.ellipse(6, -1, 5, 2.2, 0, 0, Math.PI * 2);
-  ctx.fill();
-  if (suit) {
-    ctx.fillStyle = "#1a1c20";
-    ctx.fillRect(-8, -6, 16, 6);
-    ctx.fillStyle = "#d6a31a";
-    ctx.fillRect(-7, -16, 3, 12);
-    ctx.fillRect(5, -16, 3, 12);
-  }
+  const step = Math.sin(t * 8 + seed * 1.7);
+  ctx.translate(0, -Math.abs(step) * 2);
+  const leg = (hip: number, swing: number) => {
+    ctx.save();
+    ctx.translate(hip, -16);
+    ctx.rotate(swing);
+    ctx.fillStyle = cloth;
+    ctx.fillRect(-2, 0, 4, 16);
+    ctx.beginPath();
+    ctx.ellipse(0, 17, 5, 2.2, 0, 0, Math.PI * 2);
+    ctx.fill();
+    if (suit) {
+      ctx.fillStyle = "#1a1c20";
+      ctx.fillRect(-2.2, 12, 4.4, 3);
+      ctx.fillStyle = "#d6a31a";
+      ctx.fillRect(-1.5, 1, 3, 10);
+    }
+    ctx.restore();
+  };
+  leg(-5, step * 0.55);
+  leg(6, -step * 0.55);
   ctx.fillStyle = suit ? "#d26518" : jacket ? "#cfc8b8" : "#07080c";
   ctx.beginPath();
   ctx.moveTo(-13, -h + 18);
@@ -4787,7 +4794,7 @@ export function renderFrame(
     else if (bird.kind === "shade") {
       const look =
         sim.level.id === "yule" ? "beard" : sim.level.id === "gear" || sim.level.id === "hoist" ? "suit" : sim.level.id === "latch" ? "jacket" : "mask";
-      drawShade(ctx, bird.x, bird.y, bird.dir, bird.index, look);
+      drawShade(ctx, bird.x, bird.y, bird.dir, bird.index, look, reduced ? 0 : sim.t);
     }
     else drawCrow(ctx, bird.x, bird.y, sim.t * 14, bird.dir);
   }
