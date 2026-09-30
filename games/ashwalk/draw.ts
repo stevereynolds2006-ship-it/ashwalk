@@ -142,7 +142,7 @@ const SKY: Record<string, [string, string, string, string]> = {
 function drawLowerFill(ctx: CanvasRenderingContext2D, camera: Camera, id: string) {
   if (id === "yule" || id === "tunnel" || id === "roof" || id === "mirror") return;
   ctx.save();
-  const spacing = id === "moon" ? 360 : id === "hallow" ? 150 : 280;
+  const spacing = realLevel === id ? (id === "moon" ? 220 : id === "hallow" ? 90 : 150) : id === "moon" ? 360 : id === "hallow" ? 150 : 280;
   const layer = camera.x * 0.7;
   const first = Math.floor((layer - 700) / spacing) * spacing;
   const last = layer + camera.w + 700;
@@ -379,45 +379,76 @@ function drawMetal(ctx: CanvasRenderingContext2D, rect: RectLike) {
 }
 
 function drawRealBackdrop(ctx: CanvasRenderingContext2D, camera: Camera, id: string, t: number) {
+  const x0 = camera.x - 80;
+  const x1 = camera.x + camera.w + 80;
+  const top = camera.y - 40;
+  const bot = camera.y + camera.h + 80;
   ctx.save();
-  ctx.translate(camera.x * 0.35, camera.y * 0.08);
   if (id === "gale" || id === "choir") {
-    ctx.fillStyle = id === "choir" ? "rgba(244,246,248,0.55)" : "rgba(180,196,208,0.35)";
-    for (let i = 0; i < 8; i++) {
-      const x = -200 + i * 780;
-      ctx.beginPath();
-      ctx.ellipse(x, 120 + (i % 3) * 30, 180, 36, 0, 0, Math.PI * 2);
-      ctx.fill();
+    ctx.fillStyle = id === "choir" ? "rgba(236,240,244,0.72)" : "rgba(150,170,184,0.45)";
+    for (let row = 0; row < 4; row++) {
+      const y = top + 40 + row * ((bot - top) / 5);
+      for (let x = x0; x < x1; x += 220 - row * 20) {
+        ctx.beginPath();
+        ctx.ellipse(x, y, 160 - row * 18, 28 + row * 6, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
     }
-  } else if (id === "gear" || id === "hoist" || id === "roof") {
-    for (let x = -300; x < 9000; x += 180) {
-      ctx.fillStyle = id === "roof" ? "#2a3038" : "#3a3028";
-      ctx.fillRect(x, 40, 70, 520);
-      ctx.fillStyle = "rgba(230, 190, 120, 0.35)";
-      for (let w = 0; w < 3; w++) ctx.fillRect(x + 12, 80 + w * 48, 16, 22);
+    ctx.fillStyle = id === "choir" ? "rgba(90,100,112,0.35)" : "rgba(20,28,34,0.45)";
+    ctx.beginPath();
+    ctx.moveTo(x0, bot);
+    for (let x = x0; x <= x1; x += 40) {
+      ctx.lineTo(x, bot - 80 - Math.sin(x * 0.01 + t * 0.2) * 36);
+    }
+    ctx.lineTo(x1, bot);
+    ctx.fill();
+  } else if (id === "gear" || id === "hoist") {
+    for (let x = x0 - (x0 % 140); x < x1; x += 140) {
+      const h = bot - top;
+      ctx.fillStyle = id === "hoist" ? "#3a4034" : "#4a382c";
+      ctx.fillRect(x, top, 110, h);
+      ctx.fillStyle = "rgba(214, 176, 120, 0.28)";
+      for (let wy = top + 24; wy < bot - 20; wy += 36) {
+        ctx.fillRect(x + 14, wy, 22, 16);
+        ctx.fillRect(x + 48, wy + 8, 22, 16);
+      }
     }
   } else if (id === "moon") {
-    const planets: [number, number, string, number][] = [
-      [400, 80, "#c46a4a", 28],
-      [1600, 40, "#d8c07a", 18],
-      [2800, 110, "#6a8cb4", 36],
+    const planets: [number, string, number][] = [
+      [0.15, "#c46a4a", 34],
+      [0.38, "#d8c07a", 18],
+      [0.62, "#6a8cb4", 42],
+      [0.82, "#8a6a9a", 22],
     ];
-    for (const [x, y, color, r] of planets) {
+    for (const [u, color, r] of planets) {
       ctx.fillStyle = color;
       ctx.beginPath();
-      ctx.arc(x, y + Math.sin(t * 0.2 + x) * 6, r, 0, Math.PI * 2);
+      ctx.arc(x0 + (x1 - x0) * u, top + 70 + Math.sin(t * 0.25 + u * 6) * 10, r, 0, Math.PI * 2);
       ctx.fill();
     }
   } else if (id === "hallow" || id === "antler" || id === "yule") {
     const paint = id === "yule" ? drawTree : drawShoreTree;
-    for (let i = 0; i < 12; i++) paint(ctx, { x: -80 + i * 640, ground: 540, scale: 1.4, seed: 12 + i * 9 }, id === "hallow" ? 0.45 : 0.75);
+    for (let layer = 0; layer < 2; layer++) {
+      const ground = bot - 10 - layer * 30;
+      const step = layer === 0 ? 280 : 190;
+      for (let x = x0 - 100; x < x1 + 100; x += step) {
+        paint(ctx, { x, ground, scale: layer === 0 ? 1.7 : 2.3, seed: 12 + Math.floor(x) }, id === "hallow" ? 0.55 : 0.85);
+      }
+    }
   } else if (id === "tunnel") {
-    ctx.fillStyle = "rgba(40,48,52,0.8)";
-    for (let x = -200; x < 8000; x += 220) {
+    ctx.fillStyle = "rgba(28,34,38,0.9)";
+    ctx.fillRect(x0, top, x1 - x0, bot - top);
+    ctx.fillStyle = "rgba(70,78,84,0.85)";
+    for (let x = x0; x < x1; x += 70) {
       ctx.beginPath();
-      ctx.moveTo(x, 80);
-      ctx.lineTo(x + 30, 260);
-      ctx.lineTo(x + 70, 80);
+      ctx.moveTo(x, top);
+      ctx.lineTo(x + 18, top + 180 + (x % 50));
+      ctx.lineTo(x + 46, top);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(x + 10, bot);
+      ctx.lineTo(x + 28, bot - 140);
+      ctx.lineTo(x + 52, bot);
       ctx.fill();
     }
   }
@@ -4179,8 +4210,8 @@ function drawMirrorFog(
   if (mirrorReal) {
     ctx.save();
     ctx.translate(camera.x * 0.35, camera.y * 0.08);
-    for (let i = 0; i < 14; i++) {
-      drawShoreTree(ctx, { x: -120 + i * 520, ground: 560, scale: 1.5 + (i % 3) * 0.25, seed: 30 + i * 17 }, 0.7);
+    for (let i = 0; i < 22; i++) {
+      drawShoreTree(ctx, { x: -200 + i * 340, ground: 580, scale: 1.8 + (i % 3) * 0.35, seed: 30 + i * 17 }, 0.82);
     }
     ctx.restore();
   }
@@ -4424,6 +4455,13 @@ function drawLatchHall(ctx: CanvasRenderingContext2D, camera: Camera, t: number,
     }
   }
   ctx.restore();
+  ctx.save();
+  ctx.translate(camera.x * 0.22, 0);
+  for (let x = -400; x < 6800; x += 90) {
+    ctx.fillStyle = "#241910";
+    ctx.fillRect(x, -40, 54, 1100);
+  }
+  ctx.restore();
 }
 
 function drawLatchFog(ctx: CanvasRenderingContext2D, camera: Camera, t: number, reduced: boolean) {
@@ -4534,8 +4572,8 @@ export function renderFrame(
   ctx.translate(-camera.x, -camera.y);
 
   if (sim.level.id === "roof") {
-    drawSkyline(ctx, camera);
-    drawRareSign(ctx, sim.t, reduced);
+    drawSkyline(ctx, camera, realLevel === "roof");
+    if (realLevel !== "roof") drawRareSign(ctx, sim.t, reduced);
   } else if (sim.level.id === "shore") {
     const far = shoreReal ? SHORE_REAL_FAR : SHORE_FAR;
     const near = shoreReal ? SHORE_REAL_NEAR : SHORE_NEAR;
@@ -4549,6 +4587,14 @@ export function renderFrame(
     ctx.translate(camera.x * 0.4, camera.y * 0.15);
     for (const tree of near) paint(ctx, tree, shoreReal ? 0.95 : 0.92);
     ctx.restore();
+    if (shoreReal) {
+      ctx.save();
+      ctx.translate(camera.x * 0.2, camera.y * 0.05);
+      for (let i = 0; i < 16; i++) {
+        drawShoreTree(ctx, { x: -60 + i * 420, ground: 560, scale: 2.1 + (i % 3) * 0.25, seed: 90 + i * 7 }, 0.8);
+      }
+      ctx.restore();
+    }
   } else if (sim.level.id === "antler") {
     const paint = realLevel === "antler" ? drawShoreTree : drawRealTree;
     ctx.save();
@@ -4604,9 +4650,10 @@ export function renderFrame(
   }
 
   drawLowerFill(ctx, camera, sim.level.id);
-  if (realLevel === sim.level.id && sim.level.id !== "shore" && sim.level.id !== "latch" && sim.level.id !== "mirror") {
+  if (realLevel === sim.level.id && sim.level.id !== "shore" && sim.level.id !== "latch" && sim.level.id !== "mirror" && sim.level.id !== "roof") {
     drawRealBackdrop(ctx, camera, sim.level.id, sim.t);
   }
+  if (sim.level.id === "roof" && realLevel === "roof") drawRareSign(ctx, sim.t, reduced);
   if (sim.level.id === "shore" && shoreReal) drawShoreWater(ctx, camera, sim.t);
 
   drawTerrain(ctx, sim, reduced);
@@ -4712,7 +4759,7 @@ export function renderFrame(
     else if (bird.kind === "alien") drawAlien(ctx, bird.x, bird.y, bird.dir, sim.t);
     else if (bird.kind === "ship") drawShip(ctx, bird.x, bird.y, bird.dir);
     else if (bird.kind === "eagle") drawEagle(ctx, bird.x, bird.y, sim.t * 8, bird.dir);
-    else if (bird.kind === "scare") drawScarecrow(ctx, bird.x, bird.y, sim.t, bird.dir);
+    else if (bird.kind === "scare" && realLevel !== "hallow") drawScarecrow(ctx, bird.x, bird.y, sim.t, bird.dir);
     else if (bird.kind === "shade") drawShade(ctx, bird.x, bird.y, bird.dir, bird.index);
     else drawCrow(ctx, bird.x, bird.y, sim.t * 14, bird.dir);
   }
@@ -4944,6 +4991,7 @@ export function renderFrame(
     }
     ctx.globalAlpha = 1;
   }
+  if (realLevel === "hallow") drawPumpkinWalk(ctx, cssW, cssH, sim, camera);
 }
 
 function paintTunnelPlanks(
@@ -4988,6 +5036,29 @@ function paintLitBells(ctx: CanvasRenderingContext2D, cssW: number, sim: Sim, ca
     ctx.beginPath();
     ctx.arc(x, ground - 34, 46, 0, Math.PI * 2);
     ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawPumpkinWalk(
+  ctx: CanvasRenderingContext2D,
+  cssW: number,
+  cssH: number,
+  sim: Sim,
+  camera: Camera,
+) {
+  const scale = cssW / camera.w;
+  const y = cssH - 112;
+  ctx.save();
+  for (const bird of birdSpots(sim, false)) {
+    if (bird.kind !== "scare") continue;
+    const sx = (bird.x - camera.x) * scale;
+    if (sx < -60 || sx > cssW + 60) continue;
+    ctx.save();
+    ctx.translate(sx, y);
+    ctx.scale(Math.min(1.4, scale), Math.min(1.4, scale));
+    drawScarecrow(ctx, 0, 0, sim.t, bird.dir);
+    ctx.restore();
   }
   ctx.restore();
 }
@@ -5191,28 +5262,32 @@ function cutFog(
   ctx.restore();
 }
 
-function drawSkyline(ctx: CanvasRenderingContext2D, camera: Camera) {
+function drawSkyline(ctx: CanvasRenderingContext2D, camera: Camera, full = false) {
   ctx.save();
-  const spacing = 200;
-  const layer = camera.x * 0.62;
-  const first = Math.floor((layer - 500) / spacing) * spacing;
-  const last = layer + camera.w + 500;
-  const floor = camera.y + camera.h + 30;
-  for (let x = first; x <= last; x += spacing) {
-    const n = Math.abs(Math.round(x / spacing));
-    const worldX = camera.x + (x - layer) + (n % 2) * 8;
-    const w = 150 + (n % 4) * 22;
-    const h = 260 + (n % 5) * 78;
-    const top = floor - h;
-    ctx.fillStyle = n % 2 ? "rgba(92,94,98,0.78)" : "rgba(122,124,128,0.7)";
-    ctx.fillRect(worldX, top, w, h + 60);
-    ctx.fillStyle = "rgba(244,241,234,0.82)";
-    ctx.fillRect(worldX, top, w, 4);
-    ctx.fillStyle = n % 3 === 0 ? "rgba(255,214,140,0.45)" : "rgba(244,241,234,0.28)";
-    for (let wy = top + 18; wy < floor - 24; wy += 24) {
-      for (let wx = worldX + 12; wx < worldX + w - 14; wx += 18) {
-        if ((n + wx + wy) % 7 === 0) continue;
-        ctx.fillRect(wx, wy, 7, 10);
+  const layers = full ? 2 : 1;
+  for (let layer = 0; layer < layers; layer++) {
+    const spacing = full ? 120 - layer * 16 : 200;
+    const parallax = full ? 0.45 + layer * 0.22 : 0.62;
+    const slide = camera.x * parallax;
+    const first = Math.floor((slide - 700) / spacing) * spacing;
+    const last = slide + camera.w + 700;
+    const floor = camera.y + camera.h + (full ? 120 : 30);
+    for (let x = first; x <= last; x += spacing) {
+      const n = Math.abs(Math.round(x / spacing)) + layer * 3;
+      const worldX = camera.x + (x - slide);
+      const w = (full ? 200 : 150) + (n % 4) * (full ? 36 : 22);
+      const h = (full ? 640 : 260) + (n % 5) * (full ? 160 : 78) + layer * 80;
+      const top = floor - h;
+      ctx.fillStyle = layer === 0 ? (n % 2 ? "#3a4048" : "#4a525c") : n % 2 ? "rgba(70,76,84,0.92)" : "rgba(92,98,106,0.9)";
+      ctx.fillRect(worldX, top, w, h + 80);
+      ctx.fillStyle = "rgba(244,241,234,0.7)";
+      ctx.fillRect(worldX, top, w, full ? 8 : 4);
+      ctx.fillStyle = n % 3 === 0 ? "rgba(255,196,110,0.55)" : "rgba(244,241,234,0.28)";
+      for (let wy = top + 22; wy < floor - 30; wy += full ? 22 : 24) {
+        for (let wx = worldX + 14; wx < worldX + w - 16; wx += full ? 16 : 18) {
+          if ((n + wx + wy) % (full ? 5 : 7) === 0) continue;
+          ctx.fillRect(wx, wy, full ? 9 : 7, full ? 12 : 10);
+        }
       }
     }
   }
