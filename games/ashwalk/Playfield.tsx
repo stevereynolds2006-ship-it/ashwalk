@@ -185,6 +185,7 @@ async function purchasesOnChain(account: string) {
 }
 
 const REAL_PRICE = 10;
+const REAL_TRY = true;
 const LAMP_PRICE = 5;
 const LIGHT_PRICE = 1;
 const LIGHT_SECONDS = 13;
@@ -1206,7 +1207,7 @@ export function Playfield({
   }
 
   async function beginReal(id: string) {
-    if (id !== "shore") {
+    if (!REAL_TRY && id !== "shore") {
       if (!clearedRef.current.has(id)) {
         setStakeMsg(`Beat ${getLevel(id).title} before you can open this look.`);
         return;
@@ -1619,10 +1620,14 @@ export function Playfield({
               {stakeMsg}
             </p>
           )}
-          <p className="ash-note">The shore is free. Beat a fog, then its realistic look is 10 Rare coins. It stays open on this wallet.</p>
+          <p className="ash-note">
+            {REAL_TRY
+              ? "Open to try. The shore stays free. After this, beat a fog, then its realistic look is 10 Rare coins."
+              : "The shore is free. Beat a fog, then its realistic look is 10 Rare coins. It stays open on this wallet."}
+          </p>
           <div className="ash-levels">
             {LEVELS.map((level) => {
-              const free = level.id === "shore";
+              const free = level.id === "shore" || REAL_TRY;
               const beaten = free || cleared.includes(level.id);
               const owned = free || ledger.opened.includes(`real:${level.id}`);
               return (
