@@ -274,6 +274,7 @@ export function Playfield({
   const startRef = useRef<(id: string) => void>(() => {});
   const [phase, setPhase] = useState<Phase>("boot");
   const [guide, setGuide] = useState(false);
+  const [rebateOpen, setRebateOpen] = useState(false);
   const [family, setFamily] = useState("");
   const [spriteError, setSpriteError] = useState("");
   const [chapter, setChapter] = useState("The shore");
@@ -1603,8 +1604,6 @@ export function Playfield({
               ? `You have ${formatRareCoins(spendable(rareBalance ?? walletCoins, payingAccount) ?? 0n)} Rare coins.`
               : "Connect a wallet to buy boards with Rare coins."}
           </p>
-          <p>Beat a paid fog in one life and half the Rare coins you spent come off your next buy.</p>
-          {ledger.rebate > 0 && <p>{ledger.rebate} Rare coins are waiting on your next buy.</p>}
           {stakeMsg && (
             <p className="ash-error" role="alert">
               {stakeMsg}
@@ -1623,6 +1622,14 @@ export function Playfield({
           <div className="ash-actions">
             <button type="button" className="ash-btn" onClick={() => go("levels")}>
               Fog Levels
+            </button>
+            <button
+              type="button"
+              className="ash-btn"
+              aria-expanded={rebateOpen}
+              onClick={() => setRebateOpen((open) => !open)}
+            >
+              {rebateOpen ? "Hide coins back" : ledger.rebate > 0 ? `${ledger.rebate} coins waiting` : "Get coins back"}
             </button>
             <button type="button" className="ash-btn-ghost" onClick={() => go("real")}>
               Realistic fog
@@ -1649,6 +1656,14 @@ export function Playfield({
               {guide ? "Hide guide" : "Guide"}
             </button>
           </div>
+          {rebateOpen && (
+            <div className="ash-guide">
+              <p>Pay Rare coins to open a fog. Finish that fog without dying. Half of what you paid comes off your next buy.</p>
+              <p>A 25 coin fog gives 12 back. A realistic look gives 5 back. The shore is free, so nothing comes back. Die once and you get none of it.</p>
+              <p>The coins already left your wallet. They do not return to it. They come off the next board, cape, or life.</p>
+              {ledger.rebate > 0 && <p>{ledger.rebate} Rare coins are waiting on your next buy.</p>}
+            </div>
+          )}
           {guide && (
             <div className="ash-guide">
               <p>The shore is free. You start it with 2 coins. Coins you pick up only turn things on inside the stage. Rare coins pay to open the next fog and to buy a cape. Beat a fog, then the next one is 25 Rare coins. You cannot buy the next one until the one before it is beaten. Beat a paid fog without dying and half those Rare coins come off your next buy.</p>
