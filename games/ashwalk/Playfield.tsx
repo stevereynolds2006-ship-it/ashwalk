@@ -20,6 +20,7 @@ import {
   clothById,
   clothOpens,
   clothReleased,
+  commitRebate,
   equipCloth,
   formatRareCoins,
   grantAllFogs,
@@ -28,6 +29,8 @@ import {
   mergeLedger,
   outfitList,
   readLedger,
+  rebateOf,
+  addRebate,
   spendable,
   type Ledger,
 } from "./wardrobe";
@@ -299,6 +302,9 @@ export function Playfield({
   hudOpenRef.current = hudOpen;
   const purseRef = useRef(0);
   const carryRef = useRef(0);
+  const paidRunRef = useRef(0);
+  const pendingPayRef = useRef(0);
+  const deathsRef = useRef(0);
   const [purse, setPurse] = useState(0);
   const livesRef = useRef(LIVES);
   const [lives, setLives] = useState(LIVES);
@@ -313,6 +319,7 @@ export function Playfield({
     owned: [],
     equipped: null,
     opened: [],
+    rebate: 0,
   });
   const roadRef = useRef(false);
   const openedRef = useRef(new Set<string>());
@@ -437,21 +444,31 @@ export function Playfield({
     if (!(await ensureWallet())) return false;
     const who = accountRef.current;
     if (!who || !isAddress(who)) return false;
+    const covered = Math.min(rebateOf(who), whole);
+    const due = whole - covered;
+    if (due <= 0) {
+      commitRebate(who, covered);
+      refreshLedger(who);
+      setStakeMsg("");
+      return true;
+    }
     setStakeMsg("Confirm the Rare coin payment in your wallet.");
     try {
       await onRareChain(eth);
       const balance = await readRareBalance(who);
-      const cost = BigInt(whole) * 10n ** 18n;
+      const cost = BigInt(due) * 10n ** 18n;
       rareRef.current = balance;
       setWalletCoins(balance);
       if (balance < cost) {
-        setStakeMsg(`You need ${whole} Rare coins.`);
+        setStakeMsg(`You need ${due} Rare coins.`);
         return false;
       }
       await sendRare(eth, who, SHARE_ADDRESS, cost, tag);
+      if (covered > 0) commitRebate(who, covered);
       const next = await readRareBalance(who);
       rareRef.current = next;
       setWalletCoins(next);
+      refreshLedger(who);
       setStakeMsg("");
       return true;
     } catch (error) {
@@ -472,12 +489,13 @@ export function Playfield({
       return false;
     }
     if (openedRef.current.has(id)) return true;
+    const covered = Math.min(rebateOf(who), price);
     if (!(await chargeRare(price, `fog:${id}`))) return false;
     grantFog(who, id, price);
     openedRef.current.add(id);
     refreshLedger(who);
     onWardrobe?.();
-    setShopError(`Sent ${price} Rare coins.`);
+    setShopError(covered > 0 ? `Sent ${price - covered} Rare coins. ${covered} came off what you got back.` : `Sent ${price} Rare coins.`);
     return true;
   }
 
@@ -630,6 +648,7 @@ export function Playfield({
       );
       return;
     }
+    let paid = 0;
     if (!trial && !TRY_ALL && id !== "shore" && !fogTry(id)) {
       const prev = previousFog(id);
       if (prev && !clearedRef.current.has(prev)) {
@@ -639,10 +658,15 @@ export function Playfield({
       if (!openedRef.current.has(id)) {
         if (!(await ensureWallet())) return;
         if (!(await payFog(id))) return;
+        paid = fogPrice(id);
       }
     }
     livesRef.current = LIVES;
     setLives(LIVES);
+    deathsRef.current = 0;
+    const pending = trial ? pendingPayRef.current : 0;
+    pendingPayRef.current = 0;
+    paidRunRef.current = trial ? pending : paid;
     const base = id === "shore" || id === "stack" ? SHORE_COINS : 0;
     const startCoins = Math.min(CARRY_CAP, Math.max(base, carryRef.current));
     purseRef.current = startCoins;
@@ -895,6 +919,7 @@ export function Playfield({
             setPurse(halved);
             const left = Math.max(0, livesRef.current - 1);
             livesRef.current = left;
+            deathsRef.current += 1;
             setLives(left);
             const burnNote = kept
               ? "The mark kept your coins."
@@ -975,7 +1000,17 @@ export function Playfield({
             carryRef.current = reward;
             purseRef.current = reward;
             setPurse(reward);
-            setStakeMsg(`Reward: ${reward} stage coins come with you. A death still takes half.`);
+            let note = `Reward: ${reward} stage coins come with you. A death still takes half.`;
+            if (deathsRef.current === 0 && paidRunRef.current > 0) {
+              const back = Math.floor(paidRunRef.current / 2);
+              const who = accountRef.current;
+              if (back > 0 && who && isAddress(who)) {
+                addRebate(who, back);
+                refreshLedger(who);
+                note += ` One life: ${back} Rare coins come off your next buy.`;
+              }
+            }
+            setStakeMsg(note);
             markClearRef.current(sim.level.id);
             sound?.play("reward");
             setRunLabel(formatTime(sim.run));
@@ -1248,6 +1283,7 @@ export function Playfield({
   }
 
   async function beginReal(id: string) {
+    pendingPayRef.current = 0;
     if (!REAL_TRY && id !== "shore" && !fogTry(id)) {
       if (!clearedRef.current.has(id)) {
         setStakeMsg(`Beat ${getLevel(id).title} before you can open this look.`);
@@ -1256,7 +1292,8 @@ export function Playfield({
       if (!openedRef.current.has(`real:${id}`)) {
         if (!(await ensureWallet())) return;
         if (!(await payReal(id))) return;
-      }
+        pendingPayRef.current = REAL_PRICE;
+      } else pendingPayRef.current = 0;
     }
     setStakeMsg("");
     setRealLook(id);
@@ -1987,9 +2024,11 @@ export function Playfield({
                 );
               }
               if (!TRY_ALL && !ledger.opened.includes(next.id)) {
+                const back = rebateOf(payingAccount);
+                const due = Math.max(0, fogPrice(next.id) - back);
                 return (
                   <button type="button" className="ash-btn" onClick={() => startLevel(next.id)}>
-                    Continue · {fogPrice(next.id)} Rare coins
+                    {due === 0 ? "Continue · covered" : `Continue · ${due} Rare coins`}
                   </button>
                 );
               }

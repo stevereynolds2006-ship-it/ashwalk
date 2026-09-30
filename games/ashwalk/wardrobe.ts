@@ -117,6 +117,8 @@ export type Ledger = {
   owned: string[];
   equipped: string | null;
   opened: string[];
+  /** Rare coins returned for a one-life clear. They come off the next buy. */
+  rebate: number;
 };
 
 export function clothById(id: string | null): Cloth | null {
@@ -125,7 +127,7 @@ export function clothById(id: string | null): Cloth | null {
 }
 
 function empty(): Ledger {
-  return { spent: 0n, allFogs: false, road: false, burned: 0, owned: [], equipped: null, opened: [] };
+  return { spent: 0n, allFogs: false, road: false, burned: 0, owned: [], equipped: null, opened: [], rebate: 0 };
 }
 
 function storageKey(account: string) {
@@ -145,6 +147,7 @@ export function readLedger(account: string | null): Ledger {
       owned?: unknown;
       equipped?: unknown;
       opened?: unknown;
+      rebate?: unknown;
     };
     return {
       spent: BigInt(parsed.spent ?? "0"),
@@ -159,6 +162,7 @@ export function readLedger(account: string | null): Ledger {
           ? parsed.equipped
           : null,
       opened: Array.isArray(parsed.opened) ? parsed.opened.filter((id): id is string => typeof id === "string") : [],
+      rebate: typeof parsed.rebate === "number" && parsed.rebate > 0 ? Math.floor(parsed.rebate) : 0,
     };
   } catch {
     return empty();
@@ -177,6 +181,7 @@ function writeLedger(account: string, ledger: Ledger) {
         owned: ledger.owned,
         equipped: ledger.equipped,
         opened: ledger.opened,
+        rebate: ledger.rebate,
       }),
     );
     return true;
@@ -199,6 +204,28 @@ export function mergeLedger(
   if (extra.allFogs) ledger.allFogs = true;
   writeLedger(account, ledger);
   return ledger;
+}
+
+export function rebateOf(account: string | null) {
+  if (!account) return 0;
+  return readLedger(account).rebate;
+}
+
+export function addRebate(account: string, whole: number) {
+  const add = Math.floor(whole);
+  if (add <= 0) return rebateOf(account);
+  const ledger = readLedger(account);
+  ledger.rebate += add;
+  writeLedger(account, ledger);
+  return ledger.rebate;
+}
+
+export function commitRebate(account: string, covered: number) {
+  const take = Math.floor(covered);
+  if (take <= 0) return;
+  const ledger = readLedger(account);
+  ledger.rebate = Math.max(0, ledger.rebate - take);
+  writeLedger(account, ledger);
 }
 
 export function spendable(balance: bigint | null, account: string | null) {
