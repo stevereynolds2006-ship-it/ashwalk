@@ -393,7 +393,7 @@
 .ash-touch {
   left: 0;
   right: 0;
-  bottom: 36px;
+  bottom: 58px;
   display: none;
   justify-content: space-between;
   gap: 12px;
@@ -451,7 +451,7 @@
 
 .ash-touch-eve {
   gap: 8px;
-  bottom: 18px;
+  bottom: 40px;
   padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
 }
 
@@ -474,7 +474,7 @@
 
 .ash-touch-tunnel {
   gap: 8px;
-  bottom: 22px;
+  bottom: 44px;
   padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
 }
 
@@ -497,7 +497,7 @@
 
 .ash-touch-sign {
   gap: 6px;
-  bottom: 16px;
+  bottom: 38px;
   padding: 6px 6px calc(6px + env(safe-area-inset-bottom));
 }
 
@@ -523,7 +523,7 @@
 
 .ash-touch-gale {
   gap: 6px;
-  bottom: 16px;
+  bottom: 38px;
   padding: 6px 6px calc(6px + env(safe-area-inset-bottom));
 }
 
@@ -553,7 +553,7 @@
   }
 
   .ash-prompt {
-    bottom: calc(156px + env(safe-area-inset-bottom));
+    bottom: calc(178px + env(safe-area-inset-bottom));
   }
 
   .ash-card,
