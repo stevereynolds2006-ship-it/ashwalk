@@ -1658,91 +1658,6 @@ CAPE_DRAPE.forEach((row, y) => {
   }
 });
 
-function knitTone(cloth: string) {
-  const tones: Record<string, { body: string; band: string; fur: string; deep: string }> = {
-    white: { body: "#f3f0ea", band: "#c9c4ba", fur: "#ffffff", deep: "#b7b2a8" },
-    pink: { body: "#e23a86", band: "#7a1848", fur: "#fff4f8", deep: "#9a1458" },
-    blue: { body: "#1d4ed8", band: "#dbe7ff", fur: "#f4fbff", deep: "#163a9a" },
-    black: { body: "#1c1c20", band: "#3a3a40", fur: "#f4f1ea", deep: "#08080a" },
-    gold: { body: "#e2b007", band: "#1d4ed8", fur: "#fff6d0", deep: "#a07808" },
-    camo: { body: "#5c6b3a", band: "#3a2a16", fur: "#e4d8c0", deep: "#2c3418" },
-    scarlet: { body: "#c01018", band: "#f7f7f7", fur: "#ffffff", deep: "#7a0a10" },
-    frost: { body: "#8ed0f2", band: "#f7fbff", fur: "#ffffff", deep: "#3a88c4" },
-    gilded: { body: "#c01018", band: "#e2b007", fur: "#f0c014", deep: "#7a0a10" },
-    halloween: { body: "#e07010", band: "#5a2088", fur: "#f3d7b0", deep: "#8a3a08" },
-    ember: { body: "#ff4a00", band: "#ffb000", fur: "#f7e2d4", deep: "#8a1800" },
-    stripes: { body: "#d01218", band: "#f7f7f7", fur: "#1a3fbf", deep: "#8e0c12" },
-    rainbow: { body: "#ff3b5c", band: "#7a4dff", fur: "#ffe14a", deep: "#2f7bff" },
-    yule: { body: "#c4182a", band: "#0d7a32", fur: "#f7f4ee", deep: "#8a1020" },
-    christmas: { body: "#c4182a", band: "#0d7a32", fur: "#f7f4ee", deep: "#8a1020" },
-  };
-  return tones[cloth] ?? { body: "#c4182a", band: "#0d7a32", fur: "#f7f4ee", deep: "#8a1020" };
-}
-
-function drawKnitCape(ctx: CanvasRenderingContext2D, cloth: string, t: number, vx: number, facing: number) {
-  const tone = knitTone(cloth);
-  const run = Math.max(-1, Math.min(1, (vx * facing) / 180));
-  const gust = Math.sin(t * 1.5) * 5 + Math.sin(t * 3.1) * 2 + run * 10;
-  ctx.save();
-  ctx.beginPath();
-  ctx.rect(-140, -42, 160, 130);
-  ctx.clip();
-  ctx.translate(-gust * 0.35, Math.sin(t * 2.2) * 1.2);
-  ctx.fillStyle = tone.body;
-  ctx.beginPath();
-  ctx.moveTo(6, -36);
-  ctx.bezierCurveTo(-16, -54, -70, -34, -86, -4);
-  ctx.bezierCurveTo(-98, 22, -52, 34, -18, 8);
-  ctx.bezierCurveTo(-4, -8, -2, -24, 4, -34);
-  ctx.closePath();
-  ctx.fill();
-  ctx.fillStyle = tone.deep;
-  ctx.beginPath();
-  ctx.moveTo(2, -32);
-  ctx.bezierCurveTo(-8, -16, -40, -6, -30, 12);
-  ctx.bezierCurveTo(-16, 26, -2, 8, 4, -26);
-  ctx.closePath();
-  ctx.fill();
-  ctx.strokeStyle = tone.band;
-  ctx.lineWidth = 6;
-  ctx.lineCap = "round";
-  ctx.beginPath();
-  ctx.moveTo(2, -34);
-  ctx.bezierCurveTo(-24, -42, -62, -16, -74, 4);
-  ctx.stroke();
-  ctx.strokeStyle = tone.deep;
-  ctx.lineWidth = 1;
-  for (let i = 0; i < 8; i++) {
-    const u = i / 7;
-    const x = 2 + (-74 - 2) * u + Math.sin(u * 3) * -6;
-    const y = -34 + (4 - -34) * u * u;
-    ctx.beginPath();
-    ctx.moveTo(x - 4, y - 3);
-    ctx.lineTo(x + 4, y + 3);
-    ctx.stroke();
-  }
-  ctx.strokeStyle = tone.fur;
-  ctx.lineWidth = 5;
-  ctx.beginPath();
-  ctx.moveTo(8, -34);
-  ctx.bezierCurveTo(-14, -58, -74, -40, -90, -2);
-  ctx.bezierCurveTo(-104, 24, -50, 40, -14, 12);
-  ctx.stroke();
-  ctx.lineWidth = 2;
-  ctx.globalAlpha = 0.85;
-  for (let i = 0; i < 14; i++) {
-    const u = i / 13;
-    const wave = Math.sin(u * Math.PI);
-    const x = 8 * (1 - u) + -90 * u + Math.sin(t * 2 + i) * 1.2;
-    const y = -34 * (1 - wave) + 12 * wave + Math.sin(u * 6) * 6;
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-    ctx.lineTo(x - 4, y + 5);
-    ctx.stroke();
-  }
-  ctx.restore();
-}
-
 function drawDrapedCape(
   ctx: CanvasRenderingContext2D,
   cloth: string,
@@ -1859,10 +1774,7 @@ function drawOutfit(
     ctx.stroke();
   }
 
-  const knit = cloth.startsWith("knit:") ? cloth.slice(5) : "";
-  if (layer === "back" && knit) drawKnitCape(ctx, knit, t, vx, facing);
-
-  const draped = !knit && (cloth === "cape" || cloth === "white" || cloth === "rainbow" || cloth === "camo" || cloth === "stripes" || cloth === "pink" || cloth === "halloween" || cloth === "black" || cloth === "gold" || cloth === "ember" || cloth === "scarlet" || cloth === "blue" || cloth === "yule" || cloth === "frost" || cloth === "gilded" || cloth === "christmas");
+  const draped = cloth === "cape" || cloth === "white" || cloth === "rainbow" || cloth === "camo" || cloth === "stripes" || cloth === "pink" || cloth === "halloween" || cloth === "black" || cloth === "gold" || cloth === "ember" || cloth === "scarlet" || cloth === "blue" || cloth === "yule" || cloth === "frost" || cloth === "gilded" || cloth === "christmas";
   if (layer === "back" && draped) {
     ctx.save();
     ctx.beginPath();

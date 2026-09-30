@@ -27,17 +27,6 @@ export const CLOTHES: readonly Cloth[] = [
   { id: "christmas", name: "Christmas cape", cost: 25, rare: false, note: "Red, with snow on the edge." },
 ];
 
-export function clothBase(id: string) {
-  return id.startsWith("knit:") ? id.slice(5) : id;
-}
-
-export const REAL_CLOTHES: readonly Cloth[] = CLOTHES.map((cloth) => ({
-  id: `knit:${cloth.id}`,
-  name: `Realistic ${cloth.name.toLowerCase()}`,
-  cost: cloth.cost,
-  rare: false,
-  note: "A knit wrap with a fur edge.",
-}));
 const CAPE_WEEKS: readonly { id: string; at: Date; label: string }[] = [
   { id: "white", at: new Date(2026, 9, 1), label: "October 1" },
   { id: "rainbow", at: new Date(2026, 9, 8), label: "October 8" },
@@ -58,17 +47,15 @@ const CAPE_WEEKS: readonly { id: string; at: Date; label: string }[] = [
 
 /** Weekly dates are live. Set true only for a cape tryout. */
 export const CAPES_TRY = false;
-/** Realistic knit capes are open to try. */
-export const REAL_CAPES_TRY = true;
 
 export function clothOpens(id: string): string | null {
   if (CAPES_TRY) return null;
-  return CAPE_WEEKS.find((week) => week.id === clothBase(id))?.label ?? null;
+  return CAPE_WEEKS.find((week) => week.id === id)?.label ?? null;
 }
 
 export function clothReleased(id: string, now = new Date()) {
-  if (CAPES_TRY || (REAL_CAPES_TRY && id.startsWith("knit:"))) return true;
-  const week = CAPE_WEEKS.find((item) => item.id === clothBase(id));
+  if (CAPES_TRY) return true;
+  const week = CAPE_WEEKS.find((item) => item.id === id);
   if (!week) return true;
   return now >= week.at;
 }
@@ -118,7 +105,6 @@ export function weekRare(now = new Date()): Cloth {
 }
 
 export function rareOnOffer(id: string, now = new Date()) {
-  if (id.startsWith("knit:")) return clothReleased(id, now);
   if (CLOTHES.some((cloth) => cloth.id === id)) return true;
   return weekRare(now).id === id;
 }
@@ -135,7 +121,7 @@ export type Ledger = {
 
 export function clothById(id: string | null): Cloth | null {
   if (!id) return null;
-  return [...CLOTHES, ...REAL_CLOTHES, ...WEEKLY].find((cloth) => cloth.id === id) ?? null;
+  return [...CLOTHES, ...WEEKLY].find((cloth) => cloth.id === id) ?? null;
 }
 
 function empty(): Ledger {
@@ -275,7 +261,7 @@ export function buyCloth(account: string, balance: bigint, id: string, now = new
     writeLedger(account, ledger);
     return true;
   }
-  if (cloth.cost > 0 && !CAPES_TRY && !(REAL_CAPES_TRY && id.startsWith("knit:")) && !pay(account, balance, cloth.cost)) return false;
+  if (cloth.cost > 0 && !CAPES_TRY && !pay(account, balance, cloth.cost)) return false;
   const next = readLedger(account);
   next.owned = [...next.owned, id];
   next.equipped = id;
