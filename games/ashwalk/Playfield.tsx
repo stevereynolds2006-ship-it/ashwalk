@@ -17,6 +17,7 @@ import {
   ALL_FOGS_COST,
   buyCloth,
   CAPES_TRY,
+  REAL_CAPES_TRY,
   REAL_CLOTHES,
   clothById,
   clothOpens,
@@ -503,7 +504,7 @@ export function Playfield({
       setStakeMsg(when ? `${cloth?.name ?? "That cape"} opens ${when}. Coming soon.` : "That cape is locked.");
       return;
     }
-    if (CAPES_TRY) {
+    if (CAPES_TRY || (REAL_CAPES_TRY && id.startsWith("knit:"))) {
       const who = accountRef.current && isAddress(accountRef.current) ? accountRef.current : "guest";
       if (!buyCloth(who, 0n, id)) {
         setStakeMsg("That cape stayed shut.");
@@ -1532,7 +1533,7 @@ export function Playfield({
               Realistic fog
             </button>
             <button type="button" className="ash-btn-ghost" onClick={() => go("clothes")}>
-              Clothes
+              Capes
             </button>
             <button type="button" className="ash-btn-ghost" onClick={() => go("knit")}>
               Realistic capes
@@ -1571,9 +1572,9 @@ export function Playfield({
         </section>
       )}
       {phase === "clothes" && (
-        <section className="ash-panel" aria-label="Clothes">
+        <section className="ash-panel" aria-label="Capes">
           <p className="ash-kicker">Wardrobe</p>
-          <h2>Clothes</h2>
+          <h2>Capes</h2>
           {stakeMsg && (
             <p className="ash-error" role="alert">
               {stakeMsg}
@@ -1636,7 +1637,7 @@ export function Playfield({
             </p>
           )}
           <p className="ash-note">
-            The same capes, cut as a knit wrap with a fur edge. Only the realistic red cape is open, at 15 Rare coins. The rest open on the same days as the others.
+            The same capes, cut as a knit wrap with a fur edge. Open to try. No Rare coins yet.
           </p>
           <div className="ash-levels">
             {REAL_CLOTHES.map((cloth) => {
@@ -1664,7 +1665,9 @@ export function Playfield({
                           ? wearing
                             ? "Wearing. Press to take it off."
                             : `${cloth.note} Press to wear.`
-                          : `${cloth.note} ${cloth.cost} Rare coins.`}
+                          : REAL_CAPES_TRY
+                            ? `${cloth.note} Open to try.`
+                            : `${cloth.note} ${cloth.cost} Rare coins.`}
                   </small>
                 </button>
               );

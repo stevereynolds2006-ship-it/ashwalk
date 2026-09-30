@@ -58,6 +58,8 @@ const CAPE_WEEKS: readonly { id: string; at: Date; label: string }[] = [
 
 /** Weekly dates are live. Set true only for a cape tryout. */
 export const CAPES_TRY = false;
+/** Realistic knit capes are open to try. */
+export const REAL_CAPES_TRY = true;
 
 export function clothOpens(id: string): string | null {
   if (CAPES_TRY) return null;
@@ -65,7 +67,7 @@ export function clothOpens(id: string): string | null {
 }
 
 export function clothReleased(id: string, now = new Date()) {
-  if (CAPES_TRY) return true;
+  if (CAPES_TRY || (REAL_CAPES_TRY && id.startsWith("knit:"))) return true;
   const week = CAPE_WEEKS.find((item) => item.id === clothBase(id));
   if (!week) return true;
   return now >= week.at;
@@ -273,7 +275,7 @@ export function buyCloth(account: string, balance: bigint, id: string, now = new
     writeLedger(account, ledger);
     return true;
   }
-  if (cloth.cost > 0 && !CAPES_TRY && !pay(account, balance, cloth.cost)) return false;
+  if (cloth.cost > 0 && !CAPES_TRY && !(REAL_CAPES_TRY && id.startsWith("knit:")) && !pay(account, balance, cloth.cost)) return false;
   const next = readLedger(account);
   next.owned = [...next.owned, id];
   next.equipped = id;
