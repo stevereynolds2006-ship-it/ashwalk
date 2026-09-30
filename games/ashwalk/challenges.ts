@@ -1392,7 +1392,7 @@ export function previousFog(id: string): string | null {
 }
 
 /** Try build. Set true to open every fog. */
-export const TRY_ALL = true;
+export const TRY_ALL = false;
 /** Lets the tunnel be played before December 1. */
 export const TRY_TUNNEL = false;
 /** Lets the choir be played before the road is open. */
