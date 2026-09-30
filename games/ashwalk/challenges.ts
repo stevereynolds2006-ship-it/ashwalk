@@ -1561,8 +1561,8 @@ export const TRY_CHOIR = false;
 /** The hoist stays shut until January 1. */
 export const TRY_HOIST = false;
 
-/** The stack is open to try. */
-export const TRY_STACK = true;
+/** The stack stays shut until the hoist is beaten, then it is bought like the others. */
+export const TRY_STACK = false;
 export const TRY_YULE = false;
 
 export function fogTry(id: string) {
