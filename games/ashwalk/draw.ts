@@ -83,6 +83,7 @@ const REAL_SKY: Record<string, [string, string, string, string]> = {
   tunnel: ["#12181c", "#465058", "#1e282c", "#0c1014"],
   yule: ["#102030", "#e4eef6", "#7a98b4", "#101820"],
   hoist: ["#1a2018", "#727864", "#2c3226", "#10140e"],
+  stack: ["#1c2418", "#c9d0be", "#6e7c64", "#141c12"],
 };
 
 export function setRealLook(id: string | null) {
@@ -183,8 +184,13 @@ function drawLowerFill(ctx: CanvasRenderingContext2D, camera: Camera, id: string
       ctx.lineTo(worldX - 160, g + 180);
       ctx.fill();
     } else if (id === "stack") {
-      drawAshTree(ctx, { x: worldX + 90, ground: g + 10, scale: 1.65, seed: 80 + n * 7 }, 0.55);
-      drawAshTree(ctx, { x: worldX, ground: g + 130, scale: 2.7 + (n % 3) * 0.32, seed: 15 + n * 19 }, 0.96);
+      if (realLevel === "stack") {
+        drawShoreTree(ctx, { x: worldX + 90, ground: g + 10, scale: 1.7, seed: 80 + n * 7 }, 0.72);
+        drawShoreTree(ctx, { x: worldX, ground: g + 130, scale: 2.75 + (n % 3) * 0.3, seed: 15 + n * 19 }, 0.96);
+      } else {
+        drawAshTree(ctx, { x: worldX + 90, ground: g + 10, scale: 1.65, seed: 80 + n * 7 }, 0.55);
+        drawAshTree(ctx, { x: worldX, ground: g + 130, scale: 2.7 + (n % 3) * 0.32, seed: 15 + n * 19 }, 0.96);
+      }
     } else if (id === "hallow") {
       ctx.strokeStyle = "rgba(120,116,110,0.9)";
       ctx.lineWidth = 2.4;
@@ -784,6 +790,15 @@ function drawTerrain(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) 
         ctx.fill();
       }
       drawReeds(ctx, rect);
+    } else if (sim.level.id === "stack" && realLevel === "stack") {
+      const soil = ctx.createLinearGradient(rect.x, rect.y - 8, rect.x, rect.y + 70);
+      soil.addColorStop(0, "#6a6254");
+      soil.addColorStop(0.2, "#3c382e");
+      soil.addColorStop(1, "#161410");
+      ctx.fillStyle = soil;
+      ctx.fillRect(rect.x, rect.y - 6, rect.w, 78);
+      ctx.fillStyle = "rgba(214, 206, 188, 0.5)";
+      ctx.fillRect(rect.x, rect.y, rect.w, 3);
     } else if (sim.level.id === "shore") {
       const lip = ctx.createLinearGradient(rect.x, rect.y - 16, rect.x, rect.y + 4);
       lip.addColorStop(0, "rgba(255,255,255,0)");
@@ -799,7 +814,8 @@ function drawTerrain(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) 
     else if (realLevel === "antler" && sim.level.id === "antler") drawGrass(ctx, rect, 36, 2, "#3f4c32");
     else if (realLevel === "hallow" && sim.level.id === "hallow") drawGrass(ctx, rect, 28, 2, "#3a4a28");
     else if (realLevel === "yule" && sim.level.id === "yule") drawGrass(ctx, rect, 18, 1, "#e8eef2");
-    else if (sim.level.id !== "roof" && sim.level.id !== "gale" && sim.level.id !== "choir" && sim.level.id !== "gear" && sim.level.id !== "hoist" && sim.level.id !== "hallow") drawGrass(ctx, rect, 26);
+    else if (realLevel === "stack" && sim.level.id === "stack") drawGrass(ctx, rect, 42, 2, "#3f4c32");
+    else if (sim.level.id !== "roof" && sim.level.id !== "gale" && sim.level.id !== "choir" && sim.level.id !== "gear" && sim.level.id !== "hoist" && sim.level.id !== "hallow" && !(sim.level.id === "stack" && realLevel === "stack")) drawGrass(ctx, rect, 26);
   }
   for (const rect of bodies) {
     if (rect.terrain) continue;
@@ -818,7 +834,7 @@ function drawTerrain(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) 
         drawWood(ctx, rect);
       } else if (
         realLevel === sim.level.id &&
-        (sim.level.id === "gale" || sim.level.id === "choir" || sim.level.id === "roof" || sim.level.id === "hallow" || sim.level.id === "yule" || sim.level.id === "antler") &&
+        (sim.level.id === "gale" || sim.level.id === "choir" || sim.level.id === "roof" || sim.level.id === "hallow" || sim.level.id === "yule" || sim.level.id === "antler" || sim.level.id === "stack") &&
         (rect.kind === "crumble" || rect.kind === "oneway")
       ) {
         drawWood(ctx, rect);

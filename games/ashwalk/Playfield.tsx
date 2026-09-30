@@ -208,6 +208,7 @@ const REAL_NOTE: Record<string, string> = {
   tunnel: "A wet cave.",
   yule: "Snow and pines.",
   hoist: "Concrete and rust.",
+  stack: "Full trees, earth, and wood.",
 };
 
 function dimBoard(id: string) {
@@ -1237,7 +1238,7 @@ export function Playfield({
   }
 
   async function beginReal(id: string) {
-    if (!REAL_TRY && id !== "shore") {
+    if (!REAL_TRY && id !== "shore" && !fogTry(id)) {
       if (!clearedRef.current.has(id)) {
         setStakeMsg(`Beat ${getLevel(id).title} before you can open this look.`);
         return;
@@ -1657,7 +1658,7 @@ export function Playfield({
           </p>
           <div className="ash-levels">
             {LEVELS.map((level) => {
-              const free = level.id === "shore" || REAL_TRY;
+              const free = level.id === "shore" || REAL_TRY || fogTry(level.id);
               const beaten = free || cleared.includes(level.id);
               const owned = free || ledger.opened.includes(`real:${level.id}`);
               return (
