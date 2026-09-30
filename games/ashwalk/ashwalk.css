@@ -172,6 +172,52 @@
   display: none;
 }
 
+.ash-boot {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: max(28px, env(safe-area-inset-bottom)) 24px 48px;
+  background: #070708;
+}
+
+.ash-boot h1 {
+  margin: 8px 0 12px;
+  font-family: "Cormorant Garamond", Palatino, serif;
+  font-weight: 500;
+  font-size: 72px;
+  line-height: 0.85;
+  letter-spacing: -0.03em;
+}
+
+.ash-boot p {
+  margin: 0 0 22px;
+  color: #c8c6c0;
+  font-size: 15px;
+}
+
+.ash-boot-track {
+  height: 2px;
+  width: min(280px, 70%);
+  background: rgba(243, 240, 232, 0.16);
+  overflow: hidden;
+}
+
+.ash-boot-track span {
+  display: block;
+  height: 100%;
+  width: 38%;
+  background: #f3f0e8;
+  animation: ash-boot 1.35s ease-in-out infinite;
+}
+
+@keyframes ash-boot {
+  0% { transform: translateX(-130%); }
+  100% { transform: translateX(340%); }
+}
+
 .ash-card,
 .ash-panel {
   left: 18px;
