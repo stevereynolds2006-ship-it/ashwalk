@@ -70,7 +70,11 @@ const LATCH: Level = {
   combo: { code: [4, 2, 7], x: 4990, span: 168, y: 468 },
   pit: null,
   wind: null,
-  birds: [],
+  birds: [
+    { kind: "shade", x0: 80, x1: 480, y: 468, amp: 0, speed: 22, start: 180 },
+    { kind: "shade", x0: 2480, x1: 2820, y: 468, amp: 0, speed: 18, start: 2600 },
+    { kind: "shade", x0: 4400, x1: 5100, y: 468, amp: 0, speed: 20, start: 4700 },
+  ],
   spiders: [
     {
       id: "yard",
@@ -440,7 +444,11 @@ const GEAR: Level = {
   goal: { id: "goal", x: 7280, y: 300, w: 90, h: 170 },
   pit: { x0: 5300, x1: 6600, y: 1320 },
   wind: null,
-  birds: [],
+  birds: [
+    { kind: "shade", x0: 80, x1: 420, y: 470, amp: 0, speed: 22, start: 160 },
+    { kind: "shade", x0: 2500, x1: 2740, y: 470, amp: 0, speed: 18, start: 2580 },
+    { kind: "shade", x0: 4780, x1: 5120, y: 470, amp: 0, speed: 20, start: 4920 },
+  ],
   spiders: [
     {
       id: "mid",
@@ -588,6 +596,9 @@ const ROOF: Level = {
   birds: [
     { kind: "rat", x0: 3620, x1: 4020, y: 1156, amp: 0, speed: 80, start: 3780 },
     { kind: "rat", x0: 3960, x1: 4300, y: 1156, amp: 0, speed: 64, start: 4120 },
+    { kind: "shade", x0: 80, x1: 420, y: 468, amp: 0, speed: 20, start: 160 },
+    { kind: "shade", x0: 1220, x1: 1480, y: 468, amp: 0, speed: 16, start: 1320 },
+    { kind: "shade", x0: 2420, x1: 2780, y: 468, amp: 0, speed: 18, start: 2560 },
   ],
   spiders: [
     {
@@ -1197,6 +1208,9 @@ const YULE: Level = {
     { x0: 2000, x1: 2480, y: 720, amp: 0, speed: 74, start: 2200, kind: "deer" },
     { x0: 3340, x1: 3540, y: 700, amp: 0, speed: 68, start: 3400, kind: "deer" },
     { x0: 4140, x1: 4380, y: 760, amp: 0, speed: 64, start: 4220, kind: "deer" },
+    { kind: "shade", x0: 120, x1: 620, y: 760, amp: 0, speed: 20, start: 280 },
+    { kind: "shade", x0: 1980, x1: 2460, y: 720, amp: 0, speed: 18, start: 2100 },
+    { kind: "shade", x0: 4160, x1: 4600, y: 760, amp: 0, speed: 16, start: 4300 },
   ],
   spiders: [],
   chapters: [

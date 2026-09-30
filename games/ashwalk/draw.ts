@@ -3598,7 +3598,7 @@ function drawCrawler(ctx: CanvasRenderingContext2D, x: number, floor: number, t:
   ctx.restore();
 }
 
-function drawShade(ctx: CanvasRenderingContext2D, x: number, y: number, face: number, seed: number) {
+function drawShade(ctx: CanvasRenderingContext2D, x: number, y: number, face: number, seed: number, beard = false) {
   ctx.save();
   ctx.translate(x + 12, y);
   ctx.scale(face < 0 ? -1 : 1, 1);
@@ -3621,18 +3621,35 @@ function drawShade(ctx: CanvasRenderingContext2D, x: number, y: number, face: nu
   ctx.beginPath();
   ctx.arc(0, -h + 8, tall ? 11 : 9, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = "#e4e0d8";
-  ctx.beginPath();
-  ctx.ellipse(0, -h + 10, 8, 9, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = "#07080c";
-  ctx.beginPath();
-  ctx.ellipse(-3, -h + 10, 2.3, 2.8, 0, 0, Math.PI * 2);
-  ctx.ellipse(3.2, -h + 10, 2.3, 2.8, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = "#f7f4ee";
-  ctx.fillRect(-3.6, -h + 9, 1.3, 1.3);
-  ctx.fillRect(2.8, -h + 9, 1.3, 1.3);
+  if (beard) {
+    ctx.fillStyle = "#c4a48a";
+    ctx.beginPath();
+    ctx.ellipse(0, -h + 10, 6.2, 7, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#07080c";
+    ctx.fillRect(-2.4, -h + 8, 1.6, 1.6);
+    ctx.fillRect(1.2, -h + 8, 1.6, 1.6);
+    ctx.fillStyle = "#f7f4ee";
+    ctx.beginPath();
+    ctx.moveTo(-8, -h + 14);
+    ctx.quadraticCurveTo(-9, -h + 30, 0, -h + 38);
+    ctx.quadraticCurveTo(9, -h + 30, 8, -h + 14);
+    ctx.quadraticCurveTo(0, -h + 18, -8, -h + 14);
+    ctx.fill();
+  } else {
+    ctx.fillStyle = "#e4e0d8";
+    ctx.beginPath();
+    ctx.ellipse(0, -h + 10, 8, 9, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#07080c";
+    ctx.beginPath();
+    ctx.ellipse(-3, -h + 10, 2.3, 2.8, 0, 0, Math.PI * 2);
+    ctx.ellipse(3.2, -h + 10, 2.3, 2.8, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#f7f4ee";
+    ctx.fillRect(-3.6, -h + 9, 1.3, 1.3);
+    ctx.fillRect(2.8, -h + 9, 1.3, 1.3);
+  }
   if (seed % 2 === 0) {
     ctx.strokeStyle = "#07080c";
     ctx.lineWidth = 3;
@@ -4726,7 +4743,7 @@ export function renderFrame(
     else if (bird.kind === "ship") drawShip(ctx, bird.x, bird.y, bird.dir);
     else if (bird.kind === "eagle") drawEagle(ctx, bird.x, bird.y, sim.t * 8, bird.dir);
     else if (bird.kind === "scare") drawScarecrow(ctx, bird.x, bird.y, sim.t, bird.dir);
-    else if (bird.kind === "shade") drawShade(ctx, bird.x, bird.y, bird.dir, bird.index);
+    else if (bird.kind === "shade") drawShade(ctx, bird.x, bird.y, bird.dir, bird.index, sim.level.id === "yule");
     else drawCrow(ctx, bird.x, bird.y, sim.t * 14, bird.dir);
   }
 
