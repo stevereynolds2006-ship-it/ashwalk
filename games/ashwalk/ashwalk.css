@@ -662,7 +662,7 @@
 }
 
 .ash-card {
-  bottom: 120px;
+  bottom: 168px;
 }
 
 @media (min-width: 900px) {
@@ -673,7 +673,7 @@
   }
 
   .ash-card {
-    bottom: 148px;
+    bottom: 196px;
   }
 }
 
