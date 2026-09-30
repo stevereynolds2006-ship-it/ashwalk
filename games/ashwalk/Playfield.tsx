@@ -33,7 +33,7 @@ import {
 } from "./wardrobe";
 import "./ashwalk.css";
 
-type Phase = "title" | "levels" | "real" | "lobby" | "play" | "pause" | "lives" | "rite" | "clear" | "clothes";
+type Phase = "boot" | "title" | "levels" | "real" | "lobby" | "play" | "pause" | "lives" | "rite" | "clear" | "clothes";
 type Holds = { left: boolean; right: boolean; jump: boolean; down: boolean; use: boolean };
 type Session = { code: string; host: boolean };
 type WalletProvider = { request: (args: { method: string; params?: unknown[] }) => Promise<unknown> };
@@ -250,7 +250,7 @@ export function Playfield({
   const ignoreKeysRef = useRef(new Set<string>());
   const holdsRef = useRef<Holds>({ left: false, right: false, jump: false, down: false, use: false });
   const edgeRef = useRef({ jump: false, interact: false });
-  const phaseRef = useRef<Phase>("title");
+  const phaseRef = useRef<Phase>("boot");
   const pausedRef = useRef(paused);
   const reducedRef = useRef(false);
   const spritesRef = useRef<GenerationSprites | null>(null);
@@ -267,7 +267,7 @@ export function Playfield({
   const hostIdRef = useRef("");
   const pickRef = useRef("shore");
   const startRef = useRef<(id: string) => void>(() => {});
-  const [phase, setPhase] = useState<Phase>("title");
+  const [phase, setPhase] = useState<Phase>("boot");
   const [guide, setGuide] = useState(false);
   const [family, setFamily] = useState("");
   const [spriteError, setSpriteError] = useState("");
@@ -1418,7 +1418,7 @@ export function Playfield({
           onLobby={() => go("lobby")}
         />
       )}
-      {phase !== "title" && phase !== "levels" && phase !== "real" && phase !== "lobby" && (
+      {phase !== "boot" && phase !== "title" && phase !== "levels" && phase !== "real" && phase !== "lobby" && (
         <div className="ash-hud">
           <div>
             <p className="ash-kicker">{identity}</p>
@@ -1518,6 +1518,34 @@ export function Playfield({
         </div>
       )}
       <p className="ash-prompt" ref={promptRef} hidden />
+      {phase === "boot" && (
+        <section className="ash-boot" aria-label="Loading Ashwalk">
+          <p className="ash-kicker">Rare Friends · the hanging wood</p>
+          <h1>Ashwalk</h1>
+          <p>{spriteError ? "The chain did not answer." : family ? `${family} is in the fog.` : "Reading your Friend."}</p>
+          <p>
+            {payingAccount && (rareBalance ?? walletCoins) != null
+              ? `You have ${formatRareCoins(spendable(rareBalance ?? walletCoins, payingAccount) ?? 0n)} Rare coins.`
+              : "Connect a wallet to buy boards with Rare coins."}
+          </p>
+          {stakeMsg && (
+            <p className="ash-error" role="alert">
+              {stakeMsg}
+            </p>
+          )}
+          <div className="ash-boot-track" aria-hidden="true">
+            <span />
+          </div>
+          <div className="ash-actions">
+            <button type="button" className="ash-btn" onClick={() => void connectRareWallet()}>
+              {payingAccount ? "Wallet connected" : "Connect wallet"}
+            </button>
+            <button type="button" className="ash-btn-ghost" onClick={() => go("title")}>
+              Walk in
+            </button>
+          </div>
+        </section>
+      )}
       {phase === "title" && (
         <section className="ash-card" aria-label="Begin Ashwalk">
           <p className="ash-kicker">Rare Friends · the hanging wood</p>
@@ -2158,7 +2186,7 @@ function Rite({
 function musicScene(phase: Phase, sim: Sim): MusicScene {
   if (phase === "rite") return "rite";
   if (phase === "clear") return "clear";
-  if (phase === "title" || phase === "levels" || phase === "lobby" || phase === "clothes") return "title";
+  if (phase === "boot" || phase === "title" || phase === "levels" || phase === "lobby" || phase === "clothes") return "title";
   if (sim.level.id === "hallow" || sim.level.id === "stack") return "hallow";
   if (sim.level.id === "yule") return "yule";
   if (sim.level.id === "hoist") return "hoist";
