@@ -67,13 +67,41 @@ const SHORE_REAL_NEAR: Tree[] = Array.from({ length: 14 }, (_, i) => ({
 let shoreReal = false;
 let latchReal = false;
 let mirrorReal = false;
+let realLevel: string | null = null;
+
+const REAL_SKY: Record<string, [string, string, string, string]> = {
+  shore: ["#1a2422", "#c9cfc6", "#7d8a78", "#15201c"],
+  latch: ["#1c1612", "#a08870", "#4a382c", "#120e0c"],
+  gale: ["#243444", "#9aafc0", "#4e6474", "#1a242c"],
+  choir: ["#5e7088", "#f4f1e8", "#c5d0da", "#3a4654"],
+  gear: ["#161412", "#6e665c", "#3a342c", "#100e0c"],
+  roof: ["#1a2434", "#d2c2ae", "#5c544c", "#12161c"],
+  antler: ["#18241c", "#8ea484", "#3a4a38", "#101610"],
+  moon: ["#070814", "#243058", "#101828", "#05060c"],
+  hallow: ["#1c1418", "#7a4838", "#2e1c18", "#100c0e"],
+  mirror: ["#101816", "#7a8c78", "#243028", "#0c1210"],
+  tunnel: ["#12181c", "#465058", "#1e282c", "#0c1014"],
+  yule: ["#102030", "#e4eef6", "#7a98b4", "#101820"],
+  hoist: ["#1a2018", "#727864", "#2c3226", "#10140e"],
+};
+
+export function setRealLook(id: string | null) {
+  realLevel = id;
+  shoreReal = id === "shore";
+  latchReal = id === "latch";
+  mirrorReal = id === "mirror";
+}
+
+export function realLookId() {
+  return realLevel;
+}
 
 export function setShoreLook(real: boolean) {
-  shoreReal = real;
+  setRealLook(real ? "shore" : realLevel === "shore" ? null : realLevel);
 }
 
 export function setLatchLook(real: boolean) {
-  latchReal = real;
+  setRealLook(real ? "latch" : realLevel === "latch" ? null : realLevel);
 }
 
 export function latchLookOn() {
@@ -81,7 +109,7 @@ export function latchLookOn() {
 }
 
 export function setMirrorLook(real: boolean) {
-  mirrorReal = real;
+  setRealLook(real ? "mirror" : realLevel === "mirror" ? null : realLevel);
 }
 
 export function mirrorLookOn() {
@@ -300,6 +328,98 @@ function drawTree(ctx: CanvasRenderingContext2D, tree: Tree, alpha: number) {
     ctx.moveTo(0, y);
     ctx.quadraticCurveTo(dir * len * 0.4, y - 20 - rand() * 24, dir * len, y - 8 + rand() * 20);
     ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawRealCap(ctx: CanvasRenderingContext2D, id: string, rect: RectLike) {
+  if (id === "yule") {
+    ctx.fillStyle = "#f4f7fa";
+    ctx.fillRect(rect.x, rect.y - 6, rect.w, 10);
+    return;
+  }
+  if (id === "roof") {
+    const rows = 3;
+    for (let row = 0; row < rows; row++) {
+      ctx.fillStyle = row % 2 ? "#6a4034" : "#7a4c3c";
+      ctx.fillRect(rect.x, rect.y + row * 6, rect.w, 5);
+    }
+    return;
+  }
+  if (id === "moon") {
+    ctx.fillStyle = "#4a4e58";
+    ctx.fillRect(rect.x, rect.y - 2, rect.w, 12);
+    ctx.fillStyle = "rgba(220,224,230,0.45)";
+    ctx.fillRect(rect.x, rect.y, rect.w, 2);
+    return;
+  }
+  if (id === "gear" || id === "hoist") {
+    ctx.fillStyle = "#4e524c";
+    ctx.fillRect(rect.x, rect.y - 2, rect.w, 14);
+    ctx.fillStyle = "#8a6238";
+    ctx.fillRect(rect.x, rect.y, rect.w, 3);
+    return;
+  }
+  if (id === "hallow") {
+    ctx.fillStyle = "#3a2820";
+    ctx.fillRect(rect.x, rect.y - 2, rect.w, 14);
+    return;
+  }
+  ctx.fillStyle = id === "tunnel" ? "#3a4448" : "#4a5248";
+  ctx.fillRect(rect.x, rect.y - 2, rect.w, 14);
+  ctx.fillStyle = "rgba(214, 210, 198, 0.4)";
+  ctx.fillRect(rect.x, rect.y, rect.w, 2);
+}
+
+function drawMetal(ctx: CanvasRenderingContext2D, rect: RectLike) {
+  ctx.fillStyle = "#4a4e52";
+  ctx.fillRect(rect.x, rect.y, rect.w, 8);
+  ctx.fillStyle = "#8a6a40";
+  ctx.fillRect(rect.x, rect.y, rect.w, 2);
+}
+
+function drawRealBackdrop(ctx: CanvasRenderingContext2D, camera: Camera, id: string, t: number) {
+  ctx.save();
+  ctx.translate(camera.x * 0.35, camera.y * 0.08);
+  if (id === "gale" || id === "choir") {
+    ctx.fillStyle = id === "choir" ? "rgba(244,246,248,0.55)" : "rgba(180,196,208,0.35)";
+    for (let i = 0; i < 8; i++) {
+      const x = -200 + i * 780;
+      ctx.beginPath();
+      ctx.ellipse(x, 120 + (i % 3) * 30, 180, 36, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  } else if (id === "gear" || id === "hoist" || id === "roof") {
+    for (let x = -300; x < 9000; x += 180) {
+      ctx.fillStyle = id === "roof" ? "#2a3038" : "#3a3028";
+      ctx.fillRect(x, 40, 70, 520);
+      ctx.fillStyle = "rgba(230, 190, 120, 0.35)";
+      for (let w = 0; w < 3; w++) ctx.fillRect(x + 12, 80 + w * 48, 16, 22);
+    }
+  } else if (id === "moon") {
+    const planets: [number, number, string, number][] = [
+      [400, 80, "#c46a4a", 28],
+      [1600, 40, "#d8c07a", 18],
+      [2800, 110, "#6a8cb4", 36],
+    ];
+    for (const [x, y, color, r] of planets) {
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(x, y + Math.sin(t * 0.2 + x) * 6, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  } else if (id === "hallow" || id === "antler" || id === "yule") {
+    const paint = id === "yule" ? drawTree : drawShoreTree;
+    for (let i = 0; i < 12; i++) paint(ctx, { x: -80 + i * 640, ground: 540, scale: 1.4, seed: 12 + i * 9 }, id === "hallow" ? 0.45 : 0.75);
+  } else if (id === "tunnel") {
+    ctx.fillStyle = "rgba(40,48,52,0.8)";
+    for (let x = -200; x < 8000; x += 220) {
+      ctx.beginPath();
+      ctx.moveTo(x, 80);
+      ctx.lineTo(x + 30, 260);
+      ctx.lineTo(x + 70, 80);
+      ctx.fill();
+    }
   }
   ctx.restore();
 }
@@ -588,8 +708,13 @@ function drawTerrain(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) 
       ctx.fillRect(rect.x, rect.y - 14, rect.w, 16);
       ctx.fillStyle = "rgba(255,255,255,0.92)";
       ctx.fillRect(rect.x, rect.y, rect.w, 2);
+    } else if (realLevel === sim.level.id) {
+      drawRealCap(ctx, sim.level.id, rect);
     }
     if (sim.level.id === "shore") drawGrass(ctx, rect, 44, 2, shoreReal ? "#3f4c32" : "#070708");
+    else if (realLevel === "antler" && sim.level.id === "antler") drawGrass(ctx, rect, 36, 2, "#3f4c32");
+    else if (realLevel === "hallow" && sim.level.id === "hallow") drawGrass(ctx, rect, 28, 2, "#3a4a28");
+    else if (realLevel === "yule" && sim.level.id === "yule") drawGrass(ctx, rect, 18, 1, "#e8eef2");
     else if (sim.level.id !== "roof" && sim.level.id !== "gale" && sim.level.id !== "choir" && sim.level.id !== "gear" && sim.level.id !== "hoist" && sim.level.id !== "hallow") drawGrass(ctx, rect, 26);
   }
   for (const rect of bodies) {
@@ -607,6 +732,14 @@ function drawTerrain(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) 
         drawGrass(ctx, rect, 30, 2, "#3f4c32");
       } else if (latchReal && sim.level.id === "latch" && (rect.kind === "crumble" || rect.kind === "oneway")) {
         drawWood(ctx, rect);
+      } else if (
+        realLevel === sim.level.id &&
+        (sim.level.id === "gale" || sim.level.id === "choir" || sim.level.id === "roof" || sim.level.id === "hallow" || sim.level.id === "yule" || sim.level.id === "antler") &&
+        (rect.kind === "crumble" || rect.kind === "oneway")
+      ) {
+        drawWood(ctx, rect);
+      } else if (realLevel === sim.level.id && (sim.level.id === "gear" || sim.level.id === "hoist") && (rect.kind === "crumble" || rect.kind === "oneway")) {
+        drawMetal(ctx, rect);
       } else {
         drawPlank(ctx, rect, rect.kind === "crumble" || (sim.crumbles[rect.id]?.timer ?? 0) > 0.9, sim.level.id === "choir" || sim.level.id === "shore");
         if (sim.level.id === "shore" && (rect.kind === "crumble" || rect.kind === "oneway") && !rect.id.startsWith("glow")) drawGrass(ctx, rect, 30, 2);
@@ -1023,7 +1156,7 @@ function drawGrass(ctx: CanvasRenderingContext2D, rect: RectLike, tall: number, 
     const h = 6 + rand() * tall;
     const lean = (rand() - 0.45) * h * 0.45;
     const wide = rand() > 0.82 ? 3.4 : 1.6;
-    ctx.fillStyle = color !== "#070708" && rand() > 0.72 ? "#6d7d4a" : color;
+    ctx.fillStyle = (color === "#3f4c32" || color === "#3a4a28") && rand() > 0.72 ? "#6d7d4a" : color;
     ctx.beginPath();
     ctx.moveTo(x, rect.y + 3);
     ctx.lineTo(x + lean, rect.y - h);
@@ -4375,13 +4508,7 @@ export function renderFrame(
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, cssW, cssH);
 
-  const skyStops = (sim.level.id === "shore" && shoreReal
-    ? (["#1a2422", "#c9cfc6", "#7d8a78", "#15201c"] as [string, string, string, string])
-    : sim.level.id === "latch" && latchReal
-      ? (["#1c1612", "#a08870", "#4a382c", "#120e0c"] as [string, string, string, string])
-      : sim.level.id === "mirror" && mirrorReal
-        ? (["#101816", "#7a8c78", "#243028", "#0c1210"] as [string, string, string, string])
-        : SKY[sim.level.id]) ?? SKY.shore!;
+  const skyStops = (realLevel === sim.level.id ? REAL_SKY[sim.level.id] : undefined) ?? SKY[sim.level.id] ?? SKY.shore!;
   const sky = ctx.createLinearGradient(0, 0, 0, cssH);
   sky.addColorStop(0, skyStops[0]);
   sky.addColorStop(0.42, skyStops[1]);
@@ -4423,16 +4550,17 @@ export function renderFrame(
     for (const tree of near) paint(ctx, tree, shoreReal ? 0.95 : 0.92);
     ctx.restore();
   } else if (sim.level.id === "antler") {
+    const paint = realLevel === "antler" ? drawShoreTree : drawRealTree;
     ctx.save();
     ctx.translate(camera.x * 0.55, camera.y * 0.2);
     for (const tree of SHORE_FAR) {
-      drawRealTree(ctx, { ...tree, scale: tree.scale + 0.9, ground: tree.ground + 40 }, 0.42);
+      paint(ctx, { ...tree, scale: tree.scale + 0.9, ground: tree.ground + 40 }, realLevel === "antler" ? 0.7 : 0.42);
     }
     ctx.restore();
     ctx.save();
     ctx.translate(camera.x * 0.32, camera.y * 0.08);
     for (const tree of SHORE_NEAR) {
-      drawRealTree(ctx, { ...tree, scale: tree.scale + 1.15, ground: tree.ground + 80 }, 0.58);
+      paint(ctx, { ...tree, scale: tree.scale + 1.15, ground: tree.ground + 80 }, realLevel === "antler" ? 0.9 : 0.58);
     }
     ctx.restore();
   } else if (sim.level.id === "moon") {
@@ -4476,6 +4604,9 @@ export function renderFrame(
   }
 
   drawLowerFill(ctx, camera, sim.level.id);
+  if (realLevel === sim.level.id && sim.level.id !== "shore" && sim.level.id !== "latch" && sim.level.id !== "mirror") {
+    drawRealBackdrop(ctx, camera, sim.level.id, sim.t);
+  }
   if (sim.level.id === "shore" && shoreReal) drawShoreWater(ctx, camera, sim.t);
 
   drawTerrain(ctx, sim, reduced);

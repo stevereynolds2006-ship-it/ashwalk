@@ -11,7 +11,7 @@ import { windAccel, chapterAt } from "./level";
 import { Online, type NetApi } from "./online";
 import type { Ghost } from "./net";
 import { comboSet, createSim, step, type Actions, type Sim } from "./sim";
-import { burst, frameCamera, latchLookOn, mirrorLookOn, renderFrame, setLatchLook, setMirrorLook, setShoreLook, viewSize } from "./draw";
+import { burst, frameCamera, realLookId, renderFrame, setRealLook, viewSize } from "./draw";
 import { createAshMusic, type AshMusic, type MusicScene } from "./music";
 import {
   ALL_FOGS_COST,
@@ -187,6 +187,22 @@ const SHORE_COINS = 2;
 const LIFE_PRICE = 10;
 const LIVES = 3;
 const ALPHABET = "abcdefghjkmnpqrstuvwxyz23456789";
+
+const REAL_NOTE: Record<string, string> = {
+  shore: "Earth, water, and fuller trees.",
+  latch: "A timber hall and iron gates.",
+  gale: "A storm over rock.",
+  choir: "Stone under a brighter sky.",
+  gear: "A rusted works.",
+  roof: "Brick roofs and a lit city.",
+  antler: "A fuller wood.",
+  moon: "A deeper sky and planets.",
+  hallow: "A darker yard.",
+  mirror: "Glass over a jungle.",
+  tunnel: "A wet cave.",
+  yule: "Snow and pines.",
+  hoist: "Concrete and rust.",
+};
 
 function dimBoard(id: string) {
   return id === "shore" || id === "roof" || id === "choir" || id === "tunnel";
@@ -1166,18 +1182,14 @@ export function Playfield({
     }
   }
 
-  function beginShore(real = false) {
-    setShoreLook(real);
-    setLatchLook(false);
-    setMirrorLook(false);
+  function beginShore() {
+    setRealLook(null);
     armAudio();
     startLevel("shore");
   }
 
-  function beginReal(id: "shore" | "latch" | "mirror") {
-    setShoreLook(id === "shore");
-    setLatchLook(id === "latch");
-    setMirrorLook(id === "mirror");
+  function beginReal(id: string) {
+    setRealLook(id);
     armAudio();
     void startLevel(id, true);
   }
@@ -1185,7 +1197,7 @@ export function Playfield({
   function restart() {
     const id = simRef.current.level.id;
     if (session?.host) apiRef.current?.send({ k: "begin", level: id });
-    void startLevel(id, (id === "latch" && latchLookOn()) || (id === "mirror" && mirrorLookOn()));
+    void startLevel(id, realLookId() === id);
   }
 
   function chooseLevel(id: string) {
@@ -1472,7 +1484,7 @@ export function Playfield({
           )}
           {picker}
           <div className="ash-actions">
-            <button type="button" className="ash-btn" onClick={() => beginShore(false)}>
+            <button type="button" className="ash-btn" onClick={beginShore}>
               Walk into the fog
             </button>
             <button type="button" className="ash-btn-ghost" onClick={() => go("real")}>
@@ -1579,16 +1591,10 @@ export function Playfield({
           <h2>Realistic fog</h2>
           <p className="ash-note">These are free. They do not open the paid boards.</p>
           <div className="ash-levels">
-            {(
-              [
-                ["shore", "The shore", "Earth, water, and fuller trees."],
-                ["latch", "The latch", "A timber hall and iron gates."],
-                ["mirror", "The mirror", "A hall of glass over a jungle."],
-              ] as const
-            ).map(([id, title, note]) => (
-              <button key={id} type="button" className="ash-level" onClick={() => beginReal(id)}>
-                <span>{title}</span>
-                <small>{note} Free.</small>
+            {LEVELS.map((level) => (
+              <button key={level.id} type="button" className="ash-level" onClick={() => beginReal(level.id)}>
+                <span>{level.title}</span>
+                <small>{REAL_NOTE[level.id] ?? level.kicker} Free.</small>
               </button>
             ))}
           </div>
@@ -1623,9 +1629,7 @@ export function Playfield({
             opened={ledger.opened}
             onPick={(id) => {
               armAudio();
-              if (id === "shore") setShoreLook(false);
-              setLatchLook(false);
-              setMirrorLook(false);
+              setRealLook(null);
               startLevel(id);
             }}
           />
