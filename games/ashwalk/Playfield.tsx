@@ -190,6 +190,8 @@ const LAMP_PRICE = 5;
 const LIGHT_PRICE = 1;
 const LIGHT_SECONDS = 13;
 const SHORE_COINS = 2;
+const CLEAR_BONUS = 5;
+const CARRY_CAP = 12;
 const LIFE_PRICE = 3;
 const LIVES = 3;
 const ALPHABET = "abcdefghjkmnpqrstuvwxyz23456789";
@@ -296,6 +298,7 @@ export function Playfield({
   const hudOpenRef = useRef(false);
   hudOpenRef.current = hudOpen;
   const purseRef = useRef(0);
+  const carryRef = useRef(0);
   const [purse, setPurse] = useState(0);
   const livesRef = useRef(LIVES);
   const [lives, setLives] = useState(LIVES);
@@ -640,8 +643,10 @@ export function Playfield({
     }
     livesRef.current = LIVES;
     setLives(LIVES);
-    purseRef.current = id === "shore" || id === "stack" ? SHORE_COINS : 0;
-    setPurse(id === "shore" || id === "stack" ? SHORE_COINS : 0);
+    const base = id === "shore" || id === "stack" ? SHORE_COINS : 0;
+    const startCoins = Math.min(CARRY_CAP, Math.max(base, carryRef.current));
+    purseRef.current = startCoins;
+    setPurse(startCoins);
     setStakeMsg("");
     if (id === "shore") setShopError("");
     const level = getLevel(id);
@@ -966,6 +971,11 @@ export function Playfield({
             shoreGlowRef.current = Math.max(0, shoreGlowRef.current - 1 / 60);
           }
           if (events.goal) {
+            const reward = Math.min(CARRY_CAP, purseRef.current + CLEAR_BONUS);
+            carryRef.current = reward;
+            purseRef.current = reward;
+            setPurse(reward);
+            setStakeMsg(`Reward: ${reward} stage coins come with you. A death still takes half.`);
             markClearRef.current(sim.level.id);
             sound?.play("reward");
             setRunLabel(formatTime(sim.run));
@@ -1943,7 +1953,7 @@ export function Playfield({
           <p className="ash-kicker">{clearLevel.clearKicker}</p>
           <h2>{clearLevel.clearTitle}</h2>
           <p>
-            {purse} coins · {lives} {lives === 1 ? "life" : "lives"} · {runLabel}.
+            {purse} stage coins come with you · {lives} {lives === 1 ? "life" : "lives"} · {runLabel}.
             {stakeMsg ? ` ${stakeMsg}` : ""}
             {session && company > 0 ? ` ${company} still in the fog.` : ""}
             {session && company === 0 && peers.length > 0 ? " Everyone is through." : ""} The lantern rite is
