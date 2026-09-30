@@ -10,7 +10,7 @@ import { LEVELS, TRY_ALL, fogHeld, fogPrice, fogReleased, fogTry, fogUnlocked, g
 import { windAccel, chapterAt } from "./level";
 import { Online, type NetApi } from "./online";
 import type { Ghost } from "./net";
-import { comboSet, createSim, step, type Actions, type Sim } from "./sim";
+import { comboSet, createSim, markSpot, step, type Actions, type Sim } from "./sim";
 import { burst, frameCamera, realLookId, renderFrame, setRealLook, viewSize } from "./draw";
 import { createAshMusic, type AshMusic, type MusicScene } from "./music";
 import {
@@ -864,20 +864,37 @@ export function Playfield({
             burst(sim.x + 7, sim.y, 8);
           }
           if (events.rope) sound?.play("action-ready");
+          if (events.mark) {
+            if (purseRef.current < 2) {
+              setShopError("The mark wants 2 coins you picked up.");
+            } else {
+              purseRef.current -= 2;
+              setPurse(purseRef.current);
+              sim.kept = true;
+              const spot = markSpot(sim.level);
+              if (sim.checkpoint < spot.index) sim.checkpoint = spot.index;
+              setShopError("Spent 2 coins. This spot remembers you. A death keeps the coins you still have.");
+              sound?.play("purchase");
+            }
+          }
           if (events.died) {
             sound?.play("anticipation");
             shake.v = 12;
             burst(sim.x + 7, sim.y + 10, 14);
             const before = purseRef.current;
-            const halved = Math.floor(before / 2);
+            const kept = sim.kept;
+            const halved = kept ? before : Math.floor(before / 2);
             const burned = before - halved;
             purseRef.current = halved;
             setPurse(halved);
             const left = Math.max(0, livesRef.current - 1);
             livesRef.current = left;
             setLives(left);
-            const burnNote =
-              burned > 0 ? `Burned ${burned} stage coin${burned === 1 ? "" : "s"}.` : "No stage coins left to burn.";
+            const burnNote = kept
+              ? "The mark kept your coins."
+              : burned > 0
+                ? `Burned ${burned} stage coin${burned === 1 ? "" : "s"}.`
+                : "No stage coins left to burn.";
             if (left <= 0) {
               setStakeMsg(`${burnNote} Buy one more life for ${LIFE_PRICE} Rare coins.`);
               go("lives");
@@ -1560,7 +1577,7 @@ export function Playfield({
                 A and D, or the arrow keys, move. W, up, or space jumps. S drops through a thin plank. On the hoist, Use climbs up and Down climbs down.
                 E pulls, lights a bell, or buys a lantern. A lantern costs 1 coin you picked up in the stage and lasts 13 seconds. The flashlight costs 5 of those coins. On the moon that buy is a saber, not a flashlight. Stand on a plank too long and it falls.
                 It comes back after 4 seconds. Three lives to a board. After that, one more life is 3 Rare coins.
-                A death takes half the coins you picked up in the stage. Rare coins you spend are sent in one payment. Confirm it in your wallet.
+                A death takes half the coins you picked up in the stage, unless you spent 2 of them at the mark. Then you come back there and keep what you still hold. Rare coins you spend are sent in one payment. Confirm it in your wallet.
               </p>
             </div>
           )}
@@ -2170,6 +2187,7 @@ function promptFor(sim: Sim, phase: Phase) {
   }
   if (sim.level.id === "yule" && sim.cage > 0 && sim.cage < 1) return "The snowball is behind you.";
   if (sim.level.id === "moon" && sim.cage > 0) return "Light speed. Eight seconds.";
+  if (sim.nearMark) return "E · mark this spot · 2 coins";
   if (sim.nearToll) return "E · lower the escape · 3 coins";
   if (sim.level.id === "roof" && sim.toll > 0 && sim.toll < 1) return "The escape is coming down.";
   if (sim.climbing) return sim.climbDir > 0 ? "Down · climbing down" : "Use · climbing up";

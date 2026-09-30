@@ -1,6 +1,6 @@
 import { spriteFrame, type GenerationSprites } from "@rarefriends/friendsdk/sprites";
 import type { Ghost } from "./net";
-import { PH, PW, birdSpots, comboSet, escapeDy, perchPosition, rectsAt, spiderPoses, type Sim } from "./sim";
+import { PH, PW, birdSpots, comboSet, escapeDy, markSpot, perchPosition, rectsAt, spiderPoses, type Sim } from "./sim";
 
 export type Camera = { x: number; y: number; w: number; h: number };
 
@@ -1532,6 +1532,21 @@ function drawGlider(ctx: CanvasRenderingContext2D, x: number, y: number, t: numb
   ctx.lineTo(20, 32);
   ctx.stroke();
   ctx.restore();
+}
+
+function drawMark(ctx: CanvasRenderingContext2D, sim: Sim) {
+  const spot = markSpot(sim.level);
+  const x = spot.x;
+  const y = spot.surface;
+  ctx.fillStyle = "#141418";
+  ctx.fillRect(x - 8, y - 28, 16, 28);
+  ctx.strokeStyle = sim.kept ? "#f4f1ea" : "#8a8680";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(x - 8, y - 28, 16, 28);
+  ctx.fillStyle = sim.kept ? "#f4f1ea" : "#c8c4bc";
+  ctx.font = "bold 12px sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText(sim.kept ? "•" : "2", x, y - 10);
 }
 
 function drawEscapeToll(ctx: CanvasRenderingContext2D, sim: Sim) {
@@ -4761,6 +4776,7 @@ export function renderFrame(
     });
   }
   if (sim.level.id === "roof") drawEscapeToll(ctx, sim);
+  drawMark(ctx, sim);
   if (sim.level.id === "latch") drawPulley(ctx, sim);
   if (sim.level.id === "roof") drawDrainTrash(ctx, sim.t, reduced);
   if (sim.level.combo) drawLatchLock(ctx, sim);

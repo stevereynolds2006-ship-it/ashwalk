@@ -50,6 +50,7 @@ export type StepEvents = {
   goal: boolean;
   checkpoint: string | null;
   toll: boolean;
+  mark: boolean;
 };
 
 export type Crumble = { timer: number; fall: number; gone: boolean; back: number };
@@ -174,6 +175,9 @@ export type Sim = {
   /** 0 raised, 1 lowered. The sign fire escape. */
   toll: number;
   nearToll: boolean;
+  /** Paid the coin mark. Deaths keep the coins still held. */
+  kept: boolean;
+  nearMark: boolean;
 };
 
 export function createSim(level: Level = SHORE): Sim {
@@ -272,6 +276,8 @@ export function createSim(level: Level = SHORE): Sim {
     hearthLeave: 0,
     toll: 0,
     nearToll: false,
+    kept: false,
+    nearMark: false,
   };
 }
 
@@ -364,6 +370,7 @@ function emptyEvents(): StepEvents {
     goal: false,
     checkpoint: null,
     toll: false,
+    mark: false,
   };
 }
 
@@ -388,6 +395,13 @@ function bodyOn(x: number, y: number, zone: { x: number; y: number; w: number; h
 }
 
 const ESCAPE = new Set(["e1", "f1", "sw1", "e2", "f2", "e3", "f3", "e4", "f4", "e5", "f5"]);
+
+/** How far the sign fire escape still sits above its rest. 0 once the toll is paid. */
+export function markSpot(level: Level) {
+  const index = Math.max(1, Math.floor((level.checkpoints.length - 1) / 2));
+  const spot = level.checkpoints[index] ?? level.checkpoints[0]!;
+  return { index, x: spot.x + 44, surface: spot.surface };
+}
 
 /** How far the sign fire escape still sits above its rest. 0 once the toll is paid. */
 export function escapeDy(sim: Sim, id: string) {
@@ -1250,6 +1264,24 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
     }
   }
   if (sim.toll > 0 && sim.toll < 1) sim.toll = Math.min(1, sim.toll + dt / 1.6);
+  const spot = markSpot(level);
+  sim.nearMark = false;
+  if (!sim.kept && sim.dead <= 0 && sim.grounded) {
+    const centerX = sim.x + PW / 2;
+    if (Math.abs(centerX - spot.x) < 30 && Math.abs(sim.y + PH - spot.surface) < 26) {
+      sim.nearMark = true;
+      if (
+        input.interactPressed &&
+        !events.beacon &&
+        !events.lamp &&
+        !events.shrine &&
+        !events.pull &&
+        !events.toll
+      ) {
+        events.mark = true;
+      }
+    }
+  }
   if (events.beacon === "lock") events.beacon = null;
   stepPal(sim, dt);
   sim.doorLocked =
