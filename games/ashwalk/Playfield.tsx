@@ -170,6 +170,10 @@ async function purchasesOnChain(account: string) {
       if (tag.startsWith("fog:")) {
         const id = tag.slice(4);
         if (LEVELS.some((level) => level.id === id) && !opened.includes(id)) opened.push(id);
+      } else if (tag.startsWith("real:")) {
+        const id = tag.slice(5);
+        const key = `real:${id}`;
+        if (LEVELS.some((level) => level.id === id) && !opened.includes(key)) opened.push(key);
       } else if (tag.startsWith("cape:")) {
         const id = tag.slice(5);
         if (clothById(id) && !owned.includes(id)) owned.push(id);
@@ -180,6 +184,7 @@ async function purchasesOnChain(account: string) {
   return { opened, owned, allFogs };
 }
 
+const REAL_PRICE = 10;
 const LAMP_PRICE = 5;
 const LIGHT_PRICE = 1;
 const LIGHT_SECONDS = 13;
@@ -468,6 +473,24 @@ export function Playfield({
     refreshLedger(who);
     onWardrobe?.();
     setShopError(`Sent ${price} Rare coins.`);
+    return true;
+  }
+
+  async function payReal(id: string) {
+    const who = accountRef.current;
+    const balance = rareRef.current;
+    const key = `real:${id}`;
+    if (!who || !isAddress(who) || balance == null) {
+      setStakeMsg(`Connect a wallet. The realistic ${getLevel(id).title} is ${REAL_PRICE} Rare coins.`);
+      return false;
+    }
+    if (openedRef.current.has(key)) return true;
+    if (!(await chargeRare(REAL_PRICE, key))) return false;
+    grantFog(who, key, REAL_PRICE);
+    openedRef.current.add(key);
+    refreshLedger(who);
+    onWardrobe?.();
+    setShopError(`Sent ${REAL_PRICE} Rare coins.`);
     return true;
   }
 
@@ -1188,7 +1211,18 @@ export function Playfield({
     startLevel("shore");
   }
 
-  function beginReal(id: string) {
+  async function beginReal(id: string) {
+    if (id !== "shore") {
+      if (!clearedRef.current.has(id)) {
+        setStakeMsg(`Beat ${getLevel(id).title} before you can open this look.`);
+        return;
+      }
+      if (!openedRef.current.has(`real:${id}`)) {
+        if (!(await ensureWallet())) return;
+        if (!(await payReal(id))) return;
+      }
+    }
+    setStakeMsg("");
     setRealLook(id);
     armAudio();
     void startLevel(id, true);
@@ -1589,14 +1623,36 @@ export function Playfield({
         <section className="ash-panel" aria-label="Realistic fog">
           <p className="ash-kicker">A closer look</p>
           <h2>Realistic fog</h2>
-          <p className="ash-note">These are free. They do not open the paid boards.</p>
+          {stakeMsg && (
+            <p className="ash-error" role="alert">
+              {stakeMsg}
+            </p>
+          )}
+          <p className="ash-note">The shore is free. Beat a fog, then its realistic look is 10 Rare coins. It stays open on this wallet.</p>
           <div className="ash-levels">
-            {LEVELS.map((level) => (
-              <button key={level.id} type="button" className="ash-level" onClick={() => beginReal(level.id)}>
-                <span>{level.title}</span>
-                <small>{REAL_NOTE[level.id] ?? level.kicker} Free.</small>
-              </button>
-            ))}
+            {LEVELS.map((level) => {
+              const free = level.id === "shore";
+              const beaten = free || cleared.includes(level.id);
+              const owned = free || ledger.opened.includes(`real:${level.id}`);
+              return (
+                <button
+                  key={level.id}
+                  type="button"
+                  className="ash-level"
+                  disabled={!beaten}
+                  onClick={() => void beginReal(level.id)}
+                >
+                  <span>{beaten ? (owned ? level.title : `${level.title} · ${REAL_PRICE} Rare coins`) : `${level.title} · locked`}</span>
+                  <small>
+                    {beaten
+                      ? owned
+                        ? `${REAL_NOTE[level.id] ?? level.kicker} Open.`
+                        : `${REAL_NOTE[level.id] ?? level.kicker} ${REAL_PRICE} Rare coins.`
+                      : `Beat ${level.title} first.`}
+                  </small>
+                </button>
+              );
+            })}
           </div>
           <div className="ash-actions">
             <button type="button" className="ash-btn-ghost" onClick={() => go("title")}>
