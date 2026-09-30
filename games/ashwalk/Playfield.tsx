@@ -17,6 +17,7 @@ import {
   ALL_FOGS_COST,
   buyCloth,
   CAPES_TRY,
+  REAL_CLOTHES,
   clothById,
   clothOpens,
   clothReleased,
@@ -33,7 +34,7 @@ import {
 } from "./wardrobe";
 import "./ashwalk.css";
 
-type Phase = "title" | "levels" | "real" | "lobby" | "play" | "pause" | "lives" | "rite" | "clear" | "clothes";
+type Phase = "title" | "levels" | "real" | "lobby" | "play" | "pause" | "lives" | "rite" | "clear" | "clothes" | "knit";
 type Holds = { left: boolean; right: boolean; jump: boolean; down: boolean; use: boolean };
 type Session = { code: string; host: boolean };
 type WalletProvider = { request: (args: { method: string; params?: unknown[] }) => Promise<unknown> };
@@ -1180,7 +1181,7 @@ export function Playfield({
         const current = phaseRef.current;
         if (current === "play") go("pause");
         else if (current === "pause" || current === "rite") go("play");
-        else if (current === "levels" || current === "clothes" || current === "real") go("title");
+        else if (current === "levels" || current === "clothes" || current === "real" || current === "knit") go("title");
         else if (current === "lobby" && !session) go("title");
         return;
       }
@@ -1533,6 +1534,9 @@ export function Playfield({
             <button type="button" className="ash-btn-ghost" onClick={() => go("clothes")}>
               Clothes
             </button>
+            <button type="button" className="ash-btn-ghost" onClick={() => go("knit")}>
+              Realistic capes
+            </button>
             <button
               type="button"
               className="ash-btn-ghost"
@@ -1610,6 +1614,57 @@ export function Playfield({
                           : CAPES_TRY
                             ? `${cloth.note} Open to try.`
                             : `${cloth.note} ${cloth.cost} Rare coins.`}
+                  </small>
+                </button>
+              );
+            })}
+          </div>
+          <div className="ash-actions">
+            <button type="button" className="ash-btn-ghost" onClick={() => go("title")}>
+              Back
+            </button>
+          </div>
+        </section>
+      )}
+      {phase === "knit" && (
+        <section className="ash-panel" aria-label="Realistic capes">
+          <p className="ash-kicker">Knit and fur</p>
+          <h2>Realistic capes</h2>
+          {stakeMsg && (
+            <p className="ash-error" role="alert">
+              {stakeMsg}
+            </p>
+          )}
+          <p className="ash-note">
+            The same capes, cut as a knit wrap with a fur edge. Only the realistic red cape is open, at 15 Rare coins. The rest open on the same days as the others.
+          </p>
+          <div className="ash-levels">
+            {REAL_CLOTHES.map((cloth) => {
+              const locked = !clothReleased(cloth.id);
+              const when = clothOpens(cloth.id);
+              const soon = locked && when != null;
+              const owned = ledger.owned.includes(cloth.id);
+              const wearing = ledger.equipped === cloth.id;
+              return (
+                <button
+                  key={cloth.id}
+                  type="button"
+                  className="ash-level"
+                  aria-current={wearing ? "true" : undefined}
+                  disabled={locked}
+                  onClick={() => (owned ? wearOutfit(wearing ? null : cloth.id) : buyOutfit(cloth.id))}
+                >
+                  <span>{soon ? `${cloth.name} · coming soon` : locked ? `${cloth.name} · locked` : cloth.name}</span>
+                  <small>
+                    {soon
+                      ? `Coming soon. Opens ${when}. ${cloth.cost} Rare coins.`
+                      : locked
+                        ? "Locked."
+                        : owned
+                          ? wearing
+                            ? "Wearing. Press to take it off."
+                            : `${cloth.note} Press to wear.`
+                          : `${cloth.note} ${cloth.cost} Rare coins.`}
                   </small>
                 </button>
               );
@@ -2138,7 +2193,7 @@ function Rite({
 function musicScene(phase: Phase, sim: Sim): MusicScene {
   if (phase === "rite") return "rite";
   if (phase === "clear") return "clear";
-  if (phase === "title" || phase === "levels" || phase === "lobby" || phase === "clothes") return "title";
+  if (phase === "title" || phase === "levels" || phase === "lobby" || phase === "clothes" || phase === "knit") return "title";
   if (sim.level.id === "hallow") return "hallow";
   if (sim.level.id === "yule") return "yule";
   if (sim.level.id === "hoist") return "hoist";
