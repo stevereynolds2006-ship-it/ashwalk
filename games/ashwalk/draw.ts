@@ -4608,6 +4608,7 @@ export function renderFrame(
     drawRealBackdrop(ctx, camera, sim.level.id, sim.t);
   }
   if (sim.level.id === "shore" && shoreReal) drawShoreWater(ctx, camera, sim.t);
+  if (sim.level.id === "gear") drawWorksGears(ctx, sim, reduced);
 
   drawTerrain(ctx, sim, reduced);
   if (sim.level.id === "hoist") drawToxic(ctx, sim, camera);
@@ -5453,7 +5454,9 @@ function drawGearHall(ctx: CanvasRenderingContext2D, camera: Camera, sim: Sim, r
   ctx.fillStyle = "#f7f7f4";
   ctx.fillRect(lx - 18, ly - 18, 36, 36);
   ctx.restore();
+}
 
+function drawWorksGears(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) {
   const specks = Array.from({ length: 28 }, (_, i) => ({
     x: 40 + i * 190 + (i % 3) * 24,
     y: 120 + (i % 5) * 58,
