@@ -541,7 +541,7 @@ const ROOF: Level = {
   id: "roof",
   title: "The sign",
   kicker: "The letters still know the name.",
-  rule: "The roofs are nearly black. A lantern costs 1 coin and lasts 13 seconds. Light three letters, cross the gate, and the last roof drops you into the drain. The way out is a narrow climb. Miss it and you fall.",
+  rule: "The roofs are nearly black. A lantern costs 1 coin and lasts 13 seconds. Light three letters, cross the gate, and the last roof drops you into the drain. The fire escape stays up until you pay 3 coins. Then it drops.",
   together: "The letters are shared. Any of you can light them. The drain is the same for everyone.",
   clearKicker: "The drain",
   clearTitle: "You climbed back out",
@@ -639,7 +639,7 @@ const ROOF: Level = {
   chapters: [
     { x: 0, id: "roof", title: "The sign", kicker: "A coin buys ten seconds of light." },
     { x: 2300, id: "letters", title: "The white letter", kicker: "Light the three. Then the plate." },
-    { x: 4300, id: "drain", title: "The drain", kicker: "The fire escapes lead out." },
+    { x: 4300, id: "drain", title: "The drain", kicker: "Pay 3 coins. The fire escape drops." },
   ],
   light: { x: 1660, y: 80 },
 };

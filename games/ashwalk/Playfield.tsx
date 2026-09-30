@@ -902,6 +902,17 @@ export function Playfield({
               }
             } else go("rite");
           }
+          if (events.toll) {
+            if (purseRef.current < 3) {
+              setShopError("The escape wants 3 coins you picked up.");
+            } else {
+              purseRef.current -= 3;
+              setPurse(purseRef.current);
+              sim.toll = 0.04;
+              setShopError("Spent 3 coins. The escape is coming down.");
+              sound?.play("purchase");
+            }
+          }
           if (events.lamp) {
             if (purseRef.current < LIGHT_PRICE) {
               setShopError("A lantern wants 1 coin you picked up.");
@@ -2159,6 +2170,8 @@ function promptFor(sim: Sim, phase: Phase) {
   }
   if (sim.level.id === "yule" && sim.cage > 0 && sim.cage < 1) return "The snowball is behind you.";
   if (sim.level.id === "moon" && sim.cage > 0) return "Light speed. Eight seconds.";
+  if (sim.nearToll) return "E · lower the escape · 3 coins";
+  if (sim.level.id === "roof" && sim.toll > 0 && sim.toll < 1) return "The escape is coming down.";
   if (sim.climbing) return sim.climbDir > 0 ? "Down · climbing down" : "Use · climbing up";
   if (sim.nearLadder) return "Use climbs up. Down climbs down.";
   if (sim.plateAsleep && sim.level.id === "latch" && sim.rope < 1) return "Pull the pulley. Then the plate.";

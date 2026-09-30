@@ -49,6 +49,7 @@ export type StepEvents = {
   beacon: string | null;
   goal: boolean;
   checkpoint: string | null;
+  toll: boolean;
 };
 
 export type Crumble = { timer: number; fall: number; gone: boolean; back: number };
@@ -162,6 +163,7 @@ export type Sim = {
   climbDir: number;
   nearLadder: boolean;
   /** Bird indexes the saber has cut. */
+  slain: Set<number>;
   /** Presents set under the eve tree. */
   gifts: number;
   /** Where the last present stood, so the room can send you back. */
@@ -169,7 +171,9 @@ export type Sim = {
   hearthY: number;
   /** Seconds left in the room after the last present. */
   hearthLeave: number;
-  slain: Set<number>;
+  /** 0 raised, 1 lowered. The sign fire escape. */
+  toll: number;
+  nearToll: boolean;
 };
 
 export function createSim(level: Level = SHORE): Sim {
@@ -266,6 +270,8 @@ export function createSim(level: Level = SHORE): Sim {
     hearthX: 0,
     hearthY: 0,
     hearthLeave: 0,
+    toll: 0,
+    nearToll: false,
   };
 }
 
@@ -357,6 +363,7 @@ function emptyEvents(): StepEvents {
     beacon: null,
     goal: false,
     checkpoint: null,
+    toll: false,
   };
 }
 
@@ -380,6 +387,14 @@ function bodyOn(x: number, y: number, zone: { x: number; y: number; w: number; h
   return x < zone.x + zone.w && x + PW > zone.x && y < zone.y + zone.h && y + PH > zone.y;
 }
 
+const ESCAPE = new Set(["e1", "f1", "sw1", "e2", "f2", "e3", "f3", "e4", "f4", "e5", "f5"]);
+
+/** How far the sign fire escape still sits above its rest. 0 once the toll is paid. */
+export function escapeDy(sim: Sim, id: string) {
+  if (sim.level.id !== "roof" || !ESCAPE.has(id)) return 0;
+  return (1 - sim.toll) * -520;
+}
+
 export function rectsAt(sim: Sim, reduced: boolean): Rect[] {
   const out: Rect[] = [];
   for (const plat of sim.level.platforms) {
@@ -390,7 +405,7 @@ export function rectsAt(sim: Sim, reduced: boolean): Rect[] {
         id: plat.id,
         kind: plat.kind,
         x: spin.cx + Math.cos(ang) * spin.r - plat.w / 2,
-        y: spin.cy + Math.sin(ang) * spin.r,
+        y: spin.cy + Math.sin(ang) * spin.r + escapeDy(sim, plat.id),
         w: plat.w,
         h: plat.h,
       });
@@ -412,7 +427,7 @@ export function rectsAt(sim: Sim, reduced: boolean): Rect[] {
         id: plat.id,
         kind: plat.kind,
         x: plat.x + s * amp + shake + crackShake,
-        y: plat.y + Math.abs(s) * dip + drop,
+        y: plat.y + Math.abs(s) * dip + drop + escapeDy(sim, plat.id),
         w: plat.w,
         h: plat.h,
       });
@@ -426,7 +441,7 @@ export function rectsAt(sim: Sim, reduced: boolean): Rect[] {
         id: plat.id,
         kind: plat.kind,
         x: plat.x + shake + crackShake,
-        y: y0 + (y1 - y0) * sim.rope + drop,
+        y: y0 + (y1 - y0) * sim.rope + drop + escapeDy(sim, plat.id),
         w: plat.w,
         h: plat.h,
       });
@@ -449,7 +464,7 @@ export function rectsAt(sim: Sim, reduced: boolean): Rect[] {
       id: plat.id,
       kind: plat.kind,
       x: plat.x + shake + crackShake,
-      y: plat.y + drop,
+      y: plat.y + drop + escapeDy(sim, plat.id),
       w: plat.w,
       h: plat.h,
       terrain: plat.terrain,
@@ -1226,6 +1241,15 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
     }
   }
 
+  sim.nearToll = false;
+  if (level.id === "roof" && sim.toll <= 0 && sim.dead <= 0) {
+    const onSlot = sim.x + PW > 3980 && sim.x < 4160 && sim.y + PH > 1000 && sim.y + PH < 1088;
+    if (onSlot) {
+      sim.nearToll = true;
+      if (input.interactPressed && !events.beacon && !events.lamp && !events.shrine && !events.pull) events.toll = true;
+    }
+  }
+  if (sim.toll > 0 && sim.toll < 1) sim.toll = Math.min(1, sim.toll + dt / 1.6);
   if (events.beacon === "lock") events.beacon = null;
   stepPal(sim, dt);
   sim.doorLocked =
@@ -1394,8 +1418,9 @@ function ladderHit(sim: Sim) {
   for (const plat of sim.level.platforms) {
     if (plat.kind !== "ladder") continue;
     if (cx < plat.x + 2 || cx > plat.x + plat.w - 2) continue;
-    if (sim.y + PH < plat.y - 10 || sim.y > plat.y + plat.h) continue;
-    return plat;
+    const y = plat.y + escapeDy(sim, plat.id);
+    if (sim.y + PH < y - 10 || sim.y > y + plat.h) continue;
+    return { ...plat, y };
   }
   return null;
 }

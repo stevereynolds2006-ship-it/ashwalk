@@ -1,6 +1,6 @@
 import { spriteFrame, type GenerationSprites } from "@rarefriends/friendsdk/sprites";
 import type { Ghost } from "./net";
-import { PH, PW, birdSpots, comboSet, perchPosition, rectsAt, spiderPoses, type Sim } from "./sim";
+import { PH, PW, birdSpots, comboSet, escapeDy, perchPosition, rectsAt, spiderPoses, type Sim } from "./sim";
 
 export type Camera = { x: number; y: number; w: number; h: number };
 
@@ -748,8 +748,9 @@ function drawTerrain(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) 
   drawLightGaps(ctx, sim);
   for (const plat of sim.level.platforms) {
     if (plat.kind === "ladder") {
-      if (plat.id.startsWith("line")) drawRopeLine(ctx, plat);
-      else drawLadder(ctx, plat);
+      const shown = { ...plat, y: plat.y + escapeDy(sim, plat.id) };
+      if (plat.id.startsWith("line")) drawRopeLine(ctx, shown);
+      else drawLadder(ctx, shown);
     }
   }
   drawSaws(ctx, sim);
@@ -1531,6 +1532,29 @@ function drawGlider(ctx: CanvasRenderingContext2D, x: number, y: number, t: numb
   ctx.lineTo(20, 32);
   ctx.stroke();
   ctx.restore();
+}
+
+function drawEscapeToll(ctx: CanvasRenderingContext2D, sim: Sim) {
+  const x = 4048;
+  const y = 1040;
+  const top = 740 + escapeDy(sim, "e1");
+  ctx.strokeStyle = "#c8c4bc";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(x + 18, y - 28);
+  ctx.lineTo(4411, top);
+  ctx.stroke();
+  ctx.fillStyle = "#141418";
+  ctx.fillRect(x, y - 36, 40, 36);
+  ctx.strokeStyle = "#f4f1ea";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(x, y - 36, 40, 36);
+  ctx.fillStyle = sim.toll > 0 ? "#3a3a3e" : "#f4f1ea";
+  ctx.font = "bold 18px sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText(sim.toll > 0 ? "" : "3", x + 20, y - 12);
+  ctx.fillStyle = "#2a2a2e";
+  ctx.fillRect(x + 14, y - 8, 12, 3);
 }
 
 function drawExitSnare(ctx: CanvasRenderingContext2D, sim: Sim) {
@@ -4736,6 +4760,7 @@ export function renderFrame(
       empty: sim.saved > 2,
     });
   }
+  if (sim.level.id === "roof") drawEscapeToll(ctx, sim);
   if (sim.level.id === "latch") drawPulley(ctx, sim);
   if (sim.level.id === "roof") drawDrainTrash(ctx, sim.t, reduced);
   if (sim.level.combo) drawLatchLock(ctx, sim);
