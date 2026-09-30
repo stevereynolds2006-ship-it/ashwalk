@@ -11,12 +11,6 @@ import {
 export const PW = 14;
 export const PH = 36;
 
-let parkScare = false;
-
-export function setScareLow(on: boolean) {
-  parkScare = on;
-}
-
 const RUN = 196;
 const ACCEL = 1600;
 const AIR = 980;
@@ -867,7 +861,6 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
       sim.slain.add(i);
       continue;
     }
-    if (spec.kind === "scare" && parkScare) continue;
     const feet = spec.kind === "deer" || spec.kind === "scare" || spec.kind === "shade";
     const hitW = spec.kind === "shade" ? 28 : spec.kind === "scare" ? 36 : spec.kind === "deer" ? 72 : spec.kind === "gator" ? 86 : spec.kind === "eagle" ? 54 : spec.kind === "ship" ? 52 : spec.kind === "alien" ? 26 : spec.kind === "rocket" ? 48 : spec.kind === "turtle" ? 34 : spec.kind === "rat" ? 28 : 22;
     const hitH = spec.kind === "shade" ? 60 : spec.kind === "scare" ? 72 : spec.kind === "deer" ? 40 : spec.kind === "gator" ? 30 : spec.kind === "eagle" ? 24 : spec.kind === "ship" ? 22 : spec.kind === "alien" ? 40 : spec.kind === "rocket" ? 18 : spec.kind === "turtle" ? 26 : spec.kind === "rat" ? 20 : 14;

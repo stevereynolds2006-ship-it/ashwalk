@@ -10,7 +10,7 @@ import { LEVELS, TRY_ALL, fogHeld, fogPrice, fogReleased, fogTry, fogUnlocked, g
 import { windAccel, chapterAt } from "./level";
 import { Online, type NetApi } from "./online";
 import type { Ghost } from "./net";
-import { comboSet, createSim, setScareLow, step, type Actions, type Sim } from "./sim";
+import { comboSet, createSim, step, type Actions, type Sim } from "./sim";
 import { burst, frameCamera, realLookId, renderFrame, setRealLook, viewSize } from "./draw";
 import { createAshMusic, type AshMusic, type MusicScene } from "./music";
 import {
@@ -645,7 +645,6 @@ export function Playfield({
     if (id === "shore") setShopError("");
     const level = getLevel(id);
     const sim = createSim(level);
-    setScareLow(realLookId() === "hallow" && id === "hallow");
     sim.linked = (apiRef.current?.peerCount() ?? 0) > 0;
     simRef.current = sim;
     setPickId(id);
