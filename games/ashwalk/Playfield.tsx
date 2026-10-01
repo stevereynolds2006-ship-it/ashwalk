@@ -1571,24 +1571,11 @@ export function Playfield({
           <p className="ash-kicker">Rare Friends · the hanging wood</p>
           <h1>Ashwalk</h1>
           <p>{spriteError ? "The chain did not answer." : family ? `${family} is in the fog.` : "Reading your Friend."}</p>
-          <p>
-            {payingAccount && (rareBalance ?? walletCoins) != null
-              ? `You have ${formatRareCoins(spendable(rareBalance ?? walletCoins, payingAccount) ?? 0n)} Rare coins.`
-              : "Connect a wallet to buy boards with Rare coins."}
-          </p>
-          {stakeMsg && (
-            <p className="ash-error" role="alert">
-              {stakeMsg}
-            </p>
-          )}
           <div className="ash-boot-track" aria-hidden="true">
             <span />
           </div>
           <div className="ash-actions">
-            <button type="button" className="ash-btn" onClick={() => void connectRareWallet()}>
-              {payingAccount ? "Wallet connected" : "Connect wallet"}
-            </button>
-            <button type="button" className="ash-btn-ghost" onClick={() => go("title")}>
+            <button type="button" className="ash-btn" onClick={() => go("title")}>
               Walk in
             </button>
           </div>
