@@ -661,6 +661,46 @@
   }
 }
 
+.ash-pay {
+  position: absolute;
+  inset: 0;
+  z-index: 12;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 18px 18px 28px;
+  background: rgba(7, 7, 8, 0.78);
+}
+
+.ash-pay-card {
+  width: min(440px, 100%);
+  padding: 22px 22px 18px;
+  background: rgba(10, 10, 12, 0.96);
+  border: 1px solid rgba(243, 240, 232, 0.22);
+  border-radius: 18px;
+}
+
+.ash-pay-card h2 {
+  margin: 6px 0 8px;
+  font-family: "Cormorant Garamond", Palatino, serif;
+  font-weight: 500;
+  font-size: 40px;
+  line-height: 0.9;
+}
+
+.ash-pay-card p {
+  margin: 0 0 12px;
+  color: #c8c6c0;
+  font-size: 15px;
+}
+
+.ash-pay-addr {
+  word-break: break-all;
+  font-size: 13px;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
 .ash-card {
   bottom: 168px;
 }

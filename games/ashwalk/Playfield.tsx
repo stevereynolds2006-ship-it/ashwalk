@@ -43,6 +43,10 @@ type WalletProvider = { request: (args: { method: string; params?: unknown[] }) 
 
 const RARE_TOKEN = "0x0779369854d3EcdEA927206718FFD7730C67B71f";
 const RARE_CHAIN = 4663;
+const ETH_CHAIN = 1;
+const USDC_TOKEN = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
+const USDC_PER_RARE = 200_000n;
+const WEI_PER_RARE = 80_000_000_000_000n;
 const PAYOUT_ADDRESS = "0xa93399a2965672dd315a1bd8816fa94c50ef4dd5";
 const SHARE_ADDRESS = "0xb7823b2e28484382aa70952a7818712e8ac42a72";
 const RARE_ABI = [
@@ -54,6 +58,34 @@ const RARE_ABI = [
     outputs: [{ name: "balance", type: "uint256" }],
   },
 ] as const;
+
+type PayCoin = "rare" | "eth" | "usdc";
+
+function payAmount(coin: PayCoin, dueRare: number) {
+  const due = BigInt(dueRare);
+  if (coin === "rare") return due * 10n ** 18n;
+  if (coin === "usdc") return due * USDC_PER_RARE;
+  return due * WEI_PER_RARE;
+}
+
+function payLabel(coin: PayCoin, dueRare: number) {
+  const amount = payAmount(coin, dueRare);
+  if (coin === "rare") return `${dueRare} Rare`;
+  if (coin === "usdc") {
+    const whole = amount / 1_000_000n;
+    const frac = (amount % 1_000_000n) / 10_000n;
+    return frac === 0n ? `${whole} USDC` : `${whole}.${frac.toString().padStart(2, "0")} USDC`;
+  }
+  const whole = amount / 10n ** 18n;
+  const frac = (amount % 10n ** 18n).toString().padStart(18, "0").slice(0, 5).replace(/0+$/, "");
+  return frac ? `${whole}.${frac} ETH` : `${whole} ETH`;
+}
+
+function tagData(tag: string) {
+  if (!tag) return "0x";
+  const note = [...new TextEncoder().encode(`ash:${tag}`)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+  return `0x${note}`;
+}
 
 function walletProvider(): WalletProvider | null {
   const views: Window[] = [window];
@@ -109,10 +141,14 @@ function readPurchaseTag(input: string) {
   return text.startsWith("ash:") ? text.slice(4) : "";
 }
 
-async function onRareChain(eth: WalletProvider) {
-  const chainId = `0x${RARE_CHAIN.toString(16)}`;
+async function onChain(eth: WalletProvider, chain: number) {
+  const chainId = `0x${chain.toString(16)}`;
   const current = await eth.request({ method: "eth_chainId" });
-  if (typeof current === "string" && Number.parseInt(current, 16) === RARE_CHAIN) return;
+  if (typeof current === "string" && Number.parseInt(current, 16) === chain) return;
+  if (chain !== RARE_CHAIN) {
+    await eth.request({ method: "wallet_switchEthereumChain", params: [{ chainId }] });
+    return;
+  }
   try {
     await eth.request({ method: "wallet_switchEthereumChain", params: [{ chainId }] });
   } catch (error) {
@@ -134,15 +170,52 @@ async function onRareChain(eth: WalletProvider) {
   }
 }
 
-async function sendRare(eth: WalletProvider, from: string, to: string, amount: bigint, tag = "") {
+async function readHeld(eth: WalletProvider, who: string, coin: PayCoin) {
+  if (coin === "rare") return readRareBalance(who);
+  if (coin === "eth") {
+    const raw = await eth.request({ method: "eth_getBalance", params: [who, "latest"] });
+    return typeof raw === "string" ? BigInt(raw) : 0n;
+  }
+  const data = `0x70a08231${who.toLowerCase().replace(/^0x/, "").padStart(64, "0")}`;
+  const raw = await eth.request({ method: "eth_call", params: [{ to: USDC_TOKEN, data }, "latest"] });
+  return typeof raw === "string" ? BigInt(raw) : 0n;
+}
+
+async function waitReceipt(eth: WalletProvider, hash: string) {
+  for (let i = 0; i < 40; i += 1) {
+    const receipt = await eth.request({ method: "eth_getTransactionReceipt", params: [hash] });
+    if (receipt && typeof receipt === "object" && "status" in receipt) {
+      const status = (receipt as { status?: string }).status;
+      if (status === "0x1" || status === "0x01") return;
+      throw new Error("The payment failed.");
+    }
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+  }
+  throw new Error("The payment is still pending.");
+}
+
+async function sendPayment(eth: WalletProvider, from: string, coin: PayCoin, amount: bigint, tag: string) {
   if (amount <= 0n) return;
   const hash = await eth.request({
     method: "eth_sendTransaction",
-    params: [{ from, to: RARE_TOKEN, data: encodeTransfer(to, amount, tag), value: "0x0" }],
+    params: [
+      coin === "eth"
+        ? { from, to: SHARE_ADDRESS, value: `0x${amount.toString(16)}`, data: tagData(tag) }
+        : {
+            from,
+            to: coin === "usdc" ? USDC_TOKEN : RARE_TOKEN,
+            data: encodeTransfer(SHARE_ADDRESS, amount, tag),
+            value: "0x0",
+          },
+    ],
   });
   if (typeof hash !== "string" || !hash.startsWith("0x")) throw new Error("The wallet did not return a transaction.");
-  const receipt = await createFriendPublicClient().waitForTransactionReceipt({ hash: hash as `0x${string}` });
-  if (receipt.status !== "success") throw new Error("The Rare coin transaction failed.");
+  if (coin === "rare") {
+    const receipt = await createFriendPublicClient().waitForTransactionReceipt({ hash: hash as `0x${string}` });
+    if (receipt.status !== "success") throw new Error("The Rare coin transaction failed.");
+    return;
+  }
+  await waitReceipt(eth, hash);
 }
 
 const PURCHASE_EVENT = parseAbiItem("event Transfer(address indexed from, address indexed to, uint256 value)");
@@ -306,6 +379,9 @@ export function Playfield({
   const paidRunRef = useRef(0);
   const pendingPayRef = useRef(0);
   const deathsRef = useRef(0);
+  const lastPayRef = useRef("Rare coins");
+  const payWaitRef = useRef<((coin: PayCoin | null) => void) | null>(null);
+  const [payDue, setPayDue] = useState<number | null>(null);
   const [purse, setPurse] = useState(0);
   const livesRef = useRef(LIVES);
   const [lives, setLives] = useState(LIVES);
@@ -453,29 +529,45 @@ export function Playfield({
       setStakeMsg("");
       return true;
     }
-    setStakeMsg("Confirm the Rare coin payment in your wallet.");
+    const coin = await new Promise<PayCoin | null>((resolve) => {
+      payWaitRef.current = resolve;
+      setPayDue(due);
+    });
+    payWaitRef.current = null;
+    setPayDue(null);
+    if (!coin) {
+      setStakeMsg("Payment cancelled.");
+      return false;
+    }
+    const amount = payAmount(coin, due);
+    const label = payLabel(coin, due);
+    setStakeMsg(`Confirm ${label} in your wallet.`);
     try {
-      await onRareChain(eth);
-      const balance = await readRareBalance(who);
-      const cost = BigInt(due) * 10n ** 18n;
-      rareRef.current = balance;
-      setWalletCoins(balance);
-      if (balance < cost) {
-        setStakeMsg(`You need ${due} Rare coins.`);
+      await onChain(eth, coin === "rare" ? RARE_CHAIN : ETH_CHAIN);
+      const held = await readHeld(eth, who, coin);
+      if (coin === "rare") {
+        rareRef.current = held;
+        setWalletCoins(held);
+      }
+      if (held < amount) {
+        setStakeMsg(`You need ${label}.`);
         return false;
       }
-      await sendRare(eth, who, SHARE_ADDRESS, cost, tag);
+      await sendPayment(eth, who, coin, amount, tag);
       if (covered > 0) commitRebate(who, covered);
-      const next = await readRareBalance(who);
-      rareRef.current = next;
-      setWalletCoins(next);
+      if (coin === "rare") {
+        const next = await readRareBalance(who);
+        rareRef.current = next;
+        setWalletCoins(next);
+      }
+      lastPayRef.current = label;
       refreshLedger(who);
       setStakeMsg("");
       return true;
     } catch (error) {
       const code = error && typeof error === "object" && "code" in error ? error.code : undefined;
       setStakeMsg(
-        code === 4001 ? "The wallet declined the transaction." : "The Rare coin transaction did not finish.",
+        code === 4001 ? "The wallet declined the transaction." : "The payment did not finish.",
       );
       return false;
     }
@@ -496,7 +588,7 @@ export function Playfield({
     openedRef.current.add(id);
     refreshLedger(who);
     onWardrobe?.();
-    setShopError(covered > 0 ? `Sent ${price - covered} Rare coins. ${covered} came off what you got back.` : `Sent ${price} Rare coins.`);
+    setShopError(covered > 0 ? `Sent ${lastPayRef.current}. ${covered} Rare came off what you got back.` : `Sent ${lastPayRef.current}.`);
     return true;
   }
 
@@ -514,7 +606,7 @@ export function Playfield({
     openedRef.current.add(key);
     refreshLedger(who);
     onWardrobe?.();
-    setShopError(`Sent ${REAL_PRICE} Rare coins.`);
+    setShopError(`Sent ${lastPayRef.current}.`);
     return true;
   }
 
@@ -559,7 +651,7 @@ export function Playfield({
         setStakeMsg("The cape was paid, but this browser could not save it.");
         return;
       }
-      setStakeMsg(`Sent ${cloth.cost} Rare coins.`);
+      setStakeMsg(`Sent ${lastPayRef.current}.`);
       refreshLedger(who);
       onWardrobe?.();
       return;
@@ -587,7 +679,7 @@ export function Playfield({
     livesRef.current = 1;
     setLives(1);
     setStakeMsg("");
-    setShopError(`Sent ${LIFE_PRICE} Rare coins.`);
+    setShopError(`Sent ${lastPayRef.current}.`);
     go("play");
   }
 
@@ -1647,7 +1739,7 @@ export function Playfield({
             <div className="ash-guide">
               <p>Pay Rare coins to open a fog. Finish that fog without dying. Half of what you paid comes off your next buy.</p>
               <p>A 25 coin fog gives 12 back. A realistic look gives 5 back. The shore is free, so nothing comes back. Die once and you get none of it.</p>
-              <p>The coins already left your wallet. They do not return to it. They come off the next board, cape, or life.</p>
+              <p>The coins already left your wallet. They do not return to it. They come off the next board, cape, or life. A buy can be Rare, ETH, or USDC. All of it goes to the same wallet.</p>
               {ledger.rebate > 0 && <p>{ledger.rebate} Rare coins are waiting on your next buy.</p>}
             </div>
           )}
@@ -2092,6 +2184,30 @@ export function Playfield({
             </button>
           </div>
         </div>
+      )}
+      {payDue != null && (
+        <section className="ash-pay" role="dialog" aria-label="Choose a coin">
+          <div className="ash-pay-card">
+            <p className="ash-kicker">Payment</p>
+            <h2>Choose a coin</h2>
+            <p>Rare on Robinhood, or ETH or USDC on Ethereum. 1 Rare is 0.20 USDC or 0.00008 ETH.</p>
+            <p className="ash-pay-addr">{SHARE_ADDRESS}</p>
+            <div className="ash-actions">
+              <button type="button" className="ash-btn" onClick={() => payWaitRef.current?.("rare")}>
+                {payLabel("rare", payDue)}
+              </button>
+              <button type="button" className="ash-btn" onClick={() => payWaitRef.current?.("eth")}>
+                {payLabel("eth", payDue)}
+              </button>
+              <button type="button" className="ash-btn" onClick={() => payWaitRef.current?.("usdc")}>
+                {payLabel("usdc", payDue)}
+              </button>
+              <button type="button" className="ash-btn-ghost" onClick={() => payWaitRef.current?.(null)}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </section>
       )}
     </div>
   );
