@@ -2173,7 +2173,6 @@ export function Playfield({
             <p className="ash-kicker">Payment</p>
             <h2>Choose a coin</h2>
             <p>USDC or ETH is $3. Rare is 2,500. Pick one. Nothing is selected until you do.</p>
-            <p className="ash-pay-addr">{SHARE_ADDRESS}</p>
             <div className="ash-actions">
               <button type="button" className="ash-btn" onClick={() => payWaitRef.current?.("usdc")}>
                 {payLabel("usdc", payDue)}

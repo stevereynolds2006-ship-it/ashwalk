@@ -721,13 +721,6 @@
   font-size: 15px;
 }
 
-.ash-pay-addr {
-  word-break: break-all;
-  font-size: 13px;
-  -webkit-user-select: text;
-  user-select: text;
-}
-
 .ash-card {
   bottom: 168px;
 }
