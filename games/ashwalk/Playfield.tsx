@@ -22,7 +22,6 @@ import {
   clothReleased,
   commitRebate,
   equipCloth,
-  formatRareCoins,
   grantAllFogs,
   grantCloth,
   grantFog,
@@ -45,8 +44,8 @@ const RARE_TOKEN = "0x0779369854d3EcdEA927206718FFD7730C67B71f";
 const RARE_CHAIN = 4663;
 const ETH_CHAIN = 1;
 const USDC_TOKEN = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
-const USDC_PER_RARE = 200_000n;
-const WEI_PER_RARE = 80_000_000_000_000n;
+const PRICE_CENTS = 500;
+const ETH_USD = 2508;
 const PAYOUT_ADDRESS = "0xa93399a2965672dd315a1bd8816fa94c50ef4dd5";
 const SHARE_ADDRESS = "0xb7823b2e28484382aa70952a7818712e8ac42a72";
 const RARE_ABI = [
@@ -61,24 +60,29 @@ const RARE_ABI = [
 
 type PayCoin = "rare" | "eth" | "usdc";
 
-function payAmount(coin: PayCoin, dueRare: number) {
-  const due = BigInt(dueRare);
-  if (coin === "rare") return due * 10n ** 18n;
-  if (coin === "usdc") return due * USDC_PER_RARE;
-  return due * WEI_PER_RARE;
+function payAmount(coin: PayCoin, cents: number) {
+  const due = BigInt(cents);
+  if (coin === "usdc") return due * 10_000n;
+  if (coin === "eth") return (due * 10n ** 16n) / BigInt(ETH_USD);
+  return (due * 1000n * 10n ** 18n) / 86n;
 }
 
-function payLabel(coin: PayCoin, dueRare: number) {
-  const amount = payAmount(coin, dueRare);
-  if (coin === "rare") return `${dueRare} Rare`;
+function payLabel(coin: PayCoin, cents: number) {
+  const amount = payAmount(coin, cents);
   if (coin === "usdc") {
     const whole = amount / 1_000_000n;
     const frac = (amount % 1_000_000n) / 10_000n;
     return frac === 0n ? `${whole} USDC` : `${whole}.${frac.toString().padStart(2, "0")} USDC`;
   }
+  if (coin === "eth") {
+    const whole = amount / 10n ** 18n;
+    const frac = (amount % 10n ** 18n).toString().padStart(18, "0").slice(0, 5).replace(/0+$/, "");
+    return frac ? `${whole}.${frac} ETH` : `${whole} ETH`;
+  }
   const whole = amount / 10n ** 18n;
-  const frac = (amount % 10n ** 18n).toString().padStart(18, "0").slice(0, 5).replace(/0+$/, "");
-  return frac ? `${whole}.${frac} ETH` : `${whole} ETH`;
+  const frac = (amount % 10n ** 18n) / 10n ** 16n;
+  const text = whole.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  return frac === 0n ? text : `${text}.${frac.toString().padStart(2, "0")}`;
 }
 
 function tagData(tag: string) {
@@ -212,7 +216,7 @@ async function sendPayment(eth: WalletProvider, from: string, coin: PayCoin, amo
   if (typeof hash !== "string" || !hash.startsWith("0x")) throw new Error("The wallet did not return a transaction.");
   if (coin === "rare") {
     const receipt = await createFriendPublicClient().waitForTransactionReceipt({ hash: hash as `0x${string}` });
-    if (receipt.status !== "success") throw new Error("The Rare coin transaction failed.");
+    if (receipt.status !== "success") throw new Error("The payment failed.");
     return;
   }
   await waitReceipt(eth, hash);
@@ -379,7 +383,7 @@ export function Playfield({
   const paidRunRef = useRef(0);
   const pendingPayRef = useRef(0);
   const deathsRef = useRef(0);
-  const lastPayRef = useRef("Rare coins");
+  const lastPayRef = useRef("");
   const payWaitRef = useRef<((coin: PayCoin | null) => void) | null>(null);
   const [payDue, setPayDue] = useState<number | null>(null);
   const [purse, setPurse] = useState(0);
@@ -482,13 +486,13 @@ export function Playfield({
   async function connectRareWallet() {
     const eth = walletProvider();
     if (!eth) {
-      setStakeMsg("Connect a wallet to buy a board with Rare coins.");
+      setStakeMsg("Connect a wallet.");
       return false;
     }
     try {
       const who = firstAddress(await eth.request({ method: "eth_requestAccounts" }));
       if (!who) {
-        setStakeMsg("Connect a wallet to buy a board with Rare coins.");
+        setStakeMsg("Connect a wallet.");
         return false;
       }
       const balance = await readRareBalance(who);
@@ -501,7 +505,7 @@ export function Playfield({
       setStakeMsg("");
       return true;
     } catch {
-      setStakeMsg("Connect a wallet to buy a board with Rare coins.");
+      setStakeMsg("Connect a wallet.");
       return false;
     }
   }
@@ -521,8 +525,8 @@ export function Playfield({
     if (!(await ensureWallet())) return false;
     const who = accountRef.current;
     if (!who || !isAddress(who)) return false;
-    const covered = Math.min(rebateOf(who), whole);
-    const due = whole - covered;
+    const covered = Math.min(rebateOf(who), PRICE_CENTS);
+    const due = PRICE_CENTS - covered;
     if (due <= 0) {
       commitRebate(who, covered);
       refreshLedger(who);
@@ -578,17 +582,17 @@ export function Playfield({
     const balance = rareRef.current;
     const price = fogPrice(id);
     if (!who || !isAddress(who) || balance == null) {
-      setStakeMsg(`Connect a wallet. ${getLevel(id).title} is ${price} Rare coins.`);
+      setStakeMsg(`Connect a wallet. ${getLevel(id).title} is $5.`);
       return false;
     }
     if (openedRef.current.has(id)) return true;
-    const covered = Math.min(rebateOf(who), price);
+    const covered = Math.min(rebateOf(who), PRICE_CENTS);
     if (!(await chargeRare(price, `fog:${id}`))) return false;
     grantFog(who, id, price);
     openedRef.current.add(id);
     refreshLedger(who);
     onWardrobe?.();
-    setShopError(covered > 0 ? `Sent ${lastPayRef.current}. ${covered} Rare came off what you got back.` : `Sent ${lastPayRef.current}.`);
+    setShopError(covered > 0 ? `Sent ${lastPayRef.current}. $${(covered / 100).toFixed(2)} came off the price.` : `Sent ${lastPayRef.current}.`);
     return true;
   }
 
@@ -597,7 +601,7 @@ export function Playfield({
     const balance = rareRef.current;
     const key = `real:${id}`;
     if (!who || !isAddress(who) || balance == null) {
-      setStakeMsg(`Connect a wallet. The realistic ${getLevel(id).title} is ${REAL_PRICE} Rare coins.`);
+      setStakeMsg(`Connect a wallet. The realistic ${getLevel(id).title} is $5.`);
       return false;
     }
     if (openedRef.current.has(key)) return true;
@@ -642,7 +646,7 @@ export function Playfield({
         onWardrobe?.();
         return;
       }
-      setStakeMsg("Connect a wallet. The red cape is 15 Rare coins.");
+      setStakeMsg("Connect a wallet. A cape is $5.");
       return;
     }
     if (cloth && cloth.cost > 0 && !readLedger(who).owned.includes(id)) {
@@ -657,7 +661,7 @@ export function Playfield({
       return;
     }
     if (!buyCloth(who, balance, id)) {
-      setStakeMsg(cloth && cloth.cost > 0 ? `${cloth.name} wants ${cloth.cost} Rare coins.` : "That cape stayed shut.");
+      setStakeMsg(cloth && cloth.cost > 0 ? `${cloth.name} is $5.` : "That cape stayed shut.");
       return;
     }
     setStakeMsg(cloth ? `${cloth.name} is on.` : "");
@@ -670,7 +674,7 @@ export function Playfield({
     const who = accountRef.current;
     const balance = rareRef.current;
     if (!who || !isAddress(who) || balance == null) {
-      setStakeMsg("Connect a wallet. A life is 3 Rare coins.");
+      setStakeMsg("Connect a wallet. A life is $5.");
       return;
     }
     if (!(await chargeRare(LIFE_PRICE, "life"))) return;
@@ -696,7 +700,7 @@ export function Playfield({
     const who = accountRef.current;
     const balance = rareRef.current;
     if (!who || balance == null) {
-      setStakeMsg("Connect a wallet. Every fog costs 20 Rare coins.");
+      setStakeMsg("Connect a wallet. Opening every fog is $5.");
       return;
     }
     if (!(await chargeRare(ALL_FOGS_COST, "all"))) return;
@@ -751,7 +755,7 @@ export function Playfield({
       if (!openedRef.current.has(id)) {
         if (!(await ensureWallet())) return;
         if (!(await payFog(id))) return;
-        paid = fogPrice(id);
+        paid = PRICE_CENTS;
       }
     }
     livesRef.current = LIVES;
@@ -1020,7 +1024,7 @@ export function Playfield({
                 ? `Burned ${burned} stage coin${burned === 1 ? "" : "s"}.`
                 : "No stage coins left to burn.";
             if (left <= 0) {
-              setStakeMsg(`${burnNote} Buy one more life for ${LIFE_PRICE} Rare coins.`);
+              setStakeMsg(`${burnNote} One more life is $5.`);
               go("lives");
             } else {
               setShopError(`${left} ${left === 1 ? "life" : "lives"} left. ${burnNote}`);
@@ -1100,7 +1104,7 @@ export function Playfield({
               if (back > 0 && who && isAddress(who)) {
                 addRebate(who, back);
                 refreshLedger(who);
-                note += ` One life: ${back} Rare coins come off your next buy.`;
+                note += ` One life: $${(back / 100).toFixed(2)} comes off your next buy.`;
               }
             }
             setStakeMsg(note);
@@ -1385,7 +1389,7 @@ export function Playfield({
       if (!openedRef.current.has(`real:${id}`)) {
         if (!(await ensureWallet())) return;
         if (!(await payReal(id))) return;
-        pendingPayRef.current = REAL_PRICE;
+        pendingPayRef.current = PRICE_CENTS;
       } else pendingPayRef.current = 0;
     }
     setStakeMsg("");
@@ -1589,11 +1593,6 @@ export function Playfield({
                   </span>
                 )}
                 <span className="ash-count">{purse} in this stage</span>
-                <span className="ash-count">
-                  {payingAccount && (rareBalance ?? walletCoins) != null
-                    ? `${formatRareCoins(spendable(rareBalance ?? walletCoins, payingAccount) ?? 0n)} Rare`
-                    : "No wallet"}
-                </span>
                 <span className="ash-count">{ledger.burned} sent</span>
                 <span className="ash-count">
                   {lives} {lives === 1 ? "life" : "lives"}
@@ -1678,11 +1677,7 @@ export function Playfield({
           <p className="ash-kicker">Rare Friends · the hanging wood</p>
           <h1>Ashwalk</h1>
           <p>Your Friend is the small one. The fog is everything else.</p>
-          <p>
-            {payingAccount && (rareBalance ?? walletCoins) != null
-              ? `You have ${formatRareCoins(spendable(rareBalance ?? walletCoins, payingAccount) ?? 0n)} Rare coins.`
-              : "Connect a wallet to buy boards with Rare coins."}
-          </p>
+          <p>A later board, a cape, or a life is $5. You choose the coin when you pay. Nothing is selected for you.</p>
           {stakeMsg && (
             <p className="ash-error" role="alert">
               {stakeMsg}
@@ -1708,7 +1703,7 @@ export function Playfield({
               aria-expanded={rebateOpen}
               onClick={() => setRebateOpen((open) => !open)}
             >
-              {rebateOpen ? "Hide coins back" : ledger.rebate > 0 ? `${ledger.rebate} coins waiting` : "Get coins back"}
+              {rebateOpen ? "Hide the deal" : ledger.rebate > 0 ? `$${(ledger.rebate / 100).toFixed(2)} waiting` : "Half back"}
             </button>
             <button type="button" className="ash-btn-ghost" onClick={() => go("real")}>
               Realistic fog
@@ -1737,21 +1732,20 @@ export function Playfield({
           </div>
           {rebateOpen && (
             <div className="ash-guide">
-              <p>Pay Rare coins to open a fog. Finish that fog without dying. Half of what you paid comes off your next buy.</p>
-              <p>A 25 coin fog gives 12 back. A realistic look gives 5 back. The shore is free, so nothing comes back. Die once and you get none of it.</p>
-              <p>The coins already left your wallet. They do not return to it. They come off the next board, cape, or life. A buy can be Rare, ETH, or USDC. All of it goes to the same wallet.</p>
-              {ledger.rebate > 0 && <p>{ledger.rebate} Rare coins are waiting on your next buy.</p>}
+              <p>A board, a cape, or a life is $5. Finish a paid fog without dying and half of that comes off the next buy.</p>
+              <p>The shore is free, so there is nothing to give back. Die once and you get none of it. The money does not return to your wallet. You pick the coin. Nothing is selected until you do.</p>
+              {ledger.rebate > 0 && <p>${(ledger.rebate / 100).toFixed(2)} is waiting on your next buy.</p>}
             </div>
           )}
           {guide && (
             <div className="ash-guide">
-              <p>The shore is free. You start it with 2 coins. Coins you pick up only turn things on inside the stage. Rare coins pay to open the next fog and to buy a cape. Beat a fog, then the next one is 25 Rare coins. You cannot buy the next one until the one before it is beaten. Beat a paid fog without dying and half those Rare coins come off your next buy.</p>
-              <p>Every month a new map opens. A new cape opens each week, starting October 1. Capes are 15 Rare coins. The Halloween cape and the Christmas cape are 25. Only the red cape is open now. The hallow opens October 31. The eve opens December 25. The hoist opens January 1st.</p>
+              <p>The shore is free. You start it with 2 coins. Coins you pick up only turn things on inside the stage. A later fog is $5, and only after the one before it is beaten. Finish that fog without dying and half of the $5 comes off the next buy.</p>
+              <p>Every month a new map opens. A new cape opens each week, starting October 1. A cape is $5. Only the red cape is open now. The hallow opens October 31. The eve opens December 25. The hoist opens January 1st.</p>
               <p>
                 A and D, or the arrow keys, move. W, up, or space jumps. S drops through a thin plank. On the hoist, Use climbs up and Down climbs down.
                 E pulls, lights a bell, or buys a lantern. A lantern costs 1 coin you picked up in the stage and lasts 13 seconds. The flashlight costs 5 of those coins. On the moon that buy is a saber, not a flashlight. Stand on a plank too long and it falls.
-                It comes back after 4 seconds. Three lives to a board. After that, one more life is 3 Rare coins.
-                A death takes half the coins you picked up in the stage, unless you spent 2 of them at the mark. Then you come back there and keep what you still hold. Rare coins you spend are sent in one payment. Confirm it in your wallet.
+                It comes back after 4 seconds. Three lives to a board. After that, one more life is $5.
+                A death takes half the coins you picked up in the stage, unless you spent 2 of them at the mark. Then you come back there and keep what you still hold. A $5 buy asks you to pick a coin, then confirm it in your wallet.
               </p>
             </div>
           )}
@@ -1766,12 +1760,7 @@ export function Playfield({
               {stakeMsg}
             </p>
           )}
-          <p className="ash-note">
-            {payingAccount && (rareBalance ?? walletCoins) != null
-              ? `You have ${formatRareCoins(spendable(rareBalance ?? walletCoins, payingAccount) ?? 0n)} Rare coins. Only the red cape is open.`
-              : "Connect a wallet to buy a cape with Rare coins."}
-          </p>
-          <p className="ash-note">Only the red cape is open, at 15 Rare coins. Then one a week, each 15 Rare coins, except Halloween and Christmas at 25: white October 1, rainbow October 8, camo October 15, stripes October 22, pink October 29, the Halloween cape October 31, black November 5, gold November 12, ember November 19, scarlet November 26, blue December 3, yule December 10, frost December 17, gilded December 24, and the Christmas cape December 25.</p>
+          <p className="ash-note">A cape is $5. Only the red one is open now. The others open one a week, starting October 1. Halloween is October 31 and Christmas is December 25.</p>
           <div className="ash-levels">
             {outfitList().map((cloth) => {
               const locked = !clothReleased(cloth.id);
@@ -1791,7 +1780,7 @@ export function Playfield({
                   <span>{soon ? `${cloth.name} · coming soon` : locked ? `${cloth.name} · locked` : cloth.name}</span>
                   <small>
                     {soon
-                      ? `Coming soon. Opens ${when}. ${cloth.cost} Rare coins.`
+                      ? `Coming soon. Opens ${when}. $5.`
                       : locked
                         ? "Locked."
                         : owned
@@ -1800,7 +1789,7 @@ export function Playfield({
                             : `${cloth.note} Press to wear.`
                           : CAPES_TRY
                             ? `${cloth.note} Open to try.`
-                            : `${cloth.note} ${cloth.cost} Rare coins.`}
+                            : `${cloth.note} $5.`}
                   </small>
                 </button>
               );
@@ -1824,8 +1813,8 @@ export function Playfield({
           )}
           <p className="ash-note">
             {REAL_TRY
-              ? "Open to try. The shore stays free. After this, beat a fog, then its realistic look is 10 Rare coins."
-              : "The shore is free. Beat a fog, then its realistic look is 10 Rare coins. It stays open on this wallet."}
+              ? "Open to try. The shore stays free. After this, beat a fog, then its realistic look is $5."
+              : "The shore is free. Beat a fog, then its realistic look is $5. It stays open on this wallet."}
           </p>
           <div className="ash-levels">
             {LEVELS.map((level) => {
@@ -1840,12 +1829,12 @@ export function Playfield({
                   disabled={!beaten}
                   onClick={() => void beginReal(level.id)}
                 >
-                  <span>{beaten ? (owned ? level.title : `${level.title} · ${REAL_PRICE} Rare coins`) : `${level.title} · locked`}</span>
+                  <span>{beaten ? (owned ? level.title : `${level.title} · $5`) : `${level.title} · locked`}</span>
                   <small>
                     {beaten
                       ? owned
                         ? `${REAL_NOTE[level.id] ?? level.kicker} Open.`
-                        : `${REAL_NOTE[level.id] ?? level.kicker} ${REAL_PRICE} Rare coins.`
+                        : `${REAL_NOTE[level.id] ?? level.kicker} $5.`
                       : `Beat ${level.title} first.`}
                   </small>
                 </button>
@@ -1868,14 +1857,7 @@ export function Playfield({
               {stakeMsg}
             </p>
           )}
-          <p className="ash-note">
-            {payingAccount && (rareBalance ?? walletCoins) != null
-              ? `You have ${formatRareCoins(spendable(rareBalance ?? walletCoins, payingAccount) ?? 0n)} Rare coins.`
-              : "Connect a wallet to buy a board with Rare coins."}
-          </p>
-          <p className="ash-note">
-            The shore is free. Beat a fog before you can buy the next one. Every board after the shore is 25 Rare coins. Beat one in a single life and half of what you paid comes off the next buy. The moon opens October 1, the hallow October 31, the mirror November 1, the tunnel December 1, the eve December 25, and the hoist January 1st.
-          </p>
+          <p className="ash-note">The shore is free. Beat a fog before you can buy the next one. Every board after that is $5. You pick the coin. Finish one in a single life and half of the $5 comes off the next buy. The moon opens October 1, the hallow October 31, the mirror November 1, the tunnel December 1, the eve December 25, and the hoist January 1st.</p>
           <LevelList
             current={pickId}
             cleared={cleared}
@@ -1992,7 +1974,7 @@ export function Playfield({
         <section className="ash-panel" aria-label="Buy a life">
           <p className="ash-kicker">No lives left</p>
           <h2>Buy one more</h2>
-          <p>Three lives are gone. One more is {LIFE_PRICE} Rare coins.</p>
+          <p>Three lives are gone. One more is $5.</p>
           {stakeMsg && (
             <p className="ash-error" role="alert">
               {stakeMsg}
@@ -2000,7 +1982,7 @@ export function Playfield({
           )}
           <div className="ash-actions">
             <button type="button" className="ash-btn" onClick={buyLife}>
-              Buy a life · {LIFE_PRICE} Rare coins
+              Buy a life · $5
             </button>
             <button
               type="button"
@@ -2093,7 +2075,7 @@ export function Playfield({
             simulated. One lantern costs 1 RF and returns less, on average, than it takes.
           </p>
           {clearLevel.id !== "shore" || !TRY_ALL ? (
-            <p className="ash-note">The next fog is 25 Rare coins, and only after this one is beaten. Beat a paid fog in one life and half of what you paid comes off the next buy.</p>
+            <p className="ash-note">The next fog is $5, and only after this one is beaten. Finish it in one life and half of that comes off the next buy.</p>
           ) : null}
           <div className="ash-actions">
             <button type="button" className="ash-btn" onClick={() => go("rite")}>
@@ -2121,10 +2103,10 @@ export function Playfield({
               }
               if (!TRY_ALL && !ledger.opened.includes(next.id)) {
                 const back = rebateOf(payingAccount);
-                const due = Math.max(0, fogPrice(next.id) - back);
+                const due = Math.max(0, PRICE_CENTS - back);
                 return (
                   <button type="button" className="ash-btn" onClick={() => startLevel(next.id)}>
-                    {due === 0 ? "Continue · covered" : `Continue · ${due} Rare coins`}
+                    {due === 0 ? "Continue · covered" : "Continue · $5"}
                   </button>
                 );
               }
@@ -2190,17 +2172,17 @@ export function Playfield({
           <div className="ash-pay-card">
             <p className="ash-kicker">Payment</p>
             <h2>Choose a coin</h2>
-            <p>Rare on Robinhood, or ETH or USDC on Ethereum. 1 Rare is 0.20 USDC or 0.00008 ETH.</p>
+            <p>This buy is $5. Pick a coin. Nothing is selected until you do.</p>
             <p className="ash-pay-addr">{SHARE_ADDRESS}</p>
             <div className="ash-actions">
-              <button type="button" className="ash-btn" onClick={() => payWaitRef.current?.("rare")}>
-                {payLabel("rare", payDue)}
+              <button type="button" className="ash-btn" onClick={() => payWaitRef.current?.("usdc")}>
+                {payLabel("usdc", payDue)}
               </button>
               <button type="button" className="ash-btn" onClick={() => payWaitRef.current?.("eth")}>
                 {payLabel("eth", payDue)}
               </button>
-              <button type="button" className="ash-btn" onClick={() => payWaitRef.current?.("usdc")}>
-                {payLabel("usdc", payDue)}
+              <button type="button" className="ash-btn" onClick={() => payWaitRef.current?.("rare")}>
+                {payLabel("rare", payDue)} tokens
               </button>
               <button type="button" className="ash-btn-ghost" onClick={() => payWaitRef.current?.(null)}>
                 Cancel
@@ -2232,18 +2214,17 @@ function LevelList({
         const opens =
           level.id === "moon" ? "October 1" : level.id === "hallow" ? "October 31" : level.id === "mirror" ? "November 1" : level.id === "tunnel" ? "December 1" : level.id === "yule" ? "December 25" : level.id === "hoist" ? "January 1st" : null;
         const soon = !TRY_ALL && opens != null && !fogReleased(level.id);
-        const price = fogPrice(level.id);
         const prev = previousFog(level.id);
         const beaten = prev == null || cleared.includes(prev);
         const bought = allOpen || opened.includes(level.id);
         const open = TRY_ALL || level.id === "shore" || fogTry(level.id) || (!soon && bought && beaten);
         const canBuy = !open && !soon && beaten && !bought;
         const note = soon
-          ? `Coming ${opens}. ${price} Rare coins.`
+          ? `Coming ${opens}. $5.`
           : open
             ? level.rule
             : canBuy
-              ? `Beat the one before it, then ${price} Rare coins.`
+              ? "Beat the one before it, then $5."
               : prev
                 ? `Beat ${getLevel(prev).title} before you can buy this.`
                 : "Locked.";
@@ -2257,7 +2238,7 @@ function LevelList({
             onClick={() => onPick(level.id)}
           >
             <span>
-              {soon ? `${level.title} · coming ${opens}` : canBuy ? `${level.title} · ${price} Rare coins` : open ? level.title : `${level.title} · locked`}
+              {soon ? `${level.title} · coming ${opens}` : canBuy ? `${level.title} · $5` : open ? level.title : `${level.title} · locked`}
             </span>
             <small>{note}</small>
           </button>
