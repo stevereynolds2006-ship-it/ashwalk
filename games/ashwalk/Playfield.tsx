@@ -42,10 +42,8 @@ type WalletProvider = { request: (args: { method: string; params?: unknown[] }) 
 
 const RARE_TOKEN = "0x0779369854d3EcdEA927206718FFD7730C67B71f";
 const RARE_CHAIN = 4663;
-const ETH_CHAIN = 1;
-const USDC_TOKEN = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
+const USDG_TOKEN = "0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168";
 const PRICE_CENTS = 300;
-const ETH_USD = 2508;
 const PAYOUT_ADDRESS = "0xa93399a2965672dd315a1bd8816fa94c50ef4dd5";
 const SHARE_ADDRESS = "0xb7823b2e28484382aa70952a7818712e8ac42a72";
 const RARE_ABI = [
@@ -58,37 +56,25 @@ const RARE_ABI = [
   },
 ] as const;
 
-type PayCoin = "rare" | "eth" | "usdc";
+type PayCoin = "rare" | "usdg";
 
 function payAmount(coin: PayCoin, cents: number) {
   const due = BigInt(cents);
-  if (coin === "usdc") return due * 10_000n;
-  if (coin === "eth") return (due * 10n ** 16n) / BigInt(ETH_USD);
+  if (coin === "usdg") return due * 10_000n;
   return (due * 2500n * 10n ** 18n) / 300n;
 }
 
 function payLabel(coin: PayCoin, cents: number) {
   const amount = payAmount(coin, cents);
-  if (coin === "usdc") {
+  if (coin === "usdg") {
     const whole = amount / 1_000_000n;
     const frac = (amount % 1_000_000n) / 10_000n;
-    return frac === 0n ? `${whole} USDC` : `${whole}.${frac.toString().padStart(2, "0")} USDC`;
-  }
-  if (coin === "eth") {
-    const whole = amount / 10n ** 18n;
-    const frac = (amount % 10n ** 18n).toString().padStart(18, "0").slice(0, 5).replace(/0+$/, "");
-    return frac ? `${whole}.${frac} ETH` : `${whole} ETH`;
+    return frac === 0n ? `${whole} USDG` : `${whole}.${frac.toString().padStart(2, "0")} USDG`;
   }
   const whole = amount / 10n ** 18n;
   const frac = (amount % 10n ** 18n) / 10n ** 16n;
   const text = whole.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   return frac === 0n ? text : `${text}.${frac.toString().padStart(2, "0")}`;
-}
-
-function tagData(tag: string) {
-  if (!tag) return "0x";
-  const note = [...new TextEncoder().encode(`ash:${tag}`)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
-  return `0x${note}`;
 }
 
 function walletProvider(): WalletProvider | null {
@@ -176,26 +162,9 @@ async function onChain(eth: WalletProvider, chain: number) {
 
 async function readHeld(eth: WalletProvider, who: string, coin: PayCoin) {
   if (coin === "rare") return readRareBalance(who);
-  if (coin === "eth") {
-    const raw = await eth.request({ method: "eth_getBalance", params: [who, "latest"] });
-    return typeof raw === "string" ? BigInt(raw) : 0n;
-  }
   const data = `0x70a08231${who.toLowerCase().replace(/^0x/, "").padStart(64, "0")}`;
-  const raw = await eth.request({ method: "eth_call", params: [{ to: USDC_TOKEN, data }, "latest"] });
+  const raw = await eth.request({ method: "eth_call", params: [{ to: USDG_TOKEN, data }, "latest"] });
   return typeof raw === "string" ? BigInt(raw) : 0n;
-}
-
-async function waitReceipt(eth: WalletProvider, hash: string) {
-  for (let i = 0; i < 40; i += 1) {
-    const receipt = await eth.request({ method: "eth_getTransactionReceipt", params: [hash] });
-    if (receipt && typeof receipt === "object" && "status" in receipt) {
-      const status = (receipt as { status?: string }).status;
-      if (status === "0x1" || status === "0x01") return;
-      throw new Error("The payment failed.");
-    }
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-  }
-  throw new Error("The payment is still pending.");
 }
 
 async function sendPayment(eth: WalletProvider, from: string, coin: PayCoin, amount: bigint, tag: string) {
@@ -203,23 +172,17 @@ async function sendPayment(eth: WalletProvider, from: string, coin: PayCoin, amo
   const hash = await eth.request({
     method: "eth_sendTransaction",
     params: [
-      coin === "eth"
-        ? { from, to: SHARE_ADDRESS, value: `0x${amount.toString(16)}`, data: tagData(tag) }
-        : {
-            from,
-            to: coin === "usdc" ? USDC_TOKEN : RARE_TOKEN,
-            data: encodeTransfer(SHARE_ADDRESS, amount, tag),
-            value: "0x0",
-          },
+      {
+        from,
+        to: coin === "usdg" ? USDG_TOKEN : RARE_TOKEN,
+        data: encodeTransfer(SHARE_ADDRESS, amount, tag),
+        value: "0x0",
+      },
     ],
   });
   if (typeof hash !== "string" || !hash.startsWith("0x")) throw new Error("The wallet did not return a transaction.");
-  if (coin === "rare") {
-    const receipt = await createFriendPublicClient().waitForTransactionReceipt({ hash: hash as `0x${string}` });
-    if (receipt.status !== "success") throw new Error("The payment failed.");
-    return;
-  }
-  await waitReceipt(eth, hash);
+  const receipt = await createFriendPublicClient().waitForTransactionReceipt({ hash: hash as `0x${string}` });
+  if (receipt.status !== "success") throw new Error("The payment failed.");
 }
 
 const PURCHASE_EVENT = parseAbiItem("event Transfer(address indexed from, address indexed to, uint256 value)");
@@ -547,7 +510,7 @@ export function Playfield({
     const label = payLabel(coin, due);
     setStakeMsg(`Confirm ${label} in your wallet.`);
     try {
-      await onChain(eth, coin === "rare" ? RARE_CHAIN : ETH_CHAIN);
+      await onChain(eth, RARE_CHAIN);
       const held = await readHeld(eth, who, coin);
       if (coin === "rare") {
         rareRef.current = held;
@@ -2172,13 +2135,10 @@ export function Playfield({
           <div className="ash-pay-card">
             <p className="ash-kicker">Payment</p>
             <h2>Choose a coin</h2>
-            <p>USDC or ETH is $3. Rare is 2,500. Pick one. Nothing is selected until you do.</p>
+            <p>USDG is $3. Rare is 2,500. Pick one. Nothing is selected until you do.</p>
             <div className="ash-actions">
-              <button type="button" className="ash-btn" onClick={() => payWaitRef.current?.("usdc")}>
-                {payLabel("usdc", payDue)}
-              </button>
-              <button type="button" className="ash-btn" onClick={() => payWaitRef.current?.("eth")}>
-                {payLabel("eth", payDue)}
+              <button type="button" className="ash-btn" onClick={() => payWaitRef.current?.("usdg")}>
+                {payLabel("usdg", payDue)}
               </button>
               <button type="button" className="ash-btn" onClick={() => payWaitRef.current?.("rare")}>
                 {payLabel("rare", payDue)} Rare
