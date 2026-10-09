@@ -1544,7 +1544,157 @@ const STACK: Level = {
   light: { x: 400, y: 40 },
 };
 
-export const LEVELS: readonly Level[] = [SHORE, LATCH, GALE, CHOIR, GEAR, ROOF, ANTLER, MOON, HALLOW, MIRROR, TUNNEL, YULE, HOIST, STACK];
+/** A tear in the fog. The ground leaves, then the sky does. */
+const RIFT: Level = {
+  id: "rift",
+  title: "The rift",
+  kicker: "The fog tore open.",
+  rule: "Climb into the tear. Ride the gear teeth. The pull shoves you back, so jump on the lull. A coin raises the dark planks. The comet does not stop. The digits are 9, 1, and 6.",
+  together: "The bells, the plate, and the lock are shared. The comet is not.",
+  clearKicker: "The rift",
+  clearTitle: "You came back through",
+  worldW: 15000,
+  killY: 1100,
+  poster: 700,
+  introCrow: false,
+  platforms: [
+    { id: "s0", kind: "solid", terrain: true, x: 0, y: 470, w: 480, h: 700 },
+    { id: "c1", kind: "crumble", x: 640, y: 390, w: 96, h: 12 },
+    { id: "c2", kind: "crumble", x: 840, y: 300, w: 84, h: 12 },
+    { id: "isle", kind: "solid", terrain: true, x: 1020, y: 220, w: 240, h: 980 },
+    { id: "c3", kind: "oneway", x: 1340, y: 140, w: 88, h: 12 },
+    { id: "c4", kind: "crumble", x: 1520, y: 50, w: 80, h: 12 },
+    { id: "sky", kind: "solid", terrain: true, x: 1700, y: -30, w: 380, h: 1400 },
+    { id: "ga1", kind: "oneway", gear: { cx: 2460, cy: 560, r: 150, speed: 0.95, phase: 0.2, teeth: 8 }, x: 0, y: 0, w: 78, h: 12 },
+    { id: "ga2", kind: "oneway", gear: { cx: 2460, cy: 560, r: 150, speed: 0.95, phase: 1.8, teeth: 8 }, x: 0, y: 0, w: 78, h: 12 },
+    { id: "ga3", kind: "oneway", gear: { cx: 2460, cy: 560, r: 150, speed: 0.95, phase: 3.4, teeth: 8 }, x: 0, y: 0, w: 78, h: 12 },
+    { id: "ga4", kind: "oneway", gear: { cx: 2460, cy: 560, r: 150, speed: 0.95, phase: 5, teeth: 8 }, x: 0, y: 0, w: 78, h: 12 },
+    { id: "gb1", kind: "oneway", gear: { cx: 2860, cy: 720, r: 170, speed: -0.72, phase: 0.6, teeth: 8 }, x: 0, y: 0, w: 78, h: 12 },
+    { id: "gb2", kind: "oneway", gear: { cx: 2860, cy: 720, r: 170, speed: -0.72, phase: 2.2, teeth: 8 }, x: 0, y: 0, w: 78, h: 12 },
+    { id: "gb3", kind: "oneway", gear: { cx: 2860, cy: 720, r: 170, speed: -0.72, phase: 3.8, teeth: 8 }, x: 0, y: 0, w: 78, h: 12 },
+    { id: "gb4", kind: "oneway", gear: { cx: 2860, cy: 720, r: 170, speed: -0.72, phase: 5.4, teeth: 8 }, x: 0, y: 0, w: 78, h: 12 },
+    { id: "gc1", kind: "oneway", gear: { cx: 3280, cy: 500, r: 140, speed: 1.15, phase: 1, teeth: 8 }, x: 0, y: 0, w: 74, h: 12 },
+    { id: "gc2", kind: "oneway", gear: { cx: 3280, cy: 500, r: 140, speed: 1.15, phase: 2.6, teeth: 8 }, x: 0, y: 0, w: 74, h: 12 },
+    { id: "gc3", kind: "oneway", gear: { cx: 3280, cy: 500, r: 140, speed: 1.15, phase: 4.2, teeth: 8 }, x: 0, y: 0, w: 74, h: 12 },
+    { id: "gc4", kind: "oneway", gear: { cx: 3280, cy: 500, r: 140, speed: 1.15, phase: 5.8, teeth: 8 }, x: 0, y: 0, w: 74, h: 12 },
+    { id: "gd1", kind: "oneway", gear: { cx: 3680, cy: 660, r: 155, speed: -1.05, phase: 0.4, teeth: 8 }, x: 0, y: 0, w: 76, h: 12 },
+    { id: "gd2", kind: "oneway", gear: { cx: 3680, cy: 660, r: 155, speed: -1.05, phase: 2, teeth: 8 }, x: 0, y: 0, w: 76, h: 12 },
+    { id: "gd3", kind: "oneway", gear: { cx: 3680, cy: 660, r: 155, speed: -1.05, phase: 3.6, teeth: 8 }, x: 0, y: 0, w: 76, h: 12 },
+    { id: "gd4", kind: "oneway", gear: { cx: 3680, cy: 660, r: 155, speed: -1.05, phase: 5.2, teeth: 8 }, x: 0, y: 0, w: 76, h: 12 },
+    { id: "lip", kind: "solid", terrain: true, x: 3980, y: 430, w: 320, h: 760 },
+    { id: "sw1", kind: "sway", x: 4420, y: 390, w: 84, h: 12, amp: 34, freq: 1.25, phase: 0.2, dip: 10 },
+    { id: "sw2", kind: "sway", x: 4660, y: 470, w: 80, h: 12, amp: 28, freq: 1.45, phase: 1.4, dip: 14 },
+    { id: "sw3", kind: "sway", x: 4900, y: 350, w: 80, h: 12, amp: 36, freq: 1.05, phase: 2.2, dip: 8 },
+    { id: "sw4", kind: "sway", x: 5160, y: 450, w: 84, h: 12, amp: 26, freq: 1.55, phase: 0.7, dip: 12 },
+    { id: "rest", kind: "solid", terrain: true, x: 5400, y: 470, w: 260, h: 700 },
+    { id: "glow1", kind: "oneway", x: 5760, y: 420, w: 220, h: 12, bridge: "l1" },
+    { id: "mid", kind: "solid", terrain: true, x: 6060, y: 470, w: 220, h: 700 },
+    { id: "glow2", kind: "oneway", x: 6360, y: 360, w: 180, h: 12, bridge: "l2" },
+    { id: "deck", kind: "solid", terrain: true, x: 6620, y: 470, w: 280, h: 700 },
+    { id: "lad1", kind: "ladder", x: 6980, y: 160, w: 22, h: 310 },
+    { id: "top1", kind: "oneway", x: 6940, y: 160, w: 110, h: 12 },
+    { id: "lad2", kind: "ladder", x: 7200, y: -80, w: 22, h: 250 },
+    { id: "top2", kind: "oneway", x: 7160, y: -80, w: 100, h: 12 },
+    { id: "top3", kind: "crumble", x: 7340, y: -80, w: 72, h: 12 },
+    { id: "top4", kind: "oneway", x: 7500, y: 40, w: 86, h: 12 },
+    { id: "lad3", kind: "ladder", x: 7680, y: 40, w: 22, h: 430 },
+    { id: "floor", kind: "solid", terrain: true, x: 7720, y: 470, w: 520, h: 700 },
+    { id: "run", kind: "solid", terrain: true, x: 8360, y: 470, w: 2280, h: 700 },
+    { id: "hop1", kind: "crumble", x: 10800, y: 420, w: 78, h: 12 },
+    { id: "hop2", kind: "oneway", x: 11000, y: 350, w: 74, h: 12 },
+    { id: "hop3", kind: "crumble", x: 11200, y: 430, w: 74, h: 12 },
+    { id: "hop4", kind: "oneway", x: 11400, y: 360, w: 80, h: 12 },
+    { id: "porch", kind: "solid", terrain: true, x: 11620, y: 470, w: 420, h: 700 },
+    { id: "glowPit", kind: "oneway", x: 12160, y: 470, w: 560, h: 12, bridge: "shrine-rift", bridgeHold: true },
+    { id: "sanctum", kind: "solid", terrain: true, x: 12840, y: 470, w: 360, h: 700 },
+    { id: "gEnd", kind: "gate", x: 13280, y: 50, w: 24, h: 420, openY: -160 },
+    { id: "finale", kind: "solid", terrain: true, x: 13304, y: 470, w: 900, h: 700 },
+  ],
+  moths: [
+    { id: "m1", x: 180, y: 400 },
+    { id: "m2", x: 680, y: 330 },
+    { id: "m3", x: 1100, y: 160 },
+    { id: "m4", x: 1840, y: -90 },
+    { id: "m5", x: 4100, y: 360 },
+    { id: "m6", x: 4700, y: 300 },
+    { id: "m7", x: 5480, y: 400 },
+    { id: "m8", x: 7220, y: -140 },
+    { id: "m9", x: 8600, y: 400 },
+    { id: "m10", x: 9800, y: 400 },
+    { id: "m11", x: 11740, y: 400 },
+    { id: "m12", x: 13640, y: 400 },
+    { id: "c1", x: 400, y: 400 },
+    { id: "c2", x: 1900, y: -90 },
+    { id: "c3", x: 6200, y: 400 },
+    { id: "c4", x: 9000, y: 400 },
+    { id: "c5", x: 12940, y: 400 },
+  ],
+  checkpoints: [
+    { id: "start", x: 140, surface: 470 },
+    { id: "sky", x: 1820, surface: -30 },
+    { id: "ring", x: 4080, surface: 430 },
+    { id: "pull", x: 5480, surface: 470 },
+    { id: "column", x: 7860, surface: 470 },
+    { id: "comet", x: 8480, surface: 470 },
+    { id: "mouth", x: 11720, surface: 470 },
+    { id: "lock", x: 13440, surface: 470 },
+  ],
+  rope: null,
+  shrines: [{ id: "shrine-rift", x: 11740, y: 340, w: 86, h: 130 }],
+  lamps: [
+    { id: "l1", x: 5488, y: 378, w: 56, h: 92 },
+    { id: "l2", x: 6140, y: 378, w: 56, h: 92 },
+    { id: "l3", x: 11780, y: 378, w: 56, h: 92 },
+  ],
+  beacons: [
+    { id: "bell1", x: 1860, y: -122, w: 70, h: 92 },
+    { id: "bell2", x: 4120, y: 338, w: 70, h: 92 },
+    { id: "bell3", x: 12920, y: 378, w: 70, h: 92 },
+  ],
+  plates: [{ id: "pEnd", gate: "gEnd", x: 13040, y: 386, w: 120, h: 84, latch: 6.5, whenLit: true }],
+  goal: { id: "goal", x: 13840, y: 300, w: 110, h: 170 },
+  pit: null,
+  wind: { x0: 4300, x1: 6800, strength: 220, period: 1.15, mode: "gust" },
+  birds: [
+    { kind: "ship", x0: 400, x1: 4200, y: -180, amp: 24, speed: 120, start: 800 },
+    { kind: "ship", x0: 7000, x1: 12000, y: -240, amp: 30, speed: 140, start: 7600 },
+    { kind: "alien", x0: 1740, x1: 1980, y: -70, amp: 0, speed: 34, start: 1800 },
+    { kind: "alien", x0: 4040, x1: 4220, y: 390, amp: 0, speed: 30, start: 4080 },
+    { kind: "rocket", x0: 4500, x1: 6400, y: 220, amp: 16, speed: 160, start: 4700 },
+    { kind: "rocket", x0: 8600, x1: 10400, y: 180, amp: 22, speed: 190, start: 9000 },
+    { kind: "alien", x0: 11700, x1: 11940, y: 430, amp: 0, speed: 28, start: 11740 },
+  ],
+  spiders: [
+    { id: "tear", mode: "hang", x0: 900, x1: 900, y: 80, ceil: -200, speed: 0, reach: 160, period: 3.2, phase: 0.3 },
+    { id: "ring", mode: "hang", x0: 3080, x1: 3080, y: 160, ceil: -80, speed: 0, reach: 180, period: 2.8, phase: 1.1 },
+    { id: "yard", mode: "crawl", x0: 8600, x1: 9000, y: 448, ceil: 0, speed: 52, reach: 0, period: 1, phase: 0.2, kind: "scorpion" },
+    { id: "late", mode: "crawl", x0: 9800, x1: 10240, y: 448, ceil: 0, speed: 64, reach: 0, period: 1, phase: 0.8, kind: "scorpion" },
+  ],
+  saws: [
+    { x: 2660, y: 40, len: 280, swing: 0.9, speed: 1.6, phase: 0.3 },
+    { x: 3480, y: 20, len: 260, swing: 1.05, speed: 1.85, phase: 1.5 },
+    { x: 10940, y: 60, len: 240, swing: 0.8, speed: 1.7, phase: 0.6 },
+    { x: 11320, y: 40, len: 250, swing: 1.1, speed: 1.45, phase: 2 },
+  ],
+  drips: [
+    { x: 1500, y0: -220, y1: 200, period: 1.8, phase: 0.2 },
+    { x: 2500, y0: -180, y1: 360, period: 2.2, phase: 0.8 },
+    { x: 7040, y0: -200, y1: 160, period: 1.6, phase: 1.2 },
+  ],
+  combo: { code: [9, 1, 6], x: 13480, span: 280, y: 470 },
+  boulder: { x: 8280, surface: 470, wakeX: 8600, pitX: 10480, speed: 168 },
+  chapters: [
+    { x: 0, id: "tear", title: "The tear", kicker: "Remember 9. The ground leaves." },
+    { x: 2200, id: "ring", title: "The ring", kicker: "Ride a tooth. Miss it and you fall." },
+    { x: 4300, id: "pull", title: "The pull", kicker: "It shoves you back. Jump on the lull." },
+    { x: 6900, id: "column", title: "The column", kicker: "Remember 1. Up, across, then down." },
+    { x: 8300, id: "comet", title: "The comet", kicker: "Do not stop." },
+    { x: 11600, id: "mouth", title: "The mouth", kicker: "Remember 6. Light the bells. The code is 9, 1, 6." },
+  ],
+  light: { x: 200, y: -400 },
+};
+
+export const LEVELS: readonly Level[] = [SHORE, LATCH, GALE, CHOIR, GEAR, ROOF, ANTLER, MOON, HALLOW, MIRROR, TUNNEL, YULE, HOIST, STACK, RIFT];
 
 export function previousFog(id: string): string | null {
   const index = LEVELS.findIndex((level) => level.id === id);
@@ -1564,9 +1714,11 @@ export const TRY_HOIST = false;
 /** The stack stays shut until the hoist is beaten, then it is bought like the others. */
 export const TRY_STACK = false;
 export const TRY_YULE = false;
+/** The rift is open so it can be tried. */
+export const TRY_RIFT = true;
 
 export function fogTry(id: string) {
-  return (id === "tunnel" && TRY_TUNNEL) || (id === "choir" && TRY_CHOIR) || (id === "hoist" && TRY_HOIST) || (id === "yule" && TRY_YULE) || (id === "stack" && TRY_STACK);
+  return (id === "tunnel" && TRY_TUNNEL) || (id === "choir" && TRY_CHOIR) || (id === "hoist" && TRY_HOIST) || (id === "yule" && TRY_YULE) || (id === "stack" && TRY_STACK) || (id === "rift" && TRY_RIFT);
 }
 
 export function fogPrice(_id: string) {
@@ -1579,6 +1731,7 @@ export function fogReleased(id: string, now = new Date()) {
   if (id === "hoist" && TRY_HOIST) return true;
   if (id === "yule" && TRY_YULE) return true;
   if (id === "stack" && TRY_STACK) return true;
+  if (id === "rift" && TRY_RIFT) return true;
   if (id === "moon") return now >= new Date(2026, 9, 1);
   if (id === "hallow") return now >= new Date(2026, 9, 31);
   if (id === "mirror") return now >= new Date(2026, 10, 1);

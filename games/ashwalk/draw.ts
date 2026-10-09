@@ -183,6 +183,13 @@ function drawLowerFill(ctx: CanvasRenderingContext2D, camera: Camera, id: string
       ctx.lineTo(worldX + 160, g + 180);
       ctx.lineTo(worldX - 160, g + 180);
       ctx.fill();
+    } else if (id === "rift") {
+      ctx.save();
+      ctx.translate(worldX + 40, g - 180);
+      ctx.rotate(((n % 5) - 2) * 0.35);
+      ctx.fillStyle = n % 2 ? "rgba(196,168,120,0.35)" : "rgba(90,110,150,0.4)";
+      ctx.fillRect(-70, -18, 150, 28);
+      ctx.restore();
     } else if (id === "stack") {
       if (realLevel === "stack") {
         drawShoreTree(ctx, { x: worldX + 90, ground: g + 10, scale: 1.7, seed: 80 + n * 7 }, 0.72);
@@ -799,6 +806,9 @@ function drawTerrain(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) 
       ctx.fillRect(rect.x, rect.y - 6, rect.w, 78);
       ctx.fillStyle = "rgba(214, 206, 188, 0.5)";
       ctx.fillRect(rect.x, rect.y, rect.w, 3);
+    } else if (sim.level.id === "rift") {
+      ctx.fillStyle = "rgba(255,244,220,0.9)";
+      ctx.fillRect(rect.x, rect.y, rect.w, 3);
     } else if (sim.level.id === "shore") {
       const lip = ctx.createLinearGradient(rect.x, rect.y - 16, rect.x, rect.y + 4);
       lip.addColorStop(0, "rgba(255,255,255,0)");
@@ -815,7 +825,7 @@ function drawTerrain(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) 
     else if (realLevel === "hallow" && sim.level.id === "hallow") drawGrass(ctx, rect, 28, 2, "#3a4a28");
     else if (realLevel === "yule" && sim.level.id === "yule") drawGrass(ctx, rect, 18, 1, "#e8eef2");
     else if (realLevel === "stack" && sim.level.id === "stack") drawGrass(ctx, rect, 42, 2, "#3f4c32");
-    else if (sim.level.id !== "roof" && sim.level.id !== "gale" && sim.level.id !== "choir" && sim.level.id !== "gear" && sim.level.id !== "hoist" && sim.level.id !== "hallow" && !(sim.level.id === "stack" && realLevel === "stack")) drawGrass(ctx, rect, 26);
+    else if (sim.level.id !== "roof" && sim.level.id !== "gale" && sim.level.id !== "choir" && sim.level.id !== "gear" && sim.level.id !== "hoist" && sim.level.id !== "hallow" && sim.level.id !== "rift" && !(sim.level.id === "stack" && realLevel === "stack")) drawGrass(ctx, rect, 26);
   }
   for (const rect of bodies) {
     if (rect.terrain) continue;
@@ -4506,6 +4516,68 @@ function drawMirrorFog(
   }
 }
 
+function drawRift(ctx: CanvasRenderingContext2D, camera: Camera, t: number, reduced: boolean) {
+  ctx.save();
+  ctx.translate(camera.x, camera.y);
+  const wash = ctx.createLinearGradient(0, 0, 0, camera.h);
+  wash.addColorStop(0, "#1a1030");
+  wash.addColorStop(0.45, "#101820");
+  wash.addColorStop(1, "#070708");
+  ctx.fillStyle = wash;
+  ctx.fillRect(-20, -20, camera.w + 40, camera.h + 40);
+  ctx.fillStyle = "#f4f1ea";
+  for (let i = 0; i < 90; i++) {
+    const sx = ((i * 311) % Math.max(1, Math.floor(camera.w * 1.5))) - camera.w * 0.25;
+    const sy = ((i * 197) % Math.max(1, Math.floor(camera.h * 1.4))) - camera.h * 0.2;
+    const tw = reduced ? 1 : i % 7 === 0 ? 2 : 1;
+    ctx.globalAlpha = 0.45 + (i % 5) * 0.1;
+    ctx.fillRect(sx, sy, tw, tw);
+  }
+  ctx.globalAlpha = 1;
+  ctx.restore();
+
+  ctx.save();
+  ctx.translate(camera.x * 0.25, camera.y * 0.2);
+  const planets: [number, number, number, string][] = [
+    [180, -80, 70, "#d8c7a2"],
+    [920, 40, 28, "#c45a3a"],
+    [1500, -140, 18, "#7f93b8"],
+    [2100, 120, 40, "#6a4a78"],
+  ];
+  for (const [px, py, r, color] of planets) {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(px, py, r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "rgba(244,241,234,0.55)";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.ellipse(px, py, r + 18, r * 0.28, -0.5, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.strokeStyle = "rgba(244,241,234,0.7)";
+  ctx.lineWidth = 5;
+  ctx.beginPath();
+  ctx.arc(180, -80, 108, 0.4, 2.4);
+  ctx.stroke();
+  ctx.strokeStyle = "rgba(20,16,18,0.85)";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(140, -120);
+  ctx.lineTo(210, -40);
+  ctx.moveTo(150, -40);
+  ctx.lineTo(230, -110);
+  ctx.stroke();
+  if (!reduced) {
+    ctx.globalAlpha = 0.35 + Math.sin(t * 1.4) * 0.15;
+    ctx.fillStyle = "#f4f1ea";
+    ctx.beginPath();
+    ctx.arc(1500, -140, 46, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
 function drawMoonFog(ctx: CanvasRenderingContext2D, camera: Camera, t: number, reduced: boolean, light: number) {
   ctx.save();
   ctx.translate(camera.x, camera.y);
@@ -4818,6 +4890,8 @@ export function renderFrame(
     drawHallow(ctx, sim, reduced);
   } else if (sim.level.id === "stack") {
     drawGaleStorm(ctx, camera, sim.t, reduced);
+  } else if (sim.level.id === "rift") {
+    drawRift(ctx, camera, sim.t, reduced);
   } else {
     ctx.save();
     ctx.translate(camera.x * 0.72, camera.y * 0.4);
@@ -5116,7 +5190,7 @@ export function renderFrame(
       cssW * 0.72,
     );
     vig.addColorStop(0, "rgba(0,0,0,0)");
-    vig.addColorStop(1, sim.level.id === "choir" ? "rgba(0,0,0,0.16)" : sim.level.id === "moon" ? `rgba(0,0,0,${0.28 * (1 - sim.altars.size / Math.max(1, sim.level.lamps?.length ?? 1))})` : "rgba(0,0,0,0.72)");
+    vig.addColorStop(1, sim.level.id === "choir" || sim.level.id === "rift" ? "rgba(0,0,0,0.2)" : sim.level.id === "moon" ? `rgba(0,0,0,${0.28 * (1 - sim.altars.size / Math.max(1, sim.level.lamps?.length ?? 1))})` : "rgba(0,0,0,0.72)");
     ctx.fillStyle = vig;
     ctx.fillRect(0, 0, cssW, cssH);
   }
@@ -5986,7 +6060,7 @@ export function frameCamera(
       y -= 36 * huntPull;
     }
   }
-  const yMin = sim.level.id === "moon" ? -1400 : sim.level.id === "choir" ? -820 : sim.level.id === "tunnel" ? -280 : sim.level.id === "mirror" ? -560 : sim.level.id === "roof" ? -200 : sim.level.id === "gale" ? -760 : sim.level.id === "hallow" ? -280 : sim.level.id === "stack" ? -280 : -40;
+  const yMin = sim.level.id === "moon" ? -1400 : sim.level.id === "rift" ? -1100 : sim.level.id === "choir" ? -820 : sim.level.id === "tunnel" ? -280 : sim.level.id === "mirror" ? -560 : sim.level.id === "roof" ? -200 : sim.level.id === "gale" ? -760 : sim.level.id === "hallow" ? -280 : sim.level.id === "stack" ? -280 : -40;
   x = Math.max(0, Math.min(Math.max(0, sim.level.worldW - viewW), x));
   y = Math.max(yMin, Math.min(worldH - viewH, y));
   return { x, y, w: viewW, h: viewH };

@@ -267,6 +267,7 @@ const REAL_NOTE: Record<string, string> = {
   yule: "Snow and pines.",
   hoist: "Concrete and rust.",
   stack: "Full trees, earth, and wood.",
+  rift: "A tear, a ring, and a comet.",
 };
 
 function dimBoard(id: string) {
@@ -2317,7 +2318,7 @@ function musicScene(phase: Phase, sim: Sim): MusicScene {
   if (sim.level.id === "hoist") return "hoist";
   if (sim.level.id === "tunnel") return "tunnel";
   if (sim.level.id === "mirror") return "mirror";
-  if (sim.level.id === "moon") return "moon";
+  if (sim.level.id === "moon" || sim.level.id === "rift") return "moon";
   if (sim.level.id === "antler") return "hunt";
   if (sim.level.id === "choir") return "choir";
   if (sim.level.id === "gear") return "gear";
