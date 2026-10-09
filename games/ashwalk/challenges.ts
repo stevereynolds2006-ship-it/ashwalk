@@ -1714,8 +1714,8 @@ export const TRY_HOIST = false;
 /** The stack stays shut until the hoist is beaten, then it is bought like the others. */
 export const TRY_STACK = false;
 export const TRY_YULE = false;
-/** The rift is open so it can be tried. */
-export const TRY_RIFT = true;
+/** The rift stays shut until the stack is beaten, then it is bought like the others. */
+export const TRY_RIFT = false;
 
 export function fogTry(id: string) {
   return (id === "tunnel" && TRY_TUNNEL) || (id === "choir" && TRY_CHOIR) || (id === "hoist" && TRY_HOIST) || (id === "yule" && TRY_YULE) || (id === "stack" && TRY_STACK) || (id === "rift" && TRY_RIFT);
