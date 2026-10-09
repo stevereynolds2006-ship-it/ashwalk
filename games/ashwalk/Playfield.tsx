@@ -42,7 +42,6 @@ type WalletProvider = { request: (args: { method: string; params?: unknown[] }) 
 
 const RARE_TOKEN = "0x0779369854d3EcdEA927206718FFD7730C67B71f";
 const RARE_CHAIN = 4663;
-const ETH_CHAIN = 1;
 const USDG_TOKEN = "0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168";
 const PRICE_CENTS = 300;
 const ETH_USD = 2716;
@@ -77,7 +76,7 @@ function payLabel(coin: PayCoin, cents: number) {
   if (coin === "eth") {
     const whole = amount / 10n ** 18n;
     const frac = (amount % 10n ** 18n).toString().padStart(18, "0").slice(0, 5).replace(/0+$/, "");
-    return frac ? `${whole}.${frac} ETH` : `${whole} ETH`;
+    return frac ? `${whole}.${frac} Robinhood ETH` : `${whole} Robinhood ETH`;
   }
   const whole = amount / 10n ** 18n;
   const frac = (amount % 10n ** 18n) / 10n ** 16n;
@@ -179,19 +178,6 @@ async function readHeld(eth: WalletProvider, who: string, coin: PayCoin) {
   return typeof raw === "string" ? BigInt(raw) : 0n;
 }
 
-async function waitReceipt(eth: WalletProvider, hash: string) {
-  for (let i = 0; i < 40; i += 1) {
-    const receipt = await eth.request({ method: "eth_getTransactionReceipt", params: [hash] });
-    if (receipt && typeof receipt === "object" && "status" in receipt) {
-      const status = (receipt as { status?: string }).status;
-      if (status === "0x1" || status === "0x01") return;
-      throw new Error("The payment failed.");
-    }
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-  }
-  throw new Error("The payment is still pending.");
-}
-
 async function sendPayment(eth: WalletProvider, from: string, coin: PayCoin, amount: bigint, tag: string) {
   if (amount <= 0n) return;
   const hash = await eth.request({
@@ -208,10 +194,6 @@ async function sendPayment(eth: WalletProvider, from: string, coin: PayCoin, amo
     ],
   });
   if (typeof hash !== "string" || !hash.startsWith("0x")) throw new Error("The wallet did not return a transaction.");
-  if (coin === "eth") {
-    await waitReceipt(eth, hash);
-    return;
-  }
   const receipt = await createFriendPublicClient().waitForTransactionReceipt({ hash: hash as `0x${string}` });
   if (receipt.status !== "success") throw new Error("The payment failed.");
 }
@@ -541,7 +523,7 @@ export function Playfield({
     const label = payLabel(coin, due);
     setStakeMsg(`Confirm ${label} in your wallet.`);
     try {
-      await onChain(eth, coin === "eth" ? ETH_CHAIN : RARE_CHAIN);
+      await onChain(eth, RARE_CHAIN);
       const held = await readHeld(eth, who, coin);
       if (coin === "rare") {
         rareRef.current = held;
@@ -2166,7 +2148,7 @@ export function Playfield({
           <div className="ash-pay-card">
             <p className="ash-kicker">Payment</p>
             <h2>Choose a coin</h2>
-            <p>USDG or ETH is $3. Rare is 2,500. Pick one. Nothing is selected until you do.</p>
+            <p>Robinhood ETH or USDG is $3. Rare is 2,500. Pick one. Nothing is selected until you do.</p>
             <div className="ash-actions">
               <button type="button" className="ash-btn" onClick={() => payWaitRef.current?.("usdg")}>
                 {payLabel("usdg", payDue)}
