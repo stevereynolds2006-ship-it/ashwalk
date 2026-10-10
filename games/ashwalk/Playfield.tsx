@@ -45,6 +45,7 @@ const RARE_CHAIN = 4663;
 const USDG_TOKEN = "0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168";
 const PRICE_CENTS = 199;
 const CAPE_CENTS = 99;
+const LIFE_CENTS = 99;
 const ETH_USD = 2495;
 const PAYOUT_ADDRESS = "0xa93399a2965672dd315a1bd8816fa94c50ef4dd5";
 const SHARE_ADDRESS = "0xb7823b2e28484382aa70952a7818712e8ac42a72";
@@ -363,6 +364,7 @@ export function Playfield({
   const deathsRef = useRef(0);
   const lastPayRef = useRef("");
   const payWaitRef = useRef<((coin: PayCoin | null) => void) | null>(null);
+  const payLineRef = useRef("This buy is $1.99.");
   const [payDue, setPayDue] = useState<number | null>(null);
   const [purse, setPurse] = useState(0);
   const livesRef = useRef(LIVES);
@@ -493,7 +495,7 @@ export function Playfield({
     return connectRareWallet();
   }
 
-  async function chargeRare(whole: number, tag: string, cents = PRICE_CENTS) {
+  async function chargeRare(whole: number, tag: string, cents = PRICE_CENTS, line = "This buy is $1.99.") {
     if (whole <= 0) return true;
     const eth = walletProvider();
     if (!eth) {
@@ -513,6 +515,7 @@ export function Playfield({
     }
     const coin = await new Promise<PayCoin | null>((resolve) => {
       payWaitRef.current = resolve;
+      payLineRef.current = line;
       setPayDue(due);
     });
     payWaitRef.current = null;
@@ -628,7 +631,7 @@ export function Playfield({
       return;
     }
     if (cloth && cloth.cost > 0 && !readLedger(who).owned.includes(id)) {
-      if (!(await chargeRare(cloth.cost, `cape:${id}`, CAPE_CENTS))) return;
+      if (!(await chargeRare(cloth.cost, `cape:${id}`, CAPE_CENTS, "A cape is $0.99."))) return;
       if (!grantCloth(who, id, cloth.cost)) {
         setStakeMsg("The cape was paid, but this browser could not save it.");
         return;
@@ -652,10 +655,10 @@ export function Playfield({
     const who = accountRef.current;
     const balance = rareRef.current;
     if (!who || !isAddress(who) || balance == null) {
-      setStakeMsg("Connect a wallet. A life is $1.99.");
+      setStakeMsg("Connect a wallet. A life is $0.99.");
       return;
     }
-    if (!(await chargeRare(LIFE_PRICE, "life"))) return;
+    if (!(await chargeRare(LIFE_PRICE, "life", LIFE_CENTS, "A life is $0.99."))) return;
     refreshLedger(who);
     onWardrobe?.();
     livesRef.current = 1;
@@ -1002,7 +1005,7 @@ export function Playfield({
                 ? `Burned ${burned} stage coin${burned === 1 ? "" : "s"}.`
                 : "No stage coins left to burn.";
             if (left <= 0) {
-              setStakeMsg(`${burnNote} One more life is $1.99.`);
+              setStakeMsg(`${burnNote} One more life is $0.99.`);
               go("lives");
             } else {
               setShopError(`${left} ${left === 1 ? "life" : "lives"} left. ${burnNote}`);
@@ -1655,7 +1658,7 @@ export function Playfield({
           <p className="ash-kicker">Rare Friends · the hanging wood</p>
           <h1>Ashwalk</h1>
           <p>Your Friend is the small one. The fog is everything else.</p>
-          <p>A later board or a life is $1.99. A cape is $0.99. You choose the coin when you pay. Nothing is selected for you.</p>
+          <p>A later board is $1.99. A cape or an extra life is $0.99. You choose the coin when you pay. Nothing is selected for you.</p>
           {stakeMsg && (
             <p className="ash-error" role="alert">
               {stakeMsg}
@@ -1710,7 +1713,7 @@ export function Playfield({
           </div>
           {rebateOpen && (
             <div className="ash-guide">
-              <p>A board or a life is $1.99. A cape is $0.99. Finish a paid fog without dying and half of that comes off the next buy.</p>
+              <p>A board is $1.99. A cape or an extra life is $0.99. Finish a paid fog without dying and half of that comes off the next buy.</p>
               <p>The shore is free, so there is nothing to give back. Die once and you get none of it. The money does not return to your wallet. You pick the coin. Nothing is selected until you do.</p>
               {ledger.rebate > 0 && <p>${(ledger.rebate / 100).toFixed(2)} is waiting on your next buy.</p>}
             </div>
@@ -1722,7 +1725,7 @@ export function Playfield({
               <p>
                 A and D, or the arrow keys, move. W, up, or space jumps. S drops through a thin plank. On the hoist, Use climbs up and Down climbs down.
                 E pulls, lights a bell, or buys a lantern. A lantern costs 1 coin you picked up in the stage and lasts 13 seconds. The flashlight costs 5 of those coins. On the moon that buy is a saber, not a flashlight. Stand on a plank too long and it falls.
-                It comes back after 4 seconds. Three lives to a board. After that, one more life is $1.99.
+                It comes back after 4 seconds. Three lives to a board. After that, one more life is $0.99.
                 A death takes half the coins you picked up in the stage, unless you spent 2 of them at the mark. Then you come back there and keep what you still hold. A $1.99 buy asks you to pick a coin, then confirm it in your wallet.
               </p>
             </div>
@@ -1952,7 +1955,7 @@ export function Playfield({
         <section className="ash-panel" aria-label="Buy a life">
           <p className="ash-kicker">No lives left</p>
           <h2>Buy one more</h2>
-          <p>Three lives are gone. One more is $1.99.</p>
+          <p>Three lives are gone. One more is $0.99.</p>
           {stakeMsg && (
             <p className="ash-error" role="alert">
               {stakeMsg}
@@ -1960,7 +1963,7 @@ export function Playfield({
           )}
           <div className="ash-actions">
             <button type="button" className="ash-btn" onClick={buyLife}>
-              Buy a life · $1.99
+              Buy a life · $0.99
             </button>
             <button
               type="button"
@@ -2150,7 +2153,7 @@ export function Playfield({
           <div className="ash-pay-card">
             <p className="ash-kicker">Payment</p>
             <h2>Choose a coin</h2>
-            <p>{payDue === CAPE_CENTS ? "A cape is $0.99." : "This buy is $1.99."} Robinhood ETH, USDG, or Rare. Pick one. Nothing is selected until you do.</p>
+            <p>{payLineRef.current} Robinhood ETH, USDG, or Rare. Pick one. Nothing is selected until you do.</p>
             <div className="ash-actions">
               <button type="button" className="ash-btn" onClick={() => payWaitRef.current?.("usdg")}>
                 {payLabel("usdg", payDue)}
