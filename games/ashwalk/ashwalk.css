@@ -294,6 +294,12 @@
   border-color: #f3f0e8;
 }
 
+.ash-btn.ash-btn-rare {
+  background: #5c2d91;
+  color: #f6f1ea;
+  border: 2px solid #d4af37;
+}
+
 .ash-btn:disabled,
 .ash-btn-ghost:disabled {
   opacity: 0.45;

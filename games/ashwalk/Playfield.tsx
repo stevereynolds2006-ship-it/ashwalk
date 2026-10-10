@@ -2173,7 +2173,7 @@ export function Playfield({
               <button type="button" className="ash-btn" onClick={() => payWaitRef.current?.("eth")}>
                 {payDue <= 0 ? "ETH · covered" : payLabel("eth", payDue)}
               </button>
-              <button type="button" className="ash-btn" onClick={() => payWaitRef.current?.("rare")}>
+              <button type="button" className="ash-btn ash-btn-rare" onClick={() => payWaitRef.current?.("rare")}>
                 {payRareRef.current <= 0 ? "Rare · covered" : `${payLabel("rare", payRareRef.current)} Rare`}
               </button>
               <button type="button" className="ash-btn-ghost" onClick={() => payWaitRef.current?.(null)}>
