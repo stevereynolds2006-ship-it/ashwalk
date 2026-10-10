@@ -44,6 +44,7 @@ const RARE_TOKEN = "0x0779369854d3EcdEA927206718FFD7730C67B71f";
 const RARE_CHAIN = 4663;
 const USDG_TOKEN = "0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168";
 const PRICE_CENTS = 199;
+const CAPE_CENTS = 99;
 const ETH_USD = 2495;
 const PAYOUT_ADDRESS = "0xa93399a2965672dd315a1bd8816fa94c50ef4dd5";
 const SHARE_ADDRESS = "0xb7823b2e28484382aa70952a7818712e8ac42a72";
@@ -492,7 +493,7 @@ export function Playfield({
     return connectRareWallet();
   }
 
-  async function chargeRare(whole: number, tag: string) {
+  async function chargeRare(whole: number, tag: string, cents = PRICE_CENTS) {
     if (whole <= 0) return true;
     const eth = walletProvider();
     if (!eth) {
@@ -502,8 +503,8 @@ export function Playfield({
     if (!(await ensureWallet())) return false;
     const who = accountRef.current;
     if (!who || !isAddress(who)) return false;
-    const covered = Math.min(rebateOf(who), PRICE_CENTS);
-    const due = PRICE_CENTS - covered;
+    const covered = Math.min(rebateOf(who), cents);
+    const due = cents - covered;
     if (due <= 0) {
       commitRebate(who, covered);
       refreshLedger(who);
@@ -623,11 +624,11 @@ export function Playfield({
         onWardrobe?.();
         return;
       }
-      setStakeMsg("Connect a wallet. A cape is $1.99.");
+      setStakeMsg("Connect a wallet. A cape is $0.99.");
       return;
     }
     if (cloth && cloth.cost > 0 && !readLedger(who).owned.includes(id)) {
-      if (!(await chargeRare(cloth.cost, `cape:${id}`))) return;
+      if (!(await chargeRare(cloth.cost, `cape:${id}`, CAPE_CENTS))) return;
       if (!grantCloth(who, id, cloth.cost)) {
         setStakeMsg("The cape was paid, but this browser could not save it.");
         return;
@@ -638,7 +639,7 @@ export function Playfield({
       return;
     }
     if (!buyCloth(who, balance, id)) {
-      setStakeMsg(cloth && cloth.cost > 0 ? `${cloth.name} is $1.99.` : "That cape stayed shut.");
+      setStakeMsg(cloth && cloth.cost > 0 ? `${cloth.name} is $0.99.` : "That cape stayed shut.");
       return;
     }
     setStakeMsg(cloth ? `${cloth.name} is on.` : "");
@@ -1654,7 +1655,7 @@ export function Playfield({
           <p className="ash-kicker">Rare Friends · the hanging wood</p>
           <h1>Ashwalk</h1>
           <p>Your Friend is the small one. The fog is everything else.</p>
-          <p>A later board, a cape, or a life is $1.99. You choose the coin when you pay. Nothing is selected for you.</p>
+          <p>A later board or a life is $1.99. A cape is $0.99. You choose the coin when you pay. Nothing is selected for you.</p>
           {stakeMsg && (
             <p className="ash-error" role="alert">
               {stakeMsg}
@@ -1709,7 +1710,7 @@ export function Playfield({
           </div>
           {rebateOpen && (
             <div className="ash-guide">
-              <p>A board, a cape, or a life is $1.99. Finish a paid fog without dying and half of that comes off the next buy.</p>
+              <p>A board or a life is $1.99. A cape is $0.99. Finish a paid fog without dying and half of that comes off the next buy.</p>
               <p>The shore is free, so there is nothing to give back. Die once and you get none of it. The money does not return to your wallet. You pick the coin. Nothing is selected until you do.</p>
               {ledger.rebate > 0 && <p>${(ledger.rebate / 100).toFixed(2)} is waiting on your next buy.</p>}
             </div>
@@ -1717,7 +1718,7 @@ export function Playfield({
           {guide && (
             <div className="ash-guide">
               <p>The shore is free. You start it with 2 coins. Coins you pick up only turn things on inside the stage. A later fog is $1.99, and only after the one before it is beaten. Finish that fog without dying and half of the $1.99 comes off the next buy.</p>
-              <p>Every month a new map opens. A new cape opens each week, starting October 1. A cape is $1.99. Only the red cape is open now. The hallow opens October 31. The eve opens December 25. The hoist opens January 1st.</p>
+              <p>Every month a new map opens. A new cape opens each week, starting October 1. A cape is $0.99. Only the red cape is open now. The hallow opens October 31. The eve opens December 25. The hoist opens January 1st.</p>
               <p>
                 A and D, or the arrow keys, move. W, up, or space jumps. S drops through a thin plank. On the hoist, Use climbs up and Down climbs down.
                 E pulls, lights a bell, or buys a lantern. A lantern costs 1 coin you picked up in the stage and lasts 13 seconds. The flashlight costs 5 of those coins. On the moon that buy is a saber, not a flashlight. Stand on a plank too long and it falls.
@@ -1737,7 +1738,7 @@ export function Playfield({
               {stakeMsg}
             </p>
           )}
-          <p className="ash-note">A cape is $1.99. Only the red one is open now. The others open one a week, starting October 1. Halloween is October 31 and Christmas is December 25.</p>
+          <p className="ash-note">A cape is $0.99. Only the red one is open now. The others open one a week, starting October 1. Halloween is October 31 and Christmas is December 25.</p>
           <div className="ash-levels">
             {outfitList().map((cloth) => {
               const locked = !clothReleased(cloth.id);
@@ -1757,7 +1758,7 @@ export function Playfield({
                   <span>{soon ? `${cloth.name} · coming soon` : locked ? `${cloth.name} · locked` : cloth.name}</span>
                   <small>
                     {soon
-                      ? `Coming soon. Opens ${when}. $1.99.`
+                      ? `Coming soon. Opens ${when}. $0.99.`
                       : locked
                         ? "Locked."
                         : owned
@@ -1766,7 +1767,7 @@ export function Playfield({
                             : `${cloth.note} Press to wear.`
                           : CAPES_TRY
                             ? `${cloth.note} Open to try.`
-                            : `${cloth.note} $1.99.`}
+                            : `${cloth.note} $0.99.`}
                   </small>
                 </button>
               );
@@ -2149,7 +2150,7 @@ export function Playfield({
           <div className="ash-pay-card">
             <p className="ash-kicker">Payment</p>
             <h2>Choose a coin</h2>
-            <p>Robinhood ETH, USDG, or Rare is $1.99. Pick one. Nothing is selected until you do.</p>
+            <p>{payDue === CAPE_CENTS ? "A cape is $0.99." : "This buy is $1.99."} Robinhood ETH, USDG, or Rare. Pick one. Nothing is selected until you do.</p>
             <div className="ash-actions">
               <button type="button" className="ash-btn" onClick={() => payWaitRef.current?.("usdg")}>
                 {payLabel("usdg", payDue)}
