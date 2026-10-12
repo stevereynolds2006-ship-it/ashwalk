@@ -929,7 +929,14 @@ export function Playfield({
       last = now;
       const sim = simRef.current;
       const phaseNow = phaseRef.current;
-      const playing = phaseNow === "play" && !pausedRef.current && document.visibilityState !== "hidden";
+      if (phaseNow === "play" && hudOpenRef.current) {
+        const peek = sample();
+        if (peek.left || peek.right || peek.jumpHeld || peek.down) {
+          hudOpenRef.current = false;
+          setHudOpen(false);
+        }
+      }
+      const playing = phaseNow === "play" && !pausedRef.current && !hudOpenRef.current && document.visibilityState !== "hidden";
       sim.linked = (apiRef.current?.peerCount() ?? 0) > 0;
       sim.remotes = [...ghostsRef.current.values()].map((ghost) => ({
         x: ghost.tx,
@@ -944,10 +951,6 @@ export function Playfield({
       } else {
         acc += dt;
         const held = sample();
-        if (hudOpenRef.current && (held.left || held.right || held.jumpHeld || held.down)) {
-          hudOpenRef.current = false;
-          setHudOpen(false);
-        }
         let jumpPressed = held.jumpHeld && !edgeRef.current.jump;
         let interactPressed = held.interact && !edgeRef.current.interact;
         edgeRef.current = { jump: held.jumpHeld, interact: held.interact };
@@ -1252,7 +1255,7 @@ export function Playfield({
       musicRef.current?.sync({
         scene: musicScene(phaseNow, sim),
         reduced: reducedRef.current,
-        paused: phaseNow === "pause" || phaseNow === "lives" || pausedRef.current,
+        paused: phaseNow === "pause" || phaseNow === "lives" || pausedRef.current || hudOpenRef.current,
         hidden: document.visibilityState === "hidden",
       });
       renderFrame(
@@ -1528,7 +1531,7 @@ export function Playfield({
 
   return (
     <div
-      className={phase === "play" && !paused ? "ash-root" : "ash-root ash-paused"}
+      className={phase === "play" && !paused && !hudOpen ? "ash-root" : "ash-root ash-paused"}
       onPointerDown={() => {
         if (muted) return;
         void soundRef.current?.unlock();
@@ -1577,7 +1580,13 @@ export function Playfield({
               aria-expanded={hudOpen}
               aria-haspopup="menu"
               aria-controls="ash-hud-menu"
-              onClick={() => setHudOpen((open) => !open)}
+              onClick={() => {
+                if (!hudOpen && phaseRef.current === "play") {
+                  holdsRef.current = { left: false, right: false, jump: false, down: false, use: false };
+                  keysRef.current.clear();
+                }
+                setHudOpen((open) => !open);
+              }}
             >
               {hudOpen ? "Close" : "Menu"}
             </button>
@@ -2134,7 +2143,7 @@ export function Playfield({
           </div>
         </section>
       )}
-      {phase === "play" && !paused && (
+      {phase === "play" && !paused && !hudOpen && (
         <div
           className={
             pickId === "hoist" ? "ash-touch ash-touch-hoist" : pickId === "yule" ? "ash-touch ash-touch-eve" : pickId === "tunnel" ? "ash-touch ash-touch-tunnel" : pickId === "roof" ? "ash-touch ash-touch-sign" : pickId === "gale" || pickId === "hallow" ? "ash-touch ash-touch-gale" : pickId === "antler" ? "ash-touch ash-touch-antler" : "ash-touch"
