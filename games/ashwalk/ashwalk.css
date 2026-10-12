@@ -667,6 +667,10 @@
   }
 }
 
+.ash-root.ash-paused .ash-touch {
+  display: none;
+}
+
 .ash-door {
   position: fixed;
   inset: 0;

@@ -423,6 +423,10 @@ export function Playfield({
   pickRef.current = pickId;
 
   function go(next: Phase) {
+    if (next !== "play") {
+      holdsRef.current = { left: false, right: false, jump: false, down: false, use: false };
+      keysRef.current.clear();
+    }
     phaseRef.current = next;
     setPhase(next);
   }
@@ -1524,7 +1528,7 @@ export function Playfield({
 
   return (
     <div
-      className="ash-root"
+      className={phase === "play" && !paused ? "ash-root" : "ash-root ash-paused"}
       onPointerDown={() => {
         if (muted) return;
         void soundRef.current?.unlock();
@@ -2130,7 +2134,7 @@ export function Playfield({
           </div>
         </section>
       )}
-      {phase === "play" && (
+      {phase === "play" && !paused && (
         <div
           className={
             pickId === "hoist" ? "ash-touch ash-touch-hoist" : pickId === "yule" ? "ash-touch ash-touch-eve" : pickId === "tunnel" ? "ash-touch ash-touch-tunnel" : pickId === "roof" ? "ash-touch ash-touch-sign" : pickId === "gale" || pickId === "hallow" ? "ash-touch ash-touch-gale" : pickId === "antler" ? "ash-touch ash-touch-antler" : "ash-touch"
