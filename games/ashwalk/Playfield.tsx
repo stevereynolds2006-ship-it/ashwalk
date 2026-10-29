@@ -272,6 +272,7 @@ const REAL_NOTE: Record<string, string> = {
   hoist: "Concrete and rust.",
   stack: "Full trees, earth, and wood.",
   rift: "A tear, a ring, and a comet.",
+  veil: "Rain, and the eyes.",
 };
 
 function dimBoard(id: string) {
@@ -968,7 +969,7 @@ export function Playfield({
           };
           jumpPressed = false;
           interactPressed = false;
-          sim.saber = sim.level.id === "moon" && lampOnRef.current;
+          sim.saber = (sim.level.id === "moon" || sim.level.id === "veil") && lampOnRef.current;
           const events = step(sim, actions, 1 / 60, reducedRef.current);
           if (events.mothId) mothId = events.mothId;
           if (events.beacon) beaconId = events.beacon;
@@ -1472,7 +1473,9 @@ export function Playfield({
         setShopError(
           simRef.current.level.id === "moon"
             ? `The saber wants ${LAMP_PRICE} coins you picked up.`
-            : `The flashlight wants ${LAMP_PRICE} coins you picked up.`,
+            : simRef.current.level.id === "veil"
+              ? `The cut wants ${LAMP_PRICE} coins you picked up.`
+              : `The flashlight wants ${LAMP_PRICE} coins you picked up.`,
         );
         return;
       }
@@ -1482,7 +1485,9 @@ export function Playfield({
       setShopError(
         simRef.current.level.id === "moon"
           ? `Spent ${LAMP_PRICE} coins. The saber is in your hand.`
-          : `Spent ${LAMP_PRICE} coins you picked up.`,
+          : simRef.current.level.id === "veil"
+            ? `Spent ${LAMP_PRICE} coins. The cut is in your hand.`
+            : `Spent ${LAMP_PRICE} coins you picked up.`,
       );
       lampOnRef.current = true;
       setLampOwned(true);
@@ -1615,11 +1620,17 @@ export function Playfield({
                         ? "Saber on"
                         : "Saber off"
                       : `Buy saber · ${LAMP_PRICE} picked up`
-                    : lampOwned
-                      ? lampOn
-                        ? "Light on"
-                        : "Light off"
-                      : `Buy light · ${LAMP_PRICE} picked up`}
+                    : simRef.current.level.id === "veil"
+                      ? lampOwned
+                        ? lampOn
+                          ? "Cut on"
+                          : "Cut off"
+                        : `Buy the cut · ${LAMP_PRICE} picked up`
+                      : lampOwned
+                        ? lampOn
+                          ? "Light on"
+                          : "Light off"
+                        : `Buy light · ${LAMP_PRICE} picked up`}
                 </button>
                 <button
                   type="button"
@@ -2013,7 +2024,9 @@ export function Playfield({
             {snap ? `${formatRf(snap.rfBalance)} RF simulated.` : "Balance still loading."}{" "}
             {simRef.current.level.id === "moon"
               ? `A lightsaber costs ${LAMP_PRICE} coins you have picked up. It cuts the aliens.`
-              : `A flashlight costs ${LAMP_PRICE} coins you have picked up. It does not enter the lantern rite.`}
+              : simRef.current.level.id === "veil"
+                ? `The cut costs ${LAMP_PRICE} coins you have picked up. It is a bar of light. Walk it through the hooded ones.`
+                : `A flashlight costs ${LAMP_PRICE} coins you have picked up. It does not enter the lantern rite.`}
           </p>
           {shopError && (
             <p className="ash-error" role="alert">
@@ -2031,11 +2044,17 @@ export function Playfield({
                     ? "Saber on"
                     : "Saber off"
                   : `Buy a saber · ${LAMP_PRICE} picked up`
-                : lampOwned
-                  ? lampOn
-                    ? "Flashlight on"
-                    : "Flashlight off"
-                  : `Buy a flashlight · ${LAMP_PRICE} picked up`}
+                : simRef.current.level.id === "veil"
+                  ? lampOwned
+                    ? lampOn
+                      ? "Cut on"
+                      : "Cut off"
+                    : `Buy the cut · ${LAMP_PRICE} picked up`
+                  : lampOwned
+                    ? lampOn
+                      ? "Flashlight on"
+                      : "Flashlight off"
+                    : `Buy a flashlight · ${LAMP_PRICE} picked up`}
             </button>
             <button type="button" className="ash-btn-ghost" onClick={() => go("rite")}>
               Lantern rite
@@ -2347,7 +2366,7 @@ function musicScene(phase: Phase, sim: Sim): MusicScene {
   if (sim.level.id === "hoist") return "hoist";
   if (sim.level.id === "tunnel") return "tunnel";
   if (sim.level.id === "mirror") return "mirror";
-  if (sim.level.id === "moon" || sim.level.id === "rift") return "moon";
+  if (sim.level.id === "moon" || sim.level.id === "rift" || sim.level.id === "veil") return "moon";
   if (sim.level.id === "antler") return "hunt";
   if (sim.level.id === "choir") return "choir";
   if (sim.level.id === "gear") return "gear";
@@ -2359,6 +2378,7 @@ function musicScene(phase: Phase, sim: Sim): MusicScene {
 
 function promptFor(sim: Sim, phase: Phase) {
   if (phase !== "play" || sim.won || sim.dead > 0) return "";
+  if (sim.level.id === "veil" && !sim.saber && sim.x < 860) return "Pick up 5 coins. Buy the cut. It is the only thing they fear.";
   if (sim.level.id === "gale" && sim.cage > 0) return "Jump rises. Down drops. 8 seconds to the hole.";
   if (sim.level.id === "yule" && sim.x > 11200 && sim.hearthLeave > 0) return "The tree keeps them.";
   if (sim.level.id === "yule" && sim.x > 11200 && sim.gifts < sim.level.moths.length) {

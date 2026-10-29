@@ -1694,7 +1694,89 @@ const RIFT: Level = {
   light: { x: 200, y: -400 },
 };
 
-export const LEVELS: readonly Level[] = [SHORE, LATCH, GALE, CHOIR, GEAR, ROOF, ANTLER, MOON, HALLOW, MIRROR, TUNNEL, YULE, HOIST, STACK, RIFT];
+/** Rain, and the things that wear your outline. The cut is the only way through them. */
+const VEIL: Level = {
+  id: "veil",
+  title: "The inner",
+  kicker: "They have your eyes.",
+  rule: "Buy the cut with 5 coins you pick up. It is a bar of light. Walk it through every hooded one. The hole stays shut until they are gone. The digits on the way out are 3, 6, and 9.",
+  together: "The cut is yours. The demons and the lock are shared.",
+  clearKicker: "The inner",
+  clearTitle: "They blinked out",
+  worldW: 6600,
+  killY: 1100,
+  poster: 900,
+  introCrow: false,
+  platforms: [
+    { id: "s0", kind: "solid", terrain: true, x: 0, y: 470, w: 780, h: 700 },
+    { id: "bar1", kind: "oneway", x: 900, y: 390, w: 170, h: 12 },
+    { id: "rest", kind: "solid", terrain: true, x: 1160, y: 470, w: 280, h: 700 },
+    { id: "bar2", kind: "oneway", x: 1520, y: 330, w: 140, h: 12 },
+    { id: "bar3", kind: "oneway", x: 1740, y: 430, w: 140, h: 12 },
+    { id: "yard", kind: "solid", terrain: true, x: 1960, y: 470, w: 980, h: 700 },
+    { id: "bar4", kind: "oneway", x: 3060, y: 360, w: 150, h: 12 },
+    { id: "bar5", kind: "oneway", x: 3280, y: 280, w: 120, h: 12 },
+    { id: "bar6", kind: "crumble", x: 3480, y: 400, w: 110, h: 12 },
+    { id: "lip", kind: "solid", terrain: true, x: 3680, y: 470, w: 360, h: 700 },
+    { id: "bar7", kind: "oneway", x: 4140, y: 390, w: 150, h: 12 },
+    { id: "bar8", kind: "oneway", x: 4380, y: 310, w: 130, h: 12 },
+    { id: "mid", kind: "solid", terrain: true, x: 4600, y: 470, w: 420, h: 700 },
+    { id: "bar9", kind: "oneway", x: 5120, y: 380, w: 160, h: 12 },
+    { id: "lock", kind: "solid", terrain: true, x: 5360, y: 470, w: 620, h: 700 },
+    { id: "gEnd", kind: "gate", x: 5980, y: 50, w: 24, h: 420, openY: -160 },
+    { id: "finale", kind: "solid", terrain: true, x: 6004, y: 470, w: 560, h: 700 },
+  ],
+  moths: [
+    { id: "c1", x: 140, y: 400 },
+    { id: "c2", x: 280, y: 400 },
+    { id: "c3", x: 420, y: 400 },
+    { id: "c4", x: 560, y: 400 },
+    { id: "c5", x: 680, y: 400 },
+    { id: "m1", x: 1240, y: 400 },
+    { id: "m2", x: 2200, y: 400 },
+    { id: "m3", x: 2600, y: 400 },
+    { id: "m4", x: 3340, y: 220 },
+    { id: "m5", x: 4760, y: 400 },
+    { id: "m6", x: 5600, y: 400 },
+  ],
+  checkpoints: [
+    { id: "start", x: 160, surface: 470 },
+    { id: "rest", x: 1240, surface: 470 },
+    { id: "yard", x: 2100, surface: 470 },
+    { id: "lip", x: 3780, surface: 470 },
+    { id: "lock", x: 5480, surface: 470 },
+  ],
+  rope: null,
+  shrines: [],
+  beacons: [
+    { id: "bell1", x: 1260, y: 378, w: 70, h: 92 },
+    { id: "bell2", x: 3800, y: 378, w: 70, h: 92 },
+    { id: "bell3", x: 5520, y: 378, w: 70, h: 92 },
+  ],
+  plates: [{ id: "pEnd", gate: "gEnd", x: 5680, y: 386, w: 120, h: 84, latch: 6, whenLit: true }],
+  goal: { id: "goal", x: 6280, y: 300, w: 110, h: 170 },
+  pit: null,
+  wind: { x0: 3000, x1: 4600, strength: 90, period: 2.4, mode: "gust" },
+  birds: [
+    { kind: "demon", x0: 940, x1: 1040, y: 390, amp: 0, speed: 16, start: 960 },
+    { kind: "demon", x0: 2060, x1: 2800, y: 470, amp: 0, speed: 46, start: 2200 },
+    { kind: "demon", x0: 2140, x1: 2860, y: 470, amp: 0, speed: 30, start: 2600 },
+    { kind: "demon", x0: 3720, x1: 3960, y: 470, amp: 0, speed: 38, start: 3800 },
+    { kind: "demon", x0: 5140, x1: 5240, y: 380, amp: 0, speed: 14, start: 5160 },
+    { kind: "demon", x0: 5440, x1: 5880, y: 470, amp: 0, speed: 52, start: 5600 },
+  ],
+  spiders: [],
+  combo: { code: [3, 6, 9], x: 5480, span: 260, y: 470 },
+  chapters: [
+    { x: 0, id: "rain", title: "The rain", kicker: "Five coins buy the cut. Remember 3." },
+    { x: 1900, id: "crowd", title: "The crowd", kicker: "Two of them. Cut both." },
+    { x: 3600, id: "bars", title: "The bars", kicker: "Remember 6. The planks are light." },
+    { x: 5200, id: "lock", title: "The lock", kicker: "Remember 9. The code is 3, 6, 9." },
+  ],
+  light: { x: 300, y: -200 },
+};
+
+export const LEVELS: readonly Level[] = [SHORE, LATCH, GALE, CHOIR, GEAR, ROOF, ANTLER, MOON, HALLOW, MIRROR, TUNNEL, YULE, HOIST, STACK, RIFT, VEIL];
 
 export function previousFog(id: string): string | null {
   const index = LEVELS.findIndex((level) => level.id === id);
@@ -1716,9 +1798,11 @@ export const TRY_STACK = false;
 export const TRY_YULE = false;
 /** The rift stays shut until the stack is beaten, then it is bought like the others. */
 export const TRY_RIFT = false;
+/** The inner is open to try. */
+export const TRY_VEIL = true;
 
 export function fogTry(id: string) {
-  return (id === "tunnel" && TRY_TUNNEL) || (id === "choir" && TRY_CHOIR) || (id === "hoist" && TRY_HOIST) || (id === "yule" && TRY_YULE) || (id === "stack" && TRY_STACK) || (id === "rift" && TRY_RIFT);
+  return (id === "tunnel" && TRY_TUNNEL) || (id === "choir" && TRY_CHOIR) || (id === "hoist" && TRY_HOIST) || (id === "yule" && TRY_YULE) || (id === "stack" && TRY_STACK) || (id === "rift" && TRY_RIFT) || (id === "veil" && TRY_VEIL);
 }
 
 export function fogPrice(_id: string) {
@@ -1732,6 +1816,7 @@ export function fogReleased(id: string, now = new Date()) {
   if (id === "yule" && TRY_YULE) return true;
   if (id === "stack" && TRY_STACK) return true;
   if (id === "rift" && TRY_RIFT) return true;
+  if (id === "veil" && TRY_VEIL) return true;
   if (id === "moon") return now >= new Date(2026, 9, 1);
   if (id === "hallow") return now >= new Date(2026, 9, 31);
   if (id === "mirror") return now >= new Date(2026, 10, 1);

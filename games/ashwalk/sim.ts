@@ -339,6 +339,11 @@ export function comboSet(sim: Sim) {
 }
 
 function saberHits(sim: Sim, x: number, y: number) {
+  if (sim.level.id === "veil") {
+    const reach = 148;
+    const x0 = sim.facing === 1 ? sim.x + PW * 0.35 : sim.x + PW * 0.65 - reach;
+    return x >= x0 && x <= x0 + reach && Math.abs(y - (sim.y + 22)) < 28;
+  }
   const swing = Math.sin(sim.t * 7) * 0.18;
   const ang = sim.facing === 1 ? -0.4 + swing : Math.PI + 0.4 - swing;
   const x0 = sim.x + PW / 2 + sim.facing * 4;
@@ -887,13 +892,14 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
     if (bird.x > spec.x1) bird.dir = -1;
     if (bird.x < spec.x0) bird.dir = 1;
     const birdY = spec.y + birdLift(spec, sim.t, i, reduced);
-    if (spec.kind === "alien" && sim.saber && saberHits(sim, bird.x + 8, birdY + 16)) {
+    const aimY = spec.kind === "demon" ? birdY - 40 : birdY + 16;
+    if ((spec.kind === "alien" || spec.kind === "demon") && sim.saber && saberHits(sim, bird.x + 8, aimY)) {
       sim.slain.add(i);
       continue;
     }
-    const feet = spec.kind === "deer" || spec.kind === "scare" || spec.kind === "shade";
-    const hitW = spec.kind === "shade" ? 28 : spec.kind === "scare" ? 36 : spec.kind === "deer" ? 72 : spec.kind === "gator" ? 86 : spec.kind === "eagle" ? 54 : spec.kind === "ship" ? 52 : spec.kind === "alien" ? 26 : spec.kind === "rocket" ? 48 : spec.kind === "turtle" ? 34 : spec.kind === "rat" ? 28 : 22;
-    const hitH = spec.kind === "shade" ? 60 : spec.kind === "scare" ? 72 : spec.kind === "deer" ? 40 : spec.kind === "gator" ? 30 : spec.kind === "eagle" ? 24 : spec.kind === "ship" ? 22 : spec.kind === "alien" ? 40 : spec.kind === "rocket" ? 18 : spec.kind === "turtle" ? 26 : spec.kind === "rat" ? 20 : 14;
+    const feet = spec.kind === "deer" || spec.kind === "scare" || spec.kind === "shade" || spec.kind === "demon";
+    const hitW = spec.kind === "demon" ? 36 : spec.kind === "shade" ? 28 : spec.kind === "scare" ? 36 : spec.kind === "deer" ? 72 : spec.kind === "gator" ? 86 : spec.kind === "eagle" ? 54 : spec.kind === "ship" ? 52 : spec.kind === "alien" ? 26 : spec.kind === "rocket" ? 48 : spec.kind === "turtle" ? 34 : spec.kind === "rat" ? 28 : 22;
+    const hitH = spec.kind === "demon" ? 78 : spec.kind === "shade" ? 60 : spec.kind === "scare" ? 72 : spec.kind === "deer" ? 40 : spec.kind === "gator" ? 30 : spec.kind === "eagle" ? 24 : spec.kind === "ship" ? 22 : spec.kind === "alien" ? 40 : spec.kind === "rocket" ? 18 : spec.kind === "turtle" ? 26 : spec.kind === "rat" ? 20 : 14;
     const top = feet ? birdY - hitH : birdY;
     const bot = feet ? birdY : birdY + hitH;
     if (
@@ -1290,6 +1296,7 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
     (level.id !== "yule" && level.beacons.length > 0 && sim.beacons.size < level.beacons.length) ||
     (!!level.stalker && !sim.caged) ||
     (!!level.hunter && sim.wake < 1) ||
+    (level.id === "veil" && sim.slain.size < level.birds.length) ||
     !comboSet(sim);
   sim.nearGoal = zoneHit(sim.x, sim.y, level.goal);
   if (!sim.won && !sim.doorLocked && (sim.nearGoal || sim.suck > 0)) {

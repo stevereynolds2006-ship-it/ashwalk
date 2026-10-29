@@ -138,6 +138,7 @@ const SKY: Record<string, [string, string, string, string]> = {
   hoist: ["#2c3036", "#d8d6d0", "#a4a29c", "#24282e"],
   yule: ["#050506", "#9a9894", "#2a2a2c", "#050506"],
   hallow: ["#242228", "#8a8884", "#5a5854", "#1e1c22"],
+  veil: ["#02040c", "#071422", "#0c2434", "#03060e"],
 };
 
 function drawLowerFill(ctx: CanvasRenderingContext2D, camera: Camera, id: string) {
@@ -152,7 +153,19 @@ function drawLowerFill(ctx: CanvasRenderingContext2D, camera: Camera, id: string
     const n = Math.abs(Math.round(x / spacing));
     const worldX = camera.x + (x - layer);
     const g = ground + (n % 2) * 24;
-    if (id === "hoist") {
+    if (id === "veil") {
+      ctx.fillStyle = "#05070e";
+      const h = 110 + (n % 4) * 36;
+      ctx.beginPath();
+      ctx.moveTo(worldX - 4, g + 40);
+      ctx.quadraticCurveTo(worldX - 26, g - h * 0.55, worldX, g - h);
+      ctx.quadraticCurveTo(worldX + 26, g - h * 0.55, worldX + 10, g + 40);
+      ctx.fill();
+      ctx.fillStyle = "#ff3048";
+      ctx.fillRect(worldX - 7, g - h + 28, 4, 3);
+      ctx.fillStyle = "#3ae0ff";
+      ctx.fillRect(worldX + 3, g - h + 28, 4, 3);
+    } else if (id === "hoist") {
       ctx.fillStyle = "rgba(70,74,80,0.55)";
       const h = 520 + (n % 3) * 140;
       ctx.fillRect(worldX, g - h, 90 + (n % 2) * 36, h + 220);
@@ -825,7 +838,7 @@ function drawTerrain(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) 
     else if (realLevel === "hallow" && sim.level.id === "hallow") drawGrass(ctx, rect, 28, 2, "#3a4a28");
     else if (realLevel === "yule" && sim.level.id === "yule") drawGrass(ctx, rect, 18, 1, "#e8eef2");
     else if (realLevel === "stack" && sim.level.id === "stack") drawGrass(ctx, rect, 42, 2, "#3f4c32");
-    else if (sim.level.id !== "roof" && sim.level.id !== "gale" && sim.level.id !== "choir" && sim.level.id !== "gear" && sim.level.id !== "hoist" && sim.level.id !== "hallow" && sim.level.id !== "rift" && !(sim.level.id === "stack" && realLevel === "stack")) drawGrass(ctx, rect, 26);
+    else if (sim.level.id !== "roof" && sim.level.id !== "gale" && sim.level.id !== "choir" && sim.level.id !== "gear" && sim.level.id !== "hoist" && sim.level.id !== "hallow" && sim.level.id !== "rift" && sim.level.id !== "veil" && !(sim.level.id === "stack" && realLevel === "stack")) drawGrass(ctx, rect, 26);
   }
   for (const rect of bodies) {
     if (rect.terrain) continue;
@@ -852,6 +865,7 @@ function drawTerrain(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) 
         drawMetal(ctx, rect);
       } else {
         drawPlank(ctx, rect, rect.kind === "crumble" || (sim.crumbles[rect.id]?.timer ?? 0) > 0.9, sim.level.id === "choir" || sim.level.id === "shore");
+        if (sim.level.id === "veil" && rect.id.startsWith("bar")) drawVeilBar(ctx, rect, sim.t);
         if (sim.level.id === "shore" && (rect.kind === "crumble" || rect.kind === "oneway") && !rect.id.startsWith("glow")) drawGrass(ctx, rect, 30, 2);
       }
     }
@@ -2603,6 +2617,97 @@ function blitWhite(ctx: CanvasRenderingContext2D, rows: readonly string[], scale
       if (row[x] === "#") ctx.fillRect(left + x * scale, y * scale, scale, scale);
     }
   });
+}
+
+function drawVeilBar(ctx: CanvasRenderingContext2D, rect: RectLike, t: number) {
+  const pulse = 0.7 + Math.sin(t * 4 + rect.x * 0.01) * 0.22;
+  ctx.save();
+  ctx.globalAlpha = pulse * 0.55;
+  ctx.fillStyle = "#ff4060";
+  ctx.fillRect(rect.x - 2, rect.y - 2, rect.w, 3);
+  ctx.fillStyle = "#3ae0ff";
+  ctx.fillRect(rect.x + 3, rect.y + 4, rect.w, 3);
+  ctx.globalAlpha = 0.95;
+  ctx.shadowColor = "#f4f7ff";
+  ctx.shadowBlur = 14;
+  ctx.fillStyle = "#f4f7ff";
+  ctx.fillRect(rect.x, rect.y, rect.w, 3);
+  ctx.restore();
+}
+
+function drawVeilRain(ctx: CanvasRenderingContext2D, w: number, h: number, t: number, reduced: boolean) {
+  ctx.save();
+  ctx.strokeStyle = "rgba(170, 206, 224, 0.28)";
+  ctx.lineWidth = 1;
+  const count = reduced ? 36 : 84;
+  for (let i = 0; i < count; i++) {
+    const x = ((i * 97 + t * 70) % (w + 40)) - 20;
+    const y = ((i * 53 + t * 240) % (h + 50)) - 30;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x - 1, y + 16);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawVeilBeams(ctx: CanvasRenderingContext2D, camera: Camera, t: number) {
+  ctx.save();
+  for (let i = 0; i < 7; i++) {
+    const x = camera.x * 0.25 + i * 460 + Math.sin(t * 0.35 + i) * 24;
+    const g = ctx.createLinearGradient(x, camera.y, x, camera.y + camera.h);
+    g.addColorStop(0, "rgba(160,210,255,0)");
+    g.addColorStop(0.45, "rgba(160,210,255,0.16)");
+    g.addColorStop(1, "rgba(160,210,255,0)");
+    ctx.fillStyle = g;
+    ctx.fillRect(x, camera.y, 5, camera.h);
+  }
+  ctx.restore();
+}
+
+function drawDemon(ctx: CanvasRenderingContext2D, x: number, y: number, dir: number, t: number) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(dir < 0 ? -1 : 1, 1);
+  ctx.fillStyle = "#05070e";
+  ctx.beginPath();
+  ctx.moveTo(-18, 2);
+  ctx.quadraticCurveTo(-24, -36, -8, -72);
+  ctx.quadraticCurveTo(0, -84, 10, -72);
+  ctx.quadraticCurveTo(24, -36, 16, 2);
+  ctx.closePath();
+  ctx.fill();
+  const open = Math.sin(t * 2.4 + x * 0.01) > 0.9 ? 0 : 1;
+  ctx.globalAlpha = open;
+  ctx.fillStyle = "#ff3048";
+  ctx.fillRect(-9, -52, 5, 3);
+  ctx.fillStyle = "#3ae0ff";
+  ctx.fillRect(3, -52, 5, 3);
+  ctx.globalAlpha = 0.75 * open;
+  ctx.fillStyle = "#ffe080";
+  ctx.fillRect(-2, -51, 3, 2);
+  ctx.restore();
+}
+
+function drawGleam(ctx: CanvasRenderingContext2D, sim: Sim) {
+  const dir = sim.facing;
+  ctx.save();
+  ctx.translate(sim.x + PW / 2 + dir * 10, sim.y + 20);
+  ctx.scale(dir < 0 ? -1 : 1, 1);
+  const len = 132 + Math.sin(sim.t * 6) * 14;
+  for (const by of [-8, 0, 8]) {
+    ctx.globalAlpha = 0.4;
+    ctx.fillStyle = "#ff4060";
+    ctx.fillRect(0, by - 2, len, 3);
+    ctx.fillStyle = "#3ae0ff";
+    ctx.fillRect(4, by + 2, len - 10, 3);
+    ctx.globalAlpha = 0.92;
+    ctx.shadowColor = "#f4f7ff";
+    ctx.shadowBlur = 10;
+    ctx.fillStyle = "#f7fbff";
+    ctx.fillRect(0, by, len, 2);
+  }
+  ctx.restore();
 }
 
 function drawSaber(ctx: CanvasRenderingContext2D, sim: Sim) {
@@ -4824,6 +4929,7 @@ export function renderFrame(
   glow.addColorStop(1, "rgba(230,230,226,0)");
   ctx.fillStyle = glow;
   ctx.fillRect(0, 0, cssW, cssH);
+  if (sim.level.id === "veil") drawVeilRain(ctx, cssW, cssH, sim.t, reduced);
 
   const scale = cssW / camera.w;
   ctx.save();
@@ -4892,6 +4998,8 @@ export function renderFrame(
     drawGaleStorm(ctx, camera, sim.t, reduced);
   } else if (sim.level.id === "rift") {
     drawRift(ctx, camera, sim.t, reduced);
+  } else if (sim.level.id === "veil") {
+    drawVeilBeams(ctx, camera, sim.t);
   } else {
     ctx.save();
     ctx.translate(camera.x * 0.72, camera.y * 0.4);
@@ -5008,13 +5116,14 @@ export function renderFrame(
     if (!perch.gone) drawCrow(ctx, perch.x, perch.y, sim.t * 9, 1);
   }
   for (const bird of birdSpots(sim, reduced)) {
-    if (bird.kind === "alien" && sim.slain.has(bird.index)) continue;
+    if ((bird.kind === "alien" || bird.kind === "demon") && sim.slain.has(bird.index)) continue;
     if (bird.kind === "rat") drawRat(ctx, bird.x, bird.y, bird.dir, sim.t, reduced);
     else if (bird.kind === "deer") drawDeer(ctx, bird.x, bird.y, bird.dir, sim.t, reduced);
     else if (bird.kind === "turtle") drawTurtle(ctx, bird.x, bird.y, bird.dir, sim.t);
     else if (bird.kind === "gator") drawGator(ctx, bird.x, bird.y, bird.dir, sim.t, reduced);
     else if (bird.kind === "rocket") drawRocket(ctx, bird.x, bird.y, bird.dir, sim.t, reduced);
     else if (bird.kind === "alien") drawAlien(ctx, bird.x, bird.y, bird.dir, sim.t);
+    else if (bird.kind === "demon") drawDemon(ctx, bird.x, bird.y, bird.dir, sim.t);
     else if (bird.kind === "ship") drawShip(ctx, bird.x, bird.y, bird.dir);
     else if (bird.kind === "eagle") drawEagle(ctx, bird.x, bird.y, sim.t * 8, bird.dir);
     else if (bird.kind === "scare") drawScarecrow(ctx, bird.x, bird.y, sim.t, bird.dir);
@@ -5134,7 +5243,10 @@ export function renderFrame(
     if (seated) ctx.restore();
   }
   if (sim.level.id === "mirror") drawZip(ctx, sim, true);
-  if (sim.saber && sim.suck <= 0 && sim.cage <= 0 && !attract) drawSaber(ctx, sim);
+  if (sim.saber && sim.suck <= 0 && sim.cage <= 0 && !attract) {
+    if (sim.level.id === "veil") drawGleam(ctx, sim);
+    else drawSaber(ctx, sim);
+  }
   if (sim.suck > 0) {
     ctx.restore();
   }
@@ -5190,7 +5302,7 @@ export function renderFrame(
       cssW * 0.72,
     );
     vig.addColorStop(0, "rgba(0,0,0,0)");
-    vig.addColorStop(1, sim.level.id === "choir" || sim.level.id === "rift" ? "rgba(0,0,0,0.2)" : sim.level.id === "moon" ? `rgba(0,0,0,${0.28 * (1 - sim.altars.size / Math.max(1, sim.level.lamps?.length ?? 1))})` : "rgba(0,0,0,0.72)");
+    vig.addColorStop(1, sim.level.id === "choir" || sim.level.id === "rift" ? "rgba(0,0,0,0.2)" : sim.level.id === "veil" ? "rgba(0,4,12,0.45)" : sim.level.id === "moon" ? `rgba(0,0,0,${0.28 * (1 - sim.altars.size / Math.max(1, sim.level.lamps?.length ?? 1))})` : "rgba(0,0,0,0.72)");
     ctx.fillStyle = vig;
     ctx.fillRect(0, 0, cssW, cssH);
   }
