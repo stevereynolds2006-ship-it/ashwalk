@@ -340,7 +340,7 @@ export function comboSet(sim: Sim) {
 
 function saberHits(sim: Sim, x: number, y: number) {
   if (sim.level.id === "veil") {
-    const reach = 148;
+    const reach = 92;
     const x0 = sim.facing === 1 ? sim.x + PW * 0.35 : sim.x + PW * 0.65 - reach;
     return x >= x0 && x <= x0 + reach && Math.abs(y - (sim.y + 22)) < 28;
   }

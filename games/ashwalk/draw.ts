@@ -846,6 +846,7 @@ function drawTerrain(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) 
     if (rect.kind === "gate") drawGate(ctx, rect, sim.level.id === "latch" && latchReal);
     else if (rect.id.startsWith("trap")) drawTrapDoor(ctx, sim, rect);
     else if (sim.level.platforms.find((item) => item.id === rect.id)?.gear) drawGearTooth(ctx, sim, rect);
+    else if (rect.kind === "sway" && sim.level.id === "veil") drawVeilBar(ctx, rect, sim.t);
     else if (rect.kind === "sway" || rect.kind === "rope") {
       drawCage(ctx, rect, sim.rope < 1 && rect.id === "cageC", sim.t * (rect.id === "cageC" ? 1.4 : 0.65));
     } else if (rect.id.startsWith("glow")) drawLightPlank(ctx, sim, rect);
@@ -2694,8 +2695,8 @@ function drawGleam(ctx: CanvasRenderingContext2D, sim: Sim) {
   ctx.save();
   ctx.translate(sim.x + PW / 2 + dir * 10, sim.y + 20);
   ctx.scale(dir < 0 ? -1 : 1, 1);
-  const len = 132 + Math.sin(sim.t * 6) * 14;
-  for (const by of [-8, 0, 8]) {
+  const len = 84 + Math.sin(sim.t * 6) * 8;
+  for (const by of [-5, 4]) {
     ctx.globalAlpha = 0.4;
     ctx.fillStyle = "#ff4060";
     ctx.fillRect(0, by - 2, len, 3);
