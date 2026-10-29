@@ -876,7 +876,7 @@ function drawTerrain(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) 
     if (plat.kind === "ladder") {
       const shown = { ...plat, y: plat.y + escapeDy(sim, plat.id) };
       if (plat.id.startsWith("line")) drawRopeLine(ctx, shown);
-      else drawLadder(ctx, shown);
+      else drawLadder(ctx, shown, false, sim.level.id === "veil");
     }
   }
   drawSaws(ctx, sim);
@@ -1448,6 +1448,7 @@ function drawLatchLock(ctx: CanvasRenderingContext2D, sim: Sim) {
   const lift = sim.level.id === "latch" ? sim.cage * 156 : 0;
   ctx.textAlign = "center";
   lock.code.forEach((digit, index) => {
+    if (sim.level.id === "veil") return;
     const gate = gates[index];
     if (!gate) return;
     const gx = gate.x + gate.w / 2;
@@ -1505,6 +1506,53 @@ function drawBlackHole(ctx: CanvasRenderingContext2D, x: number, y: number, t: n
   ctx.fillStyle = "#000";
   ctx.fill();
   ctx.restore();
+}
+
+function drawVeilMarks(ctx: CanvasRenderingContext2D) {
+  const marks: [number, number, number][] = [
+    [3, 1620, 820],
+    [6, 2560, 860],
+    [9, 4680, 840],
+  ];
+  ctx.textAlign = "center";
+  for (const [digit, x, y] of marks) {
+    ctx.save();
+    ctx.shadowColor = "#9fd4ff";
+    ctx.shadowBlur = 18;
+    ctx.fillStyle = "#e8f4ff";
+    ctx.fillRect(x - 16, y - 30, 32, 38);
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = "#071018";
+    ctx.font = "bold 26px sans-serif";
+    ctx.fillText(String(digit), x, y);
+    ctx.restore();
+  }
+}
+
+function drawVeilCaves(ctx: CanvasRenderingContext2D) {
+  const mouths = [
+    { x: 1440, w: 448, floor: 880 },
+    { x: 2348, w: 460, floor: 920 },
+    { x: 4360, w: 720, floor: 900 },
+  ];
+  for (const mouth of mouths) {
+    ctx.fillStyle = "#010308";
+    ctx.fillRect(mouth.x, 470, mouth.w, mouth.floor - 470);
+    ctx.fillStyle = "#0a1624";
+    ctx.beginPath();
+    ctx.moveTo(mouth.x, 470);
+    ctx.quadraticCurveTo(mouth.x + mouth.w / 2, 390, mouth.x + mouth.w, 470);
+    ctx.fill();
+    ctx.fillStyle = "#061018";
+    for (let i = 0; i < 5; i++) {
+      const tx = mouth.x + 28 + i * (mouth.w / 6);
+      ctx.beginPath();
+      ctx.moveTo(tx, 500);
+      ctx.lineTo(tx + 8, 548 + (i % 2) * 16);
+      ctx.lineTo(tx + 16, 500);
+      ctx.fill();
+    }
+  }
 }
 
 function drawChoirMarks(ctx: CanvasRenderingContext2D) {
@@ -4061,8 +4109,8 @@ function drawCrow(ctx: CanvasRenderingContext2D, x: number, y: number, flap: num
   ctx.restore();
 }
 
-function drawLadder(ctx: CanvasRenderingContext2D, plat: { x: number; y: number; w: number; h: number }, snow = false) {
-  ctx.strokeStyle = snow ? "#d9d6d0" : "#1c1c20";
+function drawLadder(ctx: CanvasRenderingContext2D, plat: { x: number; y: number; w: number; h: number }, snow = false, pale = false) {
+  ctx.strokeStyle = pale ? "#d5e8ff" : snow ? "#d9d6d0" : "#1c1c20";
   ctx.lineWidth = snow ? 4 : 3;
   ctx.lineCap = "round";
   ctx.beginPath();
@@ -4082,7 +4130,7 @@ function drawLadder(ctx: CanvasRenderingContext2D, plat: { x: number; y: number;
     ctx.stroke();
   }
   for (let y = plat.y + 12; y < plat.y + plat.h - 6; y += 16) {
-    ctx.fillStyle = snow ? "#9a9690" : "#141418";
+    ctx.fillStyle = pale ? "#eef6ff" : snow ? "#9a9690" : "#141418";
     ctx.fillRect(plat.x + 3, y, plat.w - 6, 3);
     if (snow) {
       ctx.fillStyle = "#f7f4ee";
@@ -5014,6 +5062,10 @@ export function renderFrame(
   }
 
   drawLowerFill(ctx, camera, sim.level.id);
+  if (sim.level.id === "veil") {
+    drawVeilCaves(ctx);
+    drawVeilMarks(ctx);
+  }
   if (realLevel === sim.level.id && sim.level.id !== "shore" && sim.level.id !== "latch" && sim.level.id !== "mirror") {
     drawRealBackdrop(ctx, camera, sim.level.id, sim.t);
   }
