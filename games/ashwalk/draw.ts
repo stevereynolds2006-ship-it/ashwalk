@@ -866,7 +866,7 @@ function drawTerrain(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) 
         drawMetal(ctx, rect);
       } else {
         drawPlank(ctx, rect, rect.kind === "crumble" || (sim.crumbles[rect.id]?.timer ?? 0) > 0.9, sim.level.id === "choir" || sim.level.id === "shore");
-        if (sim.level.id === "veil" && rect.id.startsWith("bar")) drawVeilBar(ctx, rect, sim.t);
+        if (sim.level.id === "veil" && (rect.id.startsWith("bar") || rect.id.startsWith("out"))) drawVeilBar(ctx, rect, sim.t);
         if (sim.level.id === "shore" && (rect.kind === "crumble" || rect.kind === "oneway") && !rect.id.startsWith("glow")) drawGrass(ctx, rect, 30, 2);
       }
     }
@@ -1533,7 +1533,7 @@ function drawVeilCaves(ctx: CanvasRenderingContext2D) {
   const mouths = [
     { x: 1440, w: 448, floor: 880 },
     { x: 2348, w: 460, floor: 920 },
-    { x: 4360, w: 720, floor: 900 },
+    { x: 4360, w: 760, floor: 900 },
   ];
   for (const mouth of mouths) {
     ctx.fillStyle = "#010308";

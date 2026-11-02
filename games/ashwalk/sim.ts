@@ -872,6 +872,19 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
       sim.vy = 0;
     }
   }
+  if (sim.climbing && shaft && sim.vy < 0) {
+    const feet = sim.y + PH;
+    for (const plat of nextBodies) {
+      if (plat.kind === "ladder" || plat.kind === "gate" || plat.kind === "rope") continue;
+      if (sim.x + 2 > plat.x + plat.w || sim.x + PW - 2 < plat.x) continue;
+      if (feet < plat.y || feet > plat.y + 16) continue;
+      if (plat.y > shaft.y + 80) continue;
+      sim.y = plat.y - PH;
+      sim.vy = 0;
+      sim.climbing = false;
+      break;
+    }
+  }
   const landed = resolveY(sim, prevX, midY, nextBodies);
   if (landed && !sim.wasGrounded) events.land = true;
   sim.wasGrounded = sim.grounded;
