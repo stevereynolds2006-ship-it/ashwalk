@@ -46,8 +46,10 @@ const USDG_TOKEN = "0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168";
 const PRICE_CENTS = 99;
 const CAPE_CENTS = 50;
 const LIFE_CENTS = 50;
+const PASS_CENTS = 1099;
 const RARE_BOARD_CENTS = 75;
 const RARE_CAPE_CENTS = 40;
+const RARE_PASS_CENTS = 833;
 const ETH_USD = 2495;
 const PAYOUT_ADDRESS = "0xa93399a2965672dd315a1bd8816fa94c50ef4dd5";
 const SHARE_ADDRESS = "0xb7823b2e28484382aa70952a7818712e8ac42a72";
@@ -443,7 +445,7 @@ export function Playfield({
   clothRef.current = ledger.equipped;
 
   function fogOpen(id: string) {
-    if (TRY_ALL || fogTry(id)) return !fogHeld(id);
+    if (TRY_ALL || fogTry(id) || allOpenRef.current) return !fogHeld(id);
     if (id === "shore") return true;
     if (fogHeld(id) || !fogReleased(id)) return false;
     if (!clearedRef.current.has(previousFog(id) ?? "shore") && id !== "shore") return false;
@@ -698,12 +700,12 @@ export function Playfield({
     const who = accountRef.current;
     const balance = rareRef.current;
     if (!who || balance == null) {
-      setStakeMsg("Connect a wallet. Opening every fog is $0.99.");
+      setStakeMsg("Connect a wallet. Opening every fog is $10.99.");
       return;
     }
-    if (!(await chargeRare(ALL_FOGS_COST, "all", PRICE_CENTS, "A board is $0.99, or $0.75 in Rare.", RARE_BOARD_CENTS))) return;
+    if (!(await chargeRare(ALL_FOGS_COST, "all", PASS_CENTS, "Every fog is $10.99, or $8.33 in Rare.", RARE_PASS_CENTS))) return;
     grantAllFogs(who, ALL_FOGS_COST);
-    setStakeMsg("");
+    setStakeMsg("Every fog is open.");
     refreshLedger(who);
     onWardrobe?.();
   }
@@ -727,7 +729,7 @@ export function Playfield({
       setStakeMsg("The mirror stays shut.");
       return;
     }
-    if (!trial && !fogReleased(id)) {
+    if (!trial && !allOpenRef.current && !fogReleased(id)) {
       setStakeMsg(
         id === "mirror"
           ? "The mirror opens November 1. Coming soon."
@@ -744,7 +746,7 @@ export function Playfield({
       return;
     }
     let paid = 0;
-    if (!trial && !TRY_ALL && id !== "shore" && !fogTry(id)) {
+    if (!trial && !allOpenRef.current && !TRY_ALL && id !== "shore" && !fogTry(id)) {
       const prev = previousFog(id);
       if (prev && !clearedRef.current.has(prev)) {
         setStakeMsg(`Beat ${getLevel(prev).title} before you can open this fog.`);
@@ -1694,7 +1696,7 @@ export function Playfield({
           <p className="ash-kicker">Rare Friends · the hanging wood</p>
           <h1>Ashwalk</h1>
           <p>Your Friend is the small one. The fog is everything else.</p>
-          <p>A later board is $0.99, or $0.75 in Rare. A cape is $0.50, or $0.40 in Rare. Two extra lives are $0.50. You choose the coin when you pay. Nothing is selected for you.</p>
+          <p>A later board is $0.99, or $0.75 in Rare. A pass opens every fog for $10.99, or $8.33 in Rare. A cape is $0.50, or $0.40 in Rare. Two extra lives are $0.50. You choose the coin when you pay. Nothing is selected for you.</p>
           {stakeMsg && (
             <p className="ash-error" role="alert">
               {stakeMsg}
@@ -1714,6 +1716,11 @@ export function Playfield({
             <button type="button" className="ash-btn" onClick={() => go("levels")}>
               Fog Levels
             </button>
+            {!ledger.allFogs && (
+              <button type="button" className="ash-btn" onClick={() => void buyEveryFog()}>
+                Pass · every fog · $10.99
+              </button>
+            )}
             <button
               type="button"
               className="ash-btn"
@@ -1874,11 +1881,11 @@ export function Playfield({
               {stakeMsg}
             </p>
           )}
-          <p className="ash-note">The shore is free. Beat a fog before you can buy the next one. Every board after that is $0.99, or $0.75 in Rare. You pick the coin. Finish one in a single life and half of what you paid comes off the next buy. The moon opens October 1, the hallow October 31, the mirror November 1, the tunnel December 1, the eve December 25, and the hoist January 1st.</p>
+          <p className="ash-note">The shore is free. Beat a fog before you can buy the next one. Every board after that is $0.99, or $0.75 in Rare. A pass opens every fog, including the ones still coming, for $10.99, or $8.33 in Rare. You pick the coin. Finish one in a single life and half of what you paid comes off the next buy. The moon opens October 1, the hallow October 31, the mirror November 1, the tunnel December 1, the eve December 25, and the hoist January 1st.</p>
           <LevelList
             current={pickId}
             cleared={cleared}
-            allOpen={false}
+            allOpen={ledger.allFogs}
             opened={ledger.opened}
             onPick={(id) => {
               armAudio();
@@ -1887,6 +1894,11 @@ export function Playfield({
             }}
           />
           <div className="ash-actions">
+            {!ledger.allFogs && (
+              <button type="button" className="ash-btn" onClick={() => void buyEveryFog()}>
+                Pass · every fog · $10.99
+              </button>
+            )}
             <button type="button" className="ash-btn-ghost" onClick={() => go("title")}>
               Back
             </button>
@@ -1956,7 +1968,7 @@ export function Playfield({
           {session.host ? (
             <>
               <p className="ash-note">{picked.together}</p>
-              <LevelList current={pickId} cleared={cleared} allOpen={false} opened={ledger.opened} onPick={chooseLevel} />
+              <LevelList current={pickId} cleared={cleared} allOpen={ledger.allFogs} opened={ledger.opened} onPick={chooseLevel} />
               <div className="ash-actions">
                 <button
                   type="button"
@@ -2119,14 +2131,14 @@ export function Playfield({
             {!session && (() => {
               const next = LEVELS[LEVELS.findIndex((level) => level.id === clearLevel.id) + 1];
               if (!next) return null;
-              if (!TRY_ALL && !fogReleased(next.id)) {
+              if (!TRY_ALL && !ledger.allFogs && !fogReleased(next.id)) {
                 return (
                   <button type="button" className="ash-btn" disabled>
                     {next.title} · coming soon
                   </button>
                 );
               }
-              if (!TRY_ALL && !ledger.opened.includes(next.id)) {
+              if (!TRY_ALL && !ledger.allFogs && !ledger.opened.includes(next.id)) {
                 const back = rebateOf(payingAccount);
                 const due = Math.max(0, PRICE_CENTS - back);
                 return (
@@ -2237,11 +2249,11 @@ function LevelList({
       {LEVELS.map((level) => {
         const opens =
           level.id === "moon" ? "October 1" : level.id === "hallow" ? "October 31" : level.id === "mirror" ? "November 1" : level.id === "tunnel" ? "December 1" : level.id === "yule" ? "December 25" : level.id === "hoist" ? "January 1st" : null;
-        const soon = !TRY_ALL && opens != null && !fogReleased(level.id);
+        const soon = !allOpen && !TRY_ALL && opens != null && !fogReleased(level.id);
         const prev = previousFog(level.id);
         const beaten = prev == null || cleared.includes(prev);
         const bought = allOpen || opened.includes(level.id);
-        const open = TRY_ALL || level.id === "shore" || fogTry(level.id) || (!soon && bought && beaten);
+        const open = allOpen || TRY_ALL || level.id === "shore" || fogTry(level.id) || (!soon && bought && beaten);
         const canBuy = !open && !soon && beaten && !bought;
         const note = soon
           ? `Coming ${opens}. $0.99.`
