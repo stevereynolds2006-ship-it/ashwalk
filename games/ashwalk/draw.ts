@@ -819,6 +819,20 @@ function drawTerrain(ctx: CanvasRenderingContext2D, sim: Sim, reduced: boolean) 
       ctx.fillRect(rect.x, rect.y - 6, rect.w, 78);
       ctx.fillStyle = "rgba(214, 206, 188, 0.5)";
       ctx.fillRect(rect.x, rect.y, rect.w, 3);
+    } else if (sim.level.id === "veil") {
+      ctx.save();
+      const glow = ctx.createLinearGradient(rect.x, rect.y - 22, rect.x, rect.y + 28);
+      glow.addColorStop(0, "rgba(170, 206, 255, 0)");
+      glow.addColorStop(0.42, "rgba(186, 214, 255, 0.22)");
+      glow.addColorStop(1, "rgba(170, 206, 255, 0)");
+      ctx.fillStyle = glow;
+      ctx.fillRect(rect.x, rect.y - 20, rect.w, 46);
+      ctx.shadowColor = "#d7e8ff";
+      ctx.shadowBlur = 12;
+      ctx.fillStyle = "rgba(220, 236, 255, 0.7)";
+      ctx.fillRect(rect.x, rect.y, rect.w, 2);
+      ctx.restore();
+      ctx.fillStyle = "#070708";
     } else if (sim.level.id === "rift") {
       ctx.fillStyle = "rgba(255,244,220,0.9)";
       ctx.fillRect(rect.x, rect.y, rect.w, 3);
