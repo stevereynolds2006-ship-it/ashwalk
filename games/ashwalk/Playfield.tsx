@@ -49,7 +49,7 @@ const LIFE_CENTS = 50;
 const PASS_CENTS = 1099;
 const RARE_BOARD_CENTS = 75;
 const RARE_CAPE_CENTS = 40;
-const RARE_PASS_CENTS = 833;
+const RARE_PASS_CENTS = 1099;
 const ETH_USD = 2495;
 const PAYOUT_ADDRESS = "0xa93399a2965672dd315a1bd8816fa94c50ef4dd5";
 const SHARE_ADDRESS = "0xb7823b2e28484382aa70952a7818712e8ac42a72";
@@ -703,7 +703,7 @@ export function Playfield({
       setStakeMsg("Connect a wallet. Opening every fog is $10.99.");
       return;
     }
-    if (!(await chargeRare(ALL_FOGS_COST, "all", PASS_CENTS, "Every fog is $10.99, or $8.33 in Rare.", RARE_PASS_CENTS))) return;
+    if (!(await chargeRare(ALL_FOGS_COST, "all", PASS_CENTS, "Every fog is $10.99.", RARE_PASS_CENTS))) return;
     grantAllFogs(who, ALL_FOGS_COST);
     setStakeMsg("Every fog is open.");
     refreshLedger(who);
@@ -1696,7 +1696,7 @@ export function Playfield({
           <p className="ash-kicker">Rare Friends · the hanging wood</p>
           <h1>Ashwalk</h1>
           <p>Your Friend is the small one. The fog is everything else.</p>
-          <p>A later board is $0.99, or $0.75 in Rare. A pass opens every fog for $10.99, or $8.33 in Rare. A cape is $0.50, or $0.40 in Rare. Two extra lives are $0.50. You choose the coin when you pay. Nothing is selected for you.</p>
+          <p>A later board is $0.99, or $0.75 in Rare. A pass opens every fog for $10.99. A cape is $0.50, or $0.40 in Rare. Two extra lives are $0.50. You choose the coin when you pay. Nothing is selected for you.</p>
           {stakeMsg && (
             <p className="ash-error" role="alert">
               {stakeMsg}
@@ -1881,7 +1881,7 @@ export function Playfield({
               {stakeMsg}
             </p>
           )}
-          <p className="ash-note">The shore is free. Beat a fog before you can buy the next one. Every board after that is $0.99, or $0.75 in Rare. A pass opens every fog, including the ones still coming, for $10.99, or $8.33 in Rare. You pick the coin. Finish one in a single life and half of what you paid comes off the next buy. The moon opens October 1, the hallow October 31, the mirror November 1, the tunnel December 1, the eve December 25, and the hoist January 1st.</p>
+          <p className="ash-note">The shore is free. Beat a fog before you can buy the next one. Every board after that is $0.99, or $0.75 in Rare. A pass opens every fog, including the ones still coming, for $10.99 in any coin. You pick the coin. Finish one in a single life and half of what you paid comes off the next buy. The moon opens October 1, the hallow October 31, the mirror November 1, the tunnel December 1, the eve December 25, and the hoist January 1st.</p>
           <LevelList
             current={pickId}
             cleared={cleared}
