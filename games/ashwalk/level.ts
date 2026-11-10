@@ -57,7 +57,7 @@ export type Bird = {
   amp: number;
   speed: number;
   start?: number;
-  kind?: "crow" | "rat" | "turtle" | "gator" | "rocket" | "alien" | "ship" | "deer" | "eagle" | "scare" | "shade" | "demon";
+  kind?: "crow" | "rat" | "turtle" | "gator" | "rocket" | "alien" | "ship" | "deer" | "eagle" | "scare" | "shade" | "demon" | "red";
 };
 
 export type Wind = {
@@ -304,6 +304,8 @@ export const SHORE: Level = {
   pit: { x0: 3320, x1: 3940, y: 560 },
   wind: { x0: 4080, x1: 4680, strength: 240, period: 1.25, mode: "gust" },
   birds: [
+    { kind: "red", x0: 2480, x1: 2620, y: 368, amp: 0, speed: 18, start: 2520 },
+    { kind: "red", x0: 8520, x1: 8660, y: 480, amp: 0, speed: 16, start: 8560 },
     { x0: 4160, x1: 4620, y: 338, amp: 16, speed: 92, start: 4200 },
     { x0: 4180, x1: 4560, y: 410, amp: 8, speed: 120, start: 4400 },
   ],
@@ -384,6 +386,7 @@ export const SHORE: Level = {
   chapters: [
     { x: 0, id: "shore", title: "The shore", kicker: "A coin buys ten seconds of light." },
     { x: 1640, id: "cages", title: "The hanging wood", kicker: "The cages remember every name." },
+    { x: 2390, id: "red", title: "The red", kicker: "It walks the cliff. Stay off the body." },
     { x: 3000, id: "white", title: "The white", kicker: "The shrine raises the long plank." },
     { x: 5720, id: "span", title: "The light", kicker: "The plank lasts as long as the lantern." },
     { x: 4680, id: "run", title: "The gate", kicker: "Hold the plate, then run." },

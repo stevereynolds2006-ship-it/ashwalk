@@ -2728,6 +2728,73 @@ function drawVeilBeams(ctx: CanvasRenderingContext2D, camera: Camera, t: number)
   ctx.restore();
 }
 
+function drawRedArm(ctx: CanvasRenderingContext2D, y: number, reach: number, drop: number) {
+  const steps = 7;
+  ctx.fillStyle = "#d01028";
+  for (let i = 0; i <= steps; i++) {
+    const u = i / steps;
+    const px = reach * u;
+    const py = y + drop * u * u;
+    ctx.fillRect(px - 2, py - 2, 4, 4);
+  }
+  const tipX = reach;
+  const tipY = y + drop;
+  ctx.fillStyle = "#ff2a44";
+  for (const claw of [-8, 0, 8]) {
+    ctx.fillRect(tipX + Math.sign(reach) * 2, tipY + claw, Math.sign(reach) * 8, 2);
+  }
+}
+
+function drawRed(ctx: CanvasRenderingContext2D, x: number, y: number, dir: number, t: number) {
+  ctx.save();
+  ctx.translate(x + 14, y);
+  ctx.scale(dir < 0 ? -1 : 1, 1);
+  ctx.globalAlpha = 0.55;
+  for (let i = -8; i <= 8; i++) {
+    const fall = (i * 23 + t * 36) % 70;
+    ctx.fillStyle = i % 2 === 0 ? "#ff1a38" : "#6a0014";
+    ctx.fillRect(i * 5, -150 + fall, 2, 16 + (Math.abs(i) % 3) * 10);
+  }
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = "#9a001c";
+  ctx.beginPath();
+  ctx.moveTo(-8, -96);
+  ctx.lineTo(-18, -8);
+  ctx.lineTo(18, -8);
+  ctx.lineTo(8, -96);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = "#ff1430";
+  ctx.fillRect(-3, -100, 6, 100);
+  for (let i = -6; i <= 6; i++) {
+    const h = 14 + (Math.abs(i) % 3) * 9;
+    ctx.fillStyle = i % 2 === 0 ? "#ff2040" : "#c00020";
+    ctx.fillRect(i * 3 - 1, -112 - h, 2, h);
+  }
+  const sway = Math.sin(t * 2.1);
+  drawRedArm(ctx, -98, 62, -22 + sway * 8);
+  drawRedArm(ctx, -98, -62, -22 + sway * 8);
+  drawRedArm(ctx, -74, 74, -4 + sway * 10);
+  drawRedArm(ctx, -74, -74, -4 - sway * 10);
+  drawRedArm(ctx, -50, 58, 18 - sway * 8);
+  drawRedArm(ctx, -50, -58, 18 + sway * 8);
+  ctx.fillStyle = "#ff1840";
+  ctx.fillRect(-16, -6, 5, 10);
+  ctx.fillRect(-8, -2, 4, 8);
+  ctx.fillRect(4, -2, 4, 8);
+  ctx.fillRect(11, -6, 5, 10);
+  ctx.shadowColor = "#ff4dff";
+  ctx.shadowBlur = 10;
+  ctx.fillStyle = "#ff6af5";
+  ctx.fillRect(-9, -108, 5, 4);
+  ctx.fillRect(4, -108, 5, 4);
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = "#fff";
+  ctx.fillRect(-8, -107, 2, 2);
+  ctx.fillRect(5, -107, 2, 2);
+  ctx.restore();
+}
+
 function drawDemon(ctx: CanvasRenderingContext2D, x: number, y: number, dir: number, t: number) {
   ctx.save();
   ctx.translate(x, y);
@@ -5191,6 +5258,7 @@ export function renderFrame(
     else if (bird.kind === "rocket") drawRocket(ctx, bird.x, bird.y, bird.dir, sim.t, reduced);
     else if (bird.kind === "alien") drawAlien(ctx, bird.x, bird.y, bird.dir, sim.t);
     else if (bird.kind === "demon") drawDemon(ctx, bird.x, bird.y, bird.dir, sim.t);
+    else if (bird.kind === "red") drawRed(ctx, bird.x, bird.y, bird.dir, sim.t);
     else if (bird.kind === "ship") drawShip(ctx, bird.x, bird.y, bird.dir);
     else if (bird.kind === "eagle") drawEagle(ctx, bird.x, bird.y, sim.t * 8, bird.dir);
     else if (bird.kind === "scare") drawScarecrow(ctx, bird.x, bird.y, sim.t, bird.dir);
