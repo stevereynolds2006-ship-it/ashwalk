@@ -2747,8 +2747,8 @@ function drawRedArm(ctx: CanvasRenderingContext2D, y: number, reach: number, dro
 
 function drawRed(ctx: CanvasRenderingContext2D, x: number, y: number, dir: number, t: number) {
   ctx.save();
-  ctx.translate(x + 14, y);
-  ctx.scale(dir < 0 ? -1 : 1, 1);
+  ctx.translate(x + 12, y);
+  ctx.scale((dir < 0 ? -1 : 1) * 0.78, 0.78);
   ctx.globalAlpha = 0.55;
   for (let i = -8; i <= 8; i++) {
     const fall = (i * 23 + t * 36) % 70;

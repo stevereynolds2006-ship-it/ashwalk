@@ -102,7 +102,7 @@ export type Sim = {
   crumbles: Record<string, Crumble>;
   latch: Record<string, number>;
   gateLift: Record<string, number>;
-  birds: { x: number; dir: 1 | -1 }[];
+  birds: { x: number; y: number; dir: 1 | -1 }[];
   /** Sign roof: the gate has opened, then shut, with you on the far side. */
   sawGate: boolean;
   /** 0 intact, then rising until the last roof is gone. */
@@ -224,7 +224,7 @@ export function createSim(level: Level = SHORE): Sim {
     crumbles,
     latch,
     gateLift,
-    birds: level.birds.map((bird) => ({ x: bird.start ?? bird.x0, dir: 1 })),
+    birds: level.birds.map((bird) => ({ x: bird.start ?? bird.x0, y: bird.y, dir: 1 as const })),
     sawGate: false,
     crack: 0,
     perch: 0,
@@ -901,10 +901,25 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
     const spec = level.birds[i]!;
     const bird = sim.birds[i]!;
     if (sim.slain.has(i)) continue;
-    bird.x += bird.dir * spec.speed * dt;
-    if (bird.x > spec.x1) bird.dir = -1;
-    if (bird.x < spec.x0) bird.dir = 1;
-    const birdY = spec.y + birdLift(spec, sim.t, i, reduced);
+    if (spec.kind === "red") {
+      const prey = sim.x + PW / 2;
+      const seen = Math.abs(prey - bird.x) < 620 && Math.abs(sim.y + PH - bird.y) < 240;
+      if (seen && Math.abs(prey - bird.x) > 18) {
+        const dir = prey < bird.x ? -1 : 1;
+        const next = bird.x + dir * spec.speed * dt;
+        const ground = groundNear(level, next + 10, bird.y);
+        if (ground != null) {
+          bird.x = next;
+          bird.y = ground;
+          bird.dir = dir;
+        }
+      }
+    } else {
+      bird.x += bird.dir * spec.speed * dt;
+      if (bird.x > spec.x1) bird.dir = -1;
+      if (bird.x < spec.x0) bird.dir = 1;
+    }
+    const birdY = (spec.kind === "red" ? bird.y : spec.y) + birdLift(spec, sim.t, i, reduced);
     const aimY = spec.kind === "demon" ? birdY - 40 : birdY + 16;
     if ((spec.kind === "alien" || spec.kind === "demon") && sim.saber && saberHits(sim, bird.x + 8, aimY)) {
       sim.slain.add(i);
@@ -913,7 +928,7 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
     const red = spec.kind === "red";
     const feet = spec.kind === "deer" || spec.kind === "scare" || spec.kind === "shade" || spec.kind === "demon" || red;
     const hitW = red ? 36 : spec.kind === "demon" ? 36 : spec.kind === "shade" ? 28 : spec.kind === "scare" ? 36 : spec.kind === "deer" ? 72 : spec.kind === "gator" ? 86 : spec.kind === "eagle" ? 54 : spec.kind === "ship" ? 52 : spec.kind === "alien" ? 26 : spec.kind === "rocket" ? 48 : spec.kind === "turtle" ? 34 : spec.kind === "rat" ? 28 : 22;
-    const hitH = red ? 112 : spec.kind === "demon" ? 78 : spec.kind === "shade" ? 60 : spec.kind === "scare" ? 72 : spec.kind === "deer" ? 40 : spec.kind === "gator" ? 30 : spec.kind === "eagle" ? 24 : spec.kind === "ship" ? 22 : spec.kind === "alien" ? 40 : spec.kind === "rocket" ? 18 : spec.kind === "turtle" ? 26 : spec.kind === "rat" ? 20 : 14;
+    const hitH = red ? 86 : spec.kind === "demon" ? 78 : spec.kind === "shade" ? 60 : spec.kind === "scare" ? 72 : spec.kind === "deer" ? 40 : spec.kind === "gator" ? 30 : spec.kind === "eagle" ? 24 : spec.kind === "ship" ? 22 : spec.kind === "alien" ? 40 : spec.kind === "rocket" ? 18 : spec.kind === "turtle" ? 26 : spec.kind === "rat" ? 20 : 14;
     const top = feet ? birdY - hitH : birdY;
     const bot = feet ? birdY : birdY + hitH;
     if (
@@ -1545,12 +1560,24 @@ function resolveY(sim: Sim, prevX: number, prevY: number, bodies: Rect[]) {
   return landed;
 }
 
+function groundNear(level: Level, x: number, feet: number) {
+  let best: number | null = null;
+  for (const plat of level.platforms) {
+    if (plat.kind === "gate" || plat.kind === "ladder" || plat.kind === "rope") continue;
+    if (x < plat.x + 8 || x > plat.x + plat.w - 8) continue;
+    if (Math.abs(plat.y - feet) > 72) continue;
+    if (best == null || Math.abs(plat.y - feet) < Math.abs(best - feet)) best = plat.y;
+  }
+  return best;
+}
+
 export function birdSpots(sim: Sim, reduced: boolean) {
   return sim.level.birds.map((spec, index) => {
     const bird = sim.birds[index]!;
+    const base = spec.kind === "red" ? bird.y : spec.y;
     return {
       x: bird.x,
-      y: spec.y + birdLift(spec, sim.t, index, reduced),
+      y: base + birdLift(spec, sim.t, index, reduced),
       dir: bird.dir,
       kind: spec.kind ?? "crow",
       index,
