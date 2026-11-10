@@ -927,8 +927,8 @@ export function step(sim: Sim, input: Actions, dt: number, reduced = false): Ste
     }
     const red = spec.kind === "red";
     const feet = spec.kind === "deer" || spec.kind === "scare" || spec.kind === "shade" || spec.kind === "demon" || red;
-    const hitW = red ? 36 : spec.kind === "demon" ? 36 : spec.kind === "shade" ? 28 : spec.kind === "scare" ? 36 : spec.kind === "deer" ? 72 : spec.kind === "gator" ? 86 : spec.kind === "eagle" ? 54 : spec.kind === "ship" ? 52 : spec.kind === "alien" ? 26 : spec.kind === "rocket" ? 48 : spec.kind === "turtle" ? 34 : spec.kind === "rat" ? 28 : 22;
-    const hitH = red ? 86 : spec.kind === "demon" ? 78 : spec.kind === "shade" ? 60 : spec.kind === "scare" ? 72 : spec.kind === "deer" ? 40 : spec.kind === "gator" ? 30 : spec.kind === "eagle" ? 24 : spec.kind === "ship" ? 22 : spec.kind === "alien" ? 40 : spec.kind === "rocket" ? 18 : spec.kind === "turtle" ? 26 : spec.kind === "rat" ? 20 : 14;
+    const hitW = red ? 24 : spec.kind === "demon" ? 36 : spec.kind === "shade" ? 28 : spec.kind === "scare" ? 36 : spec.kind === "deer" ? 72 : spec.kind === "gator" ? 86 : spec.kind === "eagle" ? 54 : spec.kind === "ship" ? 52 : spec.kind === "alien" ? 26 : spec.kind === "rocket" ? 48 : spec.kind === "turtle" ? 34 : spec.kind === "rat" ? 28 : 22;
+    const hitH = red ? 64 : spec.kind === "demon" ? 78 : spec.kind === "shade" ? 60 : spec.kind === "scare" ? 72 : spec.kind === "deer" ? 40 : spec.kind === "gator" ? 30 : spec.kind === "eagle" ? 24 : spec.kind === "ship" ? 22 : spec.kind === "alien" ? 40 : spec.kind === "rocket" ? 18 : spec.kind === "turtle" ? 26 : spec.kind === "rat" ? 20 : 14;
     const top = feet ? birdY - hitH : birdY;
     const bot = feet ? birdY : birdY + hitH;
     if (
@@ -1561,11 +1561,12 @@ function resolveY(sim: Sim, prevX: number, prevY: number, bodies: Rect[]) {
 }
 
 function groundNear(level: Level, x: number, feet: number) {
+  const lip = 110;
   let best: number | null = null;
   for (const plat of level.platforms) {
-    if (plat.kind === "gate" || plat.kind === "ladder" || plat.kind === "rope") continue;
-    if (x < plat.x + 8 || x > plat.x + plat.w - 8) continue;
-    if (Math.abs(plat.y - feet) > 72) continue;
+    if (plat.kind !== "solid" || !plat.terrain) continue;
+    if (x < plat.x + lip || x > plat.x + plat.w - lip) continue;
+    if (Math.abs(plat.y - feet) > 80) continue;
     if (best == null || Math.abs(plat.y - feet) < Math.abs(best - feet)) best = plat.y;
   }
   return best;
